@@ -9,6 +9,7 @@ import SectionCard from '../components/SectionCard'
 import RejectActionModal from '../components/RejectActionModal'
 import { isAssignedToUser, isManager } from '../utils/roleAccess'
 import { validateHandledQuantities } from '../utils/lossService'
+import { formatCaStatusLabel } from '../utils/caStatusLabel'
 import { printCorrectiveActionSummary } from '../utils/correctiveActionExport'
 import { isActionOverdue } from '../utils/dueDate'
 import { formatExpiryDate, hasExpiryMismatch } from '../utils/expiry'
@@ -654,7 +655,7 @@ export default function CorrectiveActionDetails({ user }) {
                 <div className="space-y-3">
                   <Info label="Action ID" value={action.code} />
                   <Info label="Action Type" value={action.type === 'product_handling' ? 'Product Handling' : 'Corrective Action'} />
-                  <Info label="Status" value={titleCase(action.status)} />
+                  <Info label="Status" value={formatCaStatusLabel(action.status)} />
                 </div>
               </SectionCard>
 

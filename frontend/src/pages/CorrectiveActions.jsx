@@ -84,7 +84,7 @@ const CA_EXPORT_COLUMNS = [
 const STATUS_FILTER_OPTIONS = [
   { value: 'all', label: 'All Status' },
   { value: 'overdue', label: 'Overdue' },
-  { value: 'pending_review', label: 'Submitted — Pending Review' },
+  { value: 'pending_review', label: formatCaStatusLabel('completed') },
   { value: 'assigned', label: 'Assigned' },
   { value: 'in_progress', label: 'In Progress' },
   { value: 'verified', label: 'Verified' },
@@ -345,7 +345,7 @@ export default function CorrectiveActions({ user }) {
     const parts = []
     if (periodLabel) parts.push(periodLabel)
     if (caDueFilter !== 'all') parts.push(getDateFilterLabel(caDueFilter))
-    if (statusFilter === 'pending_review') parts.push('Submitted — Pending Review')
+    if (statusFilter === 'pending_review') parts.push(formatCaStatusLabel('completed'))
     else if (statusFilter !== 'all') parts.push(formatCaStatusLabel(statusFilter))
     return parts.join(' · ') || 'All Time'
   }, [periodLabel, caDueFilter, statusFilter])
@@ -417,7 +417,7 @@ export default function CorrectiveActions({ user }) {
           <KPICard
             density="emphasis"
             variant="warning"
-            title="Submitted — Pending Review"
+            title={formatCaStatusLabel('completed')}
             value={kpis.pendingReview}
             subtitle={kpis.pendingReview > 0 ? 'Awaiting verify or reject' : undefined}
             zeroHint="Nothing waiting for review"

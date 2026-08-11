@@ -1,4 +1,5 @@
 import { openPrintDocument } from './printDocument'
+import { formatCaStatusLabel } from './caStatusLabel'
 
 function escapeCsvValue(value) {
   const text = String(value ?? '')
@@ -180,7 +181,7 @@ export function buildActiveReportExport(activeTab, context) {
             { key: 'defect_code', label: 'Defect' },
             { key: 'assigned_to_name', label: 'Assigned To' },
             { key: 'due_date', label: 'Due Date', exportValue: (row) => formatDate(row.due_date || row.dueDate) },
-            { key: 'ca_status', label: 'Status', exportValue: (row) => titleCase(row.ca_status || row.status) }
+            { key: 'ca_status', label: 'Status', exportValue: (row) => formatCaStatusLabel(row.ca_status || row.status) }
           ],
           rows: correctiveRows
         }
@@ -238,7 +239,7 @@ export function buildActiveReportExport(activeTab, context) {
           { key: 'assigned_to_name', label: 'Assigned To' },
           { key: 'due_date', label: 'Due Date', exportValue: (row) => formatDate(row.due_date || row.dueDate) },
           { key: 'priority', label: 'Priority', exportValue: (row) => titleCase(row.priority) },
-          { key: 'ca_status', label: 'Status', exportValue: (row) => titleCase(row.ca_status || row.status) }
+          { key: 'ca_status', label: 'Status', exportValue: (row) => formatCaStatusLabel(row.ca_status || row.status) }
         ],
         rows: correctiveRows
       }],

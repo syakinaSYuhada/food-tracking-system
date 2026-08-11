@@ -1,4 +1,5 @@
 import { fetchEvidenceBlob, getAuthToken, resolveEvidenceFileUrl } from './assetUrl'
+import { formatCaStatusLabel } from './caStatusLabel'
 
 function escapeHtml(value) {
   return String(value ?? '-')
@@ -152,7 +153,7 @@ function buildDefectPrintHtml(defect, actions = [], photos = []) {
       <td>${escapeHtml(action.code || action.action_code)}</td>
       <td>${escapeHtml(action.task)}</td>
       <td>${escapeHtml(action.assignedToName || action.assigned_to_name || '-')}</td>
-      <td>${escapeHtml(titleCase(action.status || action.ca_status))}</td>
+      <td>${escapeHtml(formatCaStatusLabel(action.status || action.ca_status))}</td>
       <td>${escapeHtml(formatDate(action.dueDate || action.due_date))}</td>
     </tr>
   `).join('')

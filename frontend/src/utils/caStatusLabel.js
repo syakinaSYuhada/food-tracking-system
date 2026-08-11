@@ -1,7 +1,7 @@
 const CA_STATUS_LABELS = {
   assigned: 'Assigned',
   in_progress: 'In Progress',
-  completed: 'Submitted — Pending Review',
+  completed: 'Submitted — Awaiting Verification',
   verified: 'Verified',
   rejected: 'Rejected',
   cancelled: 'Cancelled'

@@ -441,7 +441,7 @@ export default function Reports() {
                       { key: 'defect_code', label: 'Defect Code' },
                       { key: 'assigned_to_name', label: 'Assigned To', exportValue: (r) => r.assigned_to_name || 'Unassigned' },
                       { key: 'due_date', label: 'Due Date', exportValue: (r) => formatDate(r.due_date || r.dueDate) },
-                      { key: 'ca_status', label: 'Status', exportValue: (r) => r.ca_status || r.status }
+                      { key: 'ca_status', label: 'Status', exportValue: (r) => formatCaStatusLabel(r.ca_status || r.status) }
                     ]}
                     rows={correctiveRows.slice(0, 5)}
                   />
