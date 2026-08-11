@@ -14,3 +14,4 @@ qdts_*.zip
 loss test/screenshots/
 .qdts_patch_check
 temp_evidence.jpg
+backend/uploads/
