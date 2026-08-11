@@ -380,46 +380,32 @@ async function main() {
     )
   })
 
-  await check('POST /defects sets qty_on_hold per containment_status (manager)', async () => {
-    const cases = [
-      {
-        containment_status: 'Segregated / On Hold',
+  await check('POST /defects sets qty_on_hold = qty_affected (manager)', async () => {
+    const body = await request('/defects', {
+      method: 'POST',
+      headers: manager.headers,
+      body: JSON.stringify({
+        product_id: 1,
+        batch_id: 6,
+        detected_at_stage: 'Labelling / Expiry Printing',
+        defect_type: 'Untidy Label',
+        problem_level: 'Can Be Corrected',
+        description: 'Integration test defect for qty_on_hold validation.',
         qty_affected: 8,
-        expectedOnHold: 8
-      },
-      {
-        containment_status: 'Not Yet Segregated',
-        qty_affected: 5,
-        expectedOnHold: 5
-      },
-      {
-        containment_status: 'No Hold Needed',
-        qty_affected: 3,
-        expectedOnHold: 0
-      }
-    ]
-
-    for (const testCase of cases) {
-      const body = await request('/defects', {
-        method: 'POST',
-        headers: manager.headers,
-        body: JSON.stringify({
-          product_id: 1,
-          batch_id: 6,
-          detected_at_stage: 'Labelling / Expiry Printing',
-          defect_type: 'Untidy Label',
-          problem_level: 'Can Be Corrected',
-          description: `Integration test defect for qty_on_hold validation (${testCase.containment_status}).`,
-          qty_affected: testCase.qty_affected,
-          containment_status: testCase.containment_status
-        })
+        containment_status: 'Segregated / On Hold'
       })
-
-      const defect = body.data || {}
-      const onHold = Number(defect.qty_on_hold)
-      if (onHold !== testCase.expectedOnHold) {
-        throw new Error(`Expected qty_on_hold ${testCase.expectedOnHold} for ${testCase.containment_status}, got ${onHold}`)
-      }
+    })
+    const defect = body.data || {}
+    const affected = Number(defect.qty_affected)
+    const onHold = Number(defect.qty_on_hold)
+    if (onHold !== affected) {
+      throw new Error(`Expected qty_on_hold ${affected}, got ${onHold}`)
+    }
+    if (defect.loss_status !== 'no_loss') {
+      throw new Error(`Expected loss_status no_loss, got ${defect.loss_status}`)
+    }
+    if (Number(defect.estimated_loss) !== 0) {
+      throw new Error(`Expected estimated_loss 0, got ${defect.estimated_loss}`)
     }
   })
 

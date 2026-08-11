@@ -46,7 +46,6 @@ function normalizeAction(row) {
     evidenceRequired: row.evidence_required,
     evidence: row.evidence || [],
     qtyAffected: Number(row.qty_affected || 0),
-    containmentStatus: row.defect_containment_status || row.containment_status || null,
     productName: row.product_name,
     batchNumber: row.batch_number,
     defectDescription: row.defect_description,
@@ -196,19 +195,7 @@ export default function CorrectiveActionDetails({ user }) {
           navigate('/corrective-actions')
         }
       }
-        qty_on_hold: 0,
-      })
-
-      const computedOnHold = Math.max(
-        0,
-        Number(action.qtyAffected || 0) - (
-          Number(form.qty_relabelled || 0) +
-          Number(form.qty_repacked || 0) +
-          Number(form.qty_reworked || 0) +
-          Number(form.qty_released || 0) +
-          Number(form.qty_discarded || 0)
-        )
-      )
+    } catch (error) {
       console.error(error)
       alert('Could not load corrective action.')
       navigate('/corrective-actions')
@@ -227,7 +214,7 @@ export default function CorrectiveActionDetails({ user }) {
     if (!targetAction?.evidenceRequired) return true
     if (file) return true
     return Boolean(targetAction.evidence?.length)
-            qty_on_hold: computedOnHold,
+  }
 
   function showEvidenceRequiredError() {
     setEvidenceError(true)
@@ -251,7 +238,7 @@ export default function CorrectiveActionDetails({ user }) {
     })
   }
 
-            qty_on_hold: Number(computedOnHold || 0)
+  async function completeAction() {
     if (!form.investigation_finding.trim()) return alert('Investigation result is required.')
     if (!form.action_taken.trim()) return alert('Action taken is required.')
     if (!hasCompletionEvidence()) {
@@ -292,7 +279,7 @@ export default function CorrectiveActionDetails({ user }) {
         qty_reworked: Number(form.qty_reworked || 0),
         qty_discarded: Number(form.qty_discarded || 0),
         qty_released: Number(form.qty_released || 0),
-        qty_on_hold: Number(computedOnHold || 0)
+        qty_on_hold: Number(form.qty_on_hold || 0)
       })
 
       await load()
@@ -367,20 +354,6 @@ export default function CorrectiveActionDetails({ user }) {
     action.investigationFinding || action.actionTaken || action.completionNotes || action.relatedToolChecked
   )
   const affected = Number(action.qtyAffected || 0)
-  // compute on-hold as remainder to match backend semantics
-  const computedOnHold = action?.containmentStatus === 'No Hold Needed'
-    ? 0
-    : Math.max(
-      0,
-      affected - (
-        Number(form.qty_relabelled || 0) +
-        Number(form.qty_repacked || 0) +
-        Number(form.qty_reworked || 0) +
-        Number(form.qty_released || 0) +
-        Number(form.qty_discarded || 0)
-      )
-    )
-
   const quantityValidation = action?.type === 'product_handling'
     ? validateHandledQuantities({
         qty_affected: affected,
@@ -388,7 +361,7 @@ export default function CorrectiveActionDetails({ user }) {
         qty_repacked: form.qty_repacked,
         qty_reworked: form.qty_reworked,
         qty_discarded: form.qty_discarded,
-        qty_on_hold: computedOnHold,
+        qty_on_hold: form.qty_on_hold,
         qty_released: form.qty_released
       })
     : { valid: true, totalHandled: 0 }
@@ -628,14 +601,7 @@ export default function CorrectiveActionDetails({ user }) {
                       ].map(([field, label]) => (
                         <label key={field} className="text-xs font-semibold text-brand-muted">
                           {label}
-                          {field === 'qty_on_hold' ? (
-                            <>
-                              <input type="number" value={computedOnHold} readOnly className="field-control mt-1 bg-gray-50" />
-                              <p className="text-[11px] text-brand-muted mt-1">Automatically calculated from other quantities — not editable</p>
-                            </>
-                          ) : (
-                            <input type="number" value={form[field]} onChange={(e) => update(field, Number(e.target.value))} className="field-control mt-1" />
-                          )}
+                          <input type="number" value={form[field]} onChange={(e) => update(field, Number(e.target.value))} className="field-control mt-1" />
                         </label>
                       ))}
                     </div>
