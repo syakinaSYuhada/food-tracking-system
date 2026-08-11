@@ -221,18 +221,18 @@ INSERT INTO corrective_actions (action_code, defect_id, action_type, task, conta
   ('CA061', 17, 'machine_process_check', 'Check retort temperature; Adjust cooking temperature / time', 'Check retort temperature; Adjust cooking temperature / time', 'Check retort temperature; Adjust cooking temperature / time', 3, 1, '2026-03-25'::date, 'medium', 'completed', 3, '2026-03-14 09:00:00'::timestamp, 3, '2026-03-18 15:00:00'::timestamp, 'Completed in demo seed.', NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-12 11:00:00'::timestamp);
 
 INSERT INTO evidence (defect_id, corrective_action_id, file_name, file_path, file_type, evidence_note, uploaded_by) VALUES
-  (2, 2, 'sealing_test.jpg', '/mock/evidence/sealing_test.jpg', 'image/jpeg', 'Photo after sealing pressure adjustment.', 3),
-  (18, 16, 'foreign_matter_hold.jpg', '/mock/evidence/foreign_matter_hold.jpg', 'image/jpeg', 'Segregated stock photo.', 3),
-  (20, 11, 'sealing_test_blurry.jpg', '/mock/evidence/sealing_test_blurry.jpg', 'image/jpeg', 'Initial rejected sealing sample (blurry).', 3),
-  (20, 12, 'sealing_test_pass.jpg', '/mock/evidence/sealing_test_pass.jpg', 'image/jpeg', 'Resubmitted sealing test — passed.', 3),
-  (33, 3, 'storage_smell_review.jpg', '/mock/evidence/storage_smell_review.jpg', 'image/jpeg', 'May storage smell inspection.', 2),
-  (49, 7, 'spoiled_stock.jpg', '/mock/evidence/spoiled_stock.jpg', 'image/jpeg', 'Spoiled units before discard.', 2),
-  (50, 8, 'expiry_test_print.jpg', '/mock/evidence/expiry_test_print.jpg', 'image/jpeg', 'Test print submitted — pending manager review.', 2),
-  (15, 18, 'sealing_pressure_log.jpg', '/mock/evidence/sealing_pressure_log.jpg', 'image/jpeg', 'Verified sealing pressure log.', 3),
-  (19, 34, 'expiry_relabel_mar.jpg', '/mock/evidence/expiry_relabel_mar.jpg', 'image/jpeg', 'March expiry relabelling evidence.', 2),
-  (1, 1, 'expiry_mould_check.jpg', '/mock/evidence/expiry_mould_check.jpg', 'image/jpeg', 'Expiry mould inspection in progress.', 2),
-  (24, NULL, 'ingredient_sieve.jpg', '/mock/evidence/ingredient_sieve.jpg', 'image/jpeg', 'Ingredient prep sieve check.', 3),
-  (35, NULL, 'fm_containment.jpg', '/mock/evidence/fm_containment.jpg', 'image/jpeg', 'Foreign matter containment photo.', 3);
+  (2, 2, 'sealing_test.jpg', '/uploads/evidence/demo-seed-1.jpeg', 'image/jpeg', 'Photo after sealing pressure adjustment.', 3),
+  (18, 16, 'foreign_matter_hold.jpg', '/uploads/evidence/demo-seed-1.jpeg', 'image/jpeg', 'Segregated stock photo.', 3),
+  (20, 11, 'sealing_test_blurry.jpg', '/uploads/evidence/demo-seed-1.jpeg', 'image/jpeg', 'Initial rejected sealing sample (blurry).', 3),
+  (20, 12, 'sealing_test_pass.jpg', '/uploads/evidence/demo-seed-1.jpeg', 'image/jpeg', 'Resubmitted sealing test — passed.', 3),
+  (33, 3, 'storage_smell_review.jpg', '/uploads/evidence/demo-seed-2.jpeg', 'image/jpeg', 'May storage smell inspection.', 2),
+  (49, 7, 'spoiled_stock.jpg', '/uploads/evidence/demo-seed-2.jpeg', 'image/jpeg', 'Spoiled units before discard.', 2),
+  (50, 8, 'expiry_test_print.jpg', '/uploads/evidence/demo-seed-2.jpeg', 'image/jpeg', 'Test print submitted — pending manager review.', 2),
+  (15, 18, 'sealing_pressure_log.jpg', '/uploads/evidence/demo-seed-2.jpeg', 'image/jpeg', 'Verified sealing pressure log.', 3),
+  (19, 34, 'expiry_relabel_mar.jpg', '/uploads/evidence/demo-seed-3.png', 'image/png', 'March expiry relabelling evidence.', 2),
+  (1, 1, 'expiry_mould_check.jpg', '/uploads/evidence/demo-seed-3.png', 'image/png', 'Expiry mould inspection in progress.', 2),
+  (24, NULL, 'ingredient_sieve.jpg', '/uploads/evidence/demo-seed-3.png', 'image/png', 'Ingredient prep sieve check.', 3),
+  (35, NULL, 'fm_containment.jpg', '/uploads/evidence/demo-seed-3.png', 'image/png', 'Foreign matter containment photo.', 3);
 
 INSERT INTO activity_logs (user_id, action_type, entity_type, entity_id, description, old_value, new_value, created_at) VALUES
   (2, 'REPORT_DEFECT', 'defect', 3, 'Worker reported untidy label on Dendeng 60g.', NULL, 'Defect status: new', '2026-01-08 09:05:00'::timestamp),

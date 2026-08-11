@@ -15,6 +15,25 @@ async function runSqlFile(client, filePath, label) {
   console.log(`  OK  ${label}`)
 }
 
+function copyDemoEvidenceAssets() {
+  const sourceDir = path.join(__dirname, '..', 'seed-assets', 'evidence')
+  const targetDir = path.join(__dirname, '..', 'uploads', 'evidence')
+  const demoFiles = ['demo-seed-1.jpeg', 'demo-seed-2.jpeg', 'demo-seed-3.png']
+
+  fs.mkdirSync(targetDir, { recursive: true })
+
+  console.log('Copying demo evidence assets...')
+  for (const fileName of demoFiles) {
+    const sourcePath = path.join(sourceDir, fileName)
+    const targetPath = path.join(targetDir, fileName)
+    if (!fs.existsSync(sourcePath)) {
+      throw new Error(`Missing demo evidence asset: ${sourcePath}`)
+    }
+    fs.copyFileSync(sourcePath, targetPath)
+    console.log(`  OK  ${fileName}`)
+  }
+}
+
 async function verifyProducts(client) {
   const result = await client.query(`
     SELECT product_code, product_name, size_weight, selling_price, loss_rate_per_unit
@@ -95,6 +114,7 @@ async function main() {
     await runSqlFile(client, path.join(dbDir, 'schema.sql'), 'schema.sql')
     await runSqlFile(client, path.join(dbDir, 'seed.sql'), 'seed.sql')
     await runSqlFile(client, path.join(dbDir, 'seed_demo_timeline.sql'), 'seed_demo_timeline.sql')
+    copyDemoEvidenceAssets()
     await runSqlFile(client, path.join(dbDir, 'seed_workflow_rules.sql'), 'seed_workflow_rules.sql')
     await verifyProducts(client)
     await verifySchemaAndRules(client)

@@ -344,6 +344,18 @@ const evidenceSpecs = [
   { defectId: 35, caCode: null, file: 'fm_containment.jpg', note: 'Foreign matter containment photo.', uploader: 3 }
 ]
 
+const DEMO_EVIDENCE_ASSETS = [
+  { filePath: '/uploads/evidence/demo-seed-1.jpeg', fileType: 'image/jpeg' },
+  { filePath: '/uploads/evidence/demo-seed-2.jpeg', fileType: 'image/jpeg' },
+  { filePath: '/uploads/evidence/demo-seed-3.png', fileType: 'image/png' }
+]
+
+function resolveDemoEvidenceAsset(index) {
+  if (index < 4) return DEMO_EVIDENCE_ASSETS[0]
+  if (index < 8) return DEMO_EVIDENCE_ASSETS[1]
+  return DEMO_EVIDENCE_ASSETS[2]
+}
+
 const activityRows = [
   [2, 'REPORT_DEFECT', 'defect', 3, 'Worker reported untidy label on Dendeng 60g.', null, 'Defect status: new', '2026-01-08 09:05:00'],
   [1, 'START_REVIEW', 'defect', 3, 'Manager started review for defect D003.', 'new', 'under_review', '2026-01-08 10:00:00'],
@@ -419,7 +431,8 @@ const caIdByCode = Object.fromEntries(actions.map((action, index) => [action.cod
 lines.push('INSERT INTO evidence (defect_id, corrective_action_id, file_name, file_path, file_type, evidence_note, uploaded_by) VALUES')
 lines.push(evidenceSpecs.map((row, index) => {
   const caId = row.caCode ? caIdByCode[row.caCode] : 'NULL'
-  return `  (${row.defectId}, ${caId}, ${sqlString(row.file)}, ${sqlString(`/mock/evidence/${row.file}`)}, 'image/jpeg', ${sqlString(row.note)}, ${row.uploader})${index === evidenceSpecs.length - 1 ? ';' : ','}`
+  const asset = resolveDemoEvidenceAsset(index)
+  return `  (${row.defectId}, ${caId}, ${sqlString(row.file)}, ${sqlString(asset.filePath)}, ${sqlString(asset.fileType)}, ${sqlString(row.note)}, ${row.uploader})${index === evidenceSpecs.length - 1 ? ';' : ','}`
 }).join('\n'))
 lines.push('')
 
