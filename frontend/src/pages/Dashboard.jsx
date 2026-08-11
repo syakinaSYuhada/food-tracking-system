@@ -173,11 +173,6 @@ export default function Dashboard({ user }) {
     [periodActions]
   )
 
-  const newReportCount = useMemo(
-    () => periodDefects.filter((defect) => defect.defect_status === 'new').length,
-    [periodDefects]
-  )
-
   const reviewAttentionSummary = useMemo(
     () => summarizeUrgentReviewAttention(periodDefects),
     [periodDefects]
@@ -376,6 +371,8 @@ export default function Dashboard({ user }) {
   if (!data) return <div className="text-sm text-red-600">Failed to load dashboard.</div>
 
   const { kpis, defectsByType, caStatus, trendData, rootCauses, latest } = data
+  const newReportCount = Number(kpis.new_reports ?? 0)
+  const pendingReviewCount = Number(kpis.pending_review_actions ?? 0)
   const overdueActionCount = periodActions.filter((action) =>
     isActionOverdue(action.due_date, action.ca_status)
   ).length
@@ -489,8 +486,11 @@ export default function Dashboard({ user }) {
         ) : null}
       />
 
-      {pendingReviewActions.length > 0 && (
-        <SectionCard title="Pending Review — Corrective Actions" subtitle="Worker-submitted actions waiting for verify or reject.">
+      {pendingReviewCount > 0 && (
+        <SectionCard
+          title="Pending Review — Corrective Actions"
+          subtitle={`Worker-submitted actions waiting for verify or reject. (${pendingReviewCount} pending)`}
+        >
           <div className="space-y-3">
             {pendingReviewActions.slice(0, 5).map((action) => (
               <AnalyticRow
