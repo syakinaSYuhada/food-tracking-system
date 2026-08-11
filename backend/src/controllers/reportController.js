@@ -96,6 +96,20 @@ async function getDashboardSummary(req, res) {
         AND ${actionPeriod}
     `)
 
+    const pendingReviewActions = await pool.query(`
+      SELECT COUNT(*)::int AS count
+      FROM corrective_actions ca
+      WHERE ca_status = 'completed'
+        AND ${actionPeriod}
+    `)
+
+    const newReports = await pool.query(`
+      SELECT COUNT(*)::int AS count
+      FROM defects d
+      WHERE defect_status = 'new'
+        AND ${defectPeriod}
+    `)
+
     const expiryMismatch = await pool.query(`
       SELECT COUNT(DISTINCT b.id)::int AS count
       FROM batches b
@@ -186,6 +200,8 @@ async function getDashboardSummary(req, res) {
           confirmed_loss: financialKpis.confirmed_loss,
           open_actions: openActions.rows[0].count,
           verified_actions: verifiedActions.rows[0].count,
+          pending_review_actions: pendingReviewActions.rows[0].count,
+          new_reports: newReports.rows[0].count,
           expiry_mismatch_batches: expiryMismatch.rows[0].count,
           top_root_cause: topRootCause.rows[0]?.confirmed_root_cause || 'Pending Investigation'
         },
