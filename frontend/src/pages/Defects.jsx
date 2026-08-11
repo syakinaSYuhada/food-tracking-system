@@ -159,7 +159,7 @@ function getValidationMessage(form, step, workerReport, qtyExceedsBatch) {
   return 'Please complete the required fields first.'
 }
 
-const OPEN_DEFECT_STATUSES = ['new', 'under_review', 'action_assigned', 'in_progress', 'ready_verification']
+const OPEN_DEFECT_STATUSES = ['new', 'under_review', 'action_assigned', 'in_progress', 'pending_verification', 'ready_verification']
 
 const STATUS_FILTER_OPTIONS = [
   { value: 'all', label: 'All' },
@@ -168,7 +168,8 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'under_review', label: 'Under Review' },
   { value: 'action_assigned', label: 'Actions Assigned' },
   { value: 'in_progress', label: 'In Progress' },
-  { value: 'ready_verification', label: 'Ready for Verification' },
+  { value: 'pending_verification', label: 'Pending Verification' },
+  { value: 'ready_verification', label: 'Ready to Close' },
   { value: 'closed', label: 'Closed' }
 ]
 
@@ -763,7 +764,7 @@ export default function Defects({ user }) {
           && ['new', 'under_review'].includes(defect.status)
       }
       if (statusFilter === 'open') return OPEN_DEFECT_STATUSES.includes(defect.status)
-      if (['under_review', 'action_assigned', 'in_progress', 'ready_verification', 'closed'].includes(statusFilter)) {
+      if (['under_review', 'action_assigned', 'in_progress', 'pending_verification', 'ready_verification', 'closed'].includes(statusFilter)) {
         return defect.status === statusFilter
       }
       return true

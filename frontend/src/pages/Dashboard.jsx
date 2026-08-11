@@ -67,8 +67,11 @@ function defectStatusHint(status, hasAssignedAction) {
   if (normalized === 'in_progress') {
     return hasAssignedAction ? 'Your action is in progress.' : 'Corrective work is in progress.'
   }
-  if (normalized === 'ready_verification') {
+  if (normalized === 'pending_verification') {
     return 'Work submitted — waiting for manager verification.'
+  }
+  if (normalized === 'ready_verification') {
+    return 'All corrective actions verified — waiting for root cause confirmation and close.'
   }
   if (normalized === 'closed') {
     return 'This defect has been closed.'
@@ -85,7 +88,8 @@ function actionButton(status, navigate, defectId) {
     under_review: { label: 'Review', intent: 'review', path: '/corrective-actions' },
     action_assigned: { label: 'View', intent: 'view', path: '/corrective-actions' },
     in_progress: { label: 'View', intent: 'view', path: '/defects' },
-    ready_verification: { label: 'Verify', intent: 'verify', path: '/defects' },
+    pending_verification: { label: 'View', intent: 'view', path: '/defects' },
+    ready_verification: { label: 'View', intent: 'view', path: '/defects' },
     closed: { label: 'View', intent: 'view', path: '/defects' }
   }
 

@@ -20,6 +20,7 @@ const ACCENT_BY_STATUS = {
   under_review: 'bg-violet-500',
   action_assigned: 'bg-indigo-500',
   in_progress: 'bg-blue-500',
+  pending_verification: 'bg-amber-500',
   ready_verification: 'bg-purple-500',
   closed: 'bg-slate-300'
 }
