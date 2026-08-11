@@ -161,6 +161,10 @@ function selectNotificationItems(notifications, limit = PANEL_ITEM_LIMIT) {
   return items
 }
 
+function isReadyVerificationStatus(defect) {
+  return String(defect.defect_status || '').toLowerCase() === 'ready_verification'
+}
+
 export function buildNotifications(user, actions = [], defects = []) {
   const notifications = []
   const managerView = isManager(user)
@@ -236,7 +240,7 @@ export function buildNotifications(user, actions = [], defects = []) {
 
     defects
       .filter((defect) =>
-        defect.defect_status === 'ready_verification'
+        isReadyVerificationStatus(defect)
         && defect.root_cause_status !== 'confirmed'
       )
       .forEach((defect) => {
@@ -252,7 +256,7 @@ export function buildNotifications(user, actions = [], defects = []) {
 
     defects
       .filter((defect) =>
-        defect.defect_status === 'ready_verification'
+        isReadyVerificationStatus(defect)
         && defect.root_cause_status === 'confirmed'
       )
       .forEach((defect) => {
