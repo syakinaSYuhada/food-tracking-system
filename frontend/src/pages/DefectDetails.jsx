@@ -513,17 +513,7 @@ export default function DefectDetails({ user }) {
       }
 
       const [defectRes, usersRes] = await Promise.all(requests)
-      let data = defectRes.data.data
-
-      if (manager && data.defect_status === 'new') {
-        try {
-          await api.patch(`/defects/${id}/start-review`)
-          const refreshed = await api.get(`/defects/${id}`)
-          data = refreshed.data.data
-        } catch (reviewError) {
-          console.error(reviewError)
-        }
-      }
+      const data = defectRes.data.data
 
       const photos = (data.evidence || []).map((item) => ({
         url: resolveAssetUrl(item.file_path),
@@ -614,6 +604,17 @@ export default function DefectDetails({ user }) {
       }
     } catch {
       setPrintingSummary(false)
+    }
+  }
+
+  async function handleStartReview() {
+    if (!defect || defect.defect_status !== 'new') return
+
+    try {
+      await api.patch(`/defects/${id}/start-review`)
+      await load()
+    } catch (error) {
+      alert(error.response?.data?.message || 'Could not start review.')
     }
   }
 
@@ -797,6 +798,11 @@ export default function DefectDetails({ user }) {
             <Button color="slate" variant="subtle" size="sm" onClick={handlePrintSummary} disabled={printingSummary}>
               <Printer size={14} /> {printingSummary ? 'Preparing…' : 'Print Summary'}
             </Button>
+            {managerView && defect.defect_status === 'new' && (
+              <Button size="sm" onClick={handleStartReview}>
+                Start Review
+              </Button>
+            )}
             <StatusBadge value={defect.defect_status} prefix="Defect" />
             <StatusBadge value={defect.root_cause_status || 'pending_investigation'} prefix="Root Cause" />
             {defect.suspected_root_cause && defect.root_cause_status !== 'confirmed' && (

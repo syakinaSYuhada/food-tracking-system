@@ -1,6 +1,6 @@
 const pool = require('../config/db')
 const { successResponse, errorResponse } = require('../middleware/responseHandler')
-const { formatBatchDates } = require('../utils/dateFormatter')
+const { formatActionRow } = require('../utils/formatActionRow')
 const correctiveActionService = require('../services/correctiveActionService')
 const {
   calculateEstimatedLoss,
@@ -15,13 +15,6 @@ const {
   applyWorkerActionListScope,
   assertWorkerActionAccess
 } = require('../utils/accessControl')
-
-function formatActionRow(row) {
-  return {
-    ...formatBatchDates(row),
-    status_explanation: correctiveActionService.getStatusExplanation(row.ca_status)
-  }
-}
 
 async function generateActionCode(client = pool) {
   const result = await client.query(`
@@ -104,6 +97,7 @@ async function syncDefectHandlingTotals(client, defectId, userId = null) {
       qty_reworked,
       qty_released,
       qty_discarded,
+      containment_status,
       estimated_loss
     FROM defects
     WHERE id = $1
@@ -114,7 +108,9 @@ async function syncDefectHandlingTotals(client, defectId, userId = null) {
   if (defectResult.rows.length === 0) return
 
   const defect = defectResult.rows[0]
-  const qtyOnHold = calculateQtyOnHold(defect)
+  const qtyOnHold = defect.containment_status === 'No Hold Needed'
+    ? 0
+    : calculateQtyOnHold(defect)
   const stillSellable = calculateStillSellable(defect)
   const lossStatus = determineLossStatus({
     qty_discarded: defect.qty_discarded,
@@ -280,6 +276,7 @@ async function getCorrectiveActionById(req, res) {
         d.description AS defect_description,
         d.defect_status,
         d.qty_affected,
+        d.containment_status AS defect_containment_status,
         d.qty_relabelled AS defect_qty_relabelled,
         d.qty_repacked AS defect_qty_repacked,
         d.qty_discarded AS defect_qty_discarded,

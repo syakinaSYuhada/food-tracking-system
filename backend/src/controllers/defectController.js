@@ -9,6 +9,7 @@ const {
   applyWorkerDefectListScope,
   assertWorkerDefectAccess
 } = require('../utils/accessControl')
+const { formatActionRow } = require('../utils/formatActionRow')
 
 const DEFECT_PRIORITIES = ['low', 'medium', 'high', 'urgent', 'critical']
 
@@ -269,7 +270,7 @@ async function getDefectById(req, res) {
       res,
       {
         ...formatDefectRow(result.rows[0]),
-        corrective_actions: actionResult.rows.map(formatDefectRow),
+        corrective_actions: actionResult.rows.map(formatActionRow),
         evidence: evidenceResult.rows
       },
       'Defect retrieved successfully'
@@ -384,6 +385,7 @@ async function createDefect(req, res) {
 
     // Default new defects to 'new'; managers may optionally start in under_review later
     const defectStatus = 'new'
+    const initialQtyOnHold = containment_status === 'No Hold Needed' ? 0 : affected
 
     const insertResult = await client.query(
       `
@@ -417,7 +419,7 @@ async function createDefect(req, res) {
         handling_notes,
         created_by
       )
-      VALUES ($1,$2,$3,$4,$5,$6,'mapped',$7,$8,$9,$10,$11,$12,0,0,0,$12,0,0,$13,0,'no_loss',$19,$14,$15,$16,$17,$18)
+      VALUES ($1,$2,$3,$4,$5,$6,'mapped',$7,$8,$9,$10,$11,$12,0,0,0,$13,0,0,$14,0,'no_loss',$20,$15,$16,$17,$18,$19)
       RETURNING *
       `,
       [
@@ -433,6 +435,7 @@ async function createDefect(req, res) {
         urgencyValidation.urgencyReason,
         description,
         affected,
+        initialQtyOnHold,
         Number(batch.loss_rate_per_unit) || 0,
         containment_status,
         suggested_product_handling || null,
