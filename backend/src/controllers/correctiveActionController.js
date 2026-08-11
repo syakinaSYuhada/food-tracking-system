@@ -60,6 +60,12 @@ async function assertRequiredEvidence(client, res, action) {
 }
 
 async function refreshDefectStatus(client, defectId, userId = null) {
+  const defectResult = await client.query(
+    `SELECT defect_code, defect_status FROM defects WHERE id = $1`,
+    [defectId]
+  )
+  const { defect_code: defectCode, defect_status: previousStatus } = defectResult.rows[0]
+
   const result = await client.query(
     `
     SELECT
@@ -90,6 +96,30 @@ async function refreshDefectStatus(client, defectId, userId = null) {
     `UPDATE defects SET defect_status = $1, updated_by = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3`,
     [status, userId, defectId]
   )
+
+  if (previousStatus !== status) {
+    await client.query(
+      `
+      INSERT INTO activity_logs (
+        user_id,
+        action_type,
+        entity_type,
+        entity_id,
+        description,
+        old_value,
+        new_value
+      )
+      VALUES ($1, 'UPDATE_DEFECT_STATUS', 'defect', $2, $3, $4, $5)
+      `,
+      [
+        userId,
+        defectId,
+        `Defect ${defectCode} status updated.`,
+        `Status: ${previousStatus}`,
+        `Status: ${status}`
+      ]
+    )
+  }
 
   return status
 }
