@@ -736,6 +736,14 @@ export default function DefectDetails({ user }) {
   }
 
   async function closeDefect() {
+    if (
+      !window.confirm(
+        `Close defect ${defect.defect_code}? This will mark the defect as closed and cannot be undone.`
+      )
+    ) {
+      return
+    }
+
     try {
       await api.patch(`/defects/${id}/close`, { closed_by: managerId })
       load()
