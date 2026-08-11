@@ -194,6 +194,7 @@ CREATE TABLE defects (
         'under_review',
         'action_assigned',
         'in_progress',
+        'pending_verification',
         'ready_verification',
         'closed'
       )

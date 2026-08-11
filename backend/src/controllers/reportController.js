@@ -72,7 +72,7 @@ async function getDashboardSummary(req, res) {
     const openDefects = await pool.query(`
       SELECT COUNT(*)::int AS count
       FROM defects d
-      WHERE defect_status IN ('new', 'under_review', 'action_assigned', 'in_progress', 'ready_verification')
+      WHERE defect_status IN ('new', 'under_review', 'action_assigned', 'in_progress', 'pending_verification', 'ready_verification')
         AND ${defectPeriod}
     `)
 
@@ -424,7 +424,7 @@ async function getExpiryIssueReport(req, res) {
         COUNT(*)::int AS wrong_expiry_cases,
         COALESCE(SUM(d.qty_relabelled), 0)::int AS units_to_relabel,
         COUNT(*) FILTER (WHERE d.defect_status IN ('ready_verification', 'closed'))::int AS resolved_cases,
-        COUNT(*) FILTER (WHERE d.defect_status NOT IN ('ready_verification', 'closed'))::int AS open_cases
+        COUNT(*) FILTER (WHERE d.defect_status IN ('new', 'under_review', 'action_assigned', 'in_progress', 'pending_verification'))::int AS open_cases
       FROM defects d
       WHERE d.defect_type = 'Wrong Expiry Date Printing'
         AND ${defectPeriod}
@@ -502,7 +502,7 @@ async function getByProductReport(req, res) {
         p.product_name,
         p.product_code,
         COUNT(d.id)::int AS total_defects,
-        COUNT(d.id) FILTER (WHERE d.defect_status IN ('new', 'under_review', 'action_assigned', 'in_progress', 'ready_verification'))::int AS open_defects,
+        COUNT(d.id) FILTER (WHERE d.defect_status IN ('new', 'under_review', 'action_assigned', 'in_progress', 'pending_verification', 'ready_verification'))::int AS open_defects,
         COUNT(d.id) FILTER (WHERE d.defect_status = 'closed')::int AS closed_defects,
         COALESCE(SUM(d.qty_affected), 0)::int AS qty_affected,
         COALESCE(SUM(d.qty_discarded), 0)::int AS qty_discarded,

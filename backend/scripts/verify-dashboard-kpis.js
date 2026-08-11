@@ -25,7 +25,7 @@ async function main() {
     const totals = await pool.query(`
       SELECT
         COUNT(*)::int AS total_defects,
-        COUNT(*) FILTER (WHERE defect_status IN ('new','under_review','action_assigned','in_progress','ready_verification'))::int AS open_defects
+        COUNT(*) FILTER (WHERE defect_status IN ('new','under_review','action_assigned','in_progress','pending_verification','ready_verification'))::int AS open_defects
       FROM defects d WHERE ${defectPeriod}
     `)
 

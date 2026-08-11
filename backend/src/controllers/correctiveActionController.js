@@ -82,7 +82,7 @@ async function refreshDefectStatus(client, defectId, userId = null) {
   let status = 'under_review'
   if (total === 0) status = 'under_review'
   else if (verified === total) status = 'ready_verification'
-  else if (submitted === total) status = 'ready_verification'
+  else if (submitted === total) status = 'pending_verification'
   else if (inProgress > 0 || submitted > 0) status = 'in_progress'
   else status = 'action_assigned'
 
