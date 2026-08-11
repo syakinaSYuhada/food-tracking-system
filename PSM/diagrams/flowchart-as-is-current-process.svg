@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="1180" viewBox="0 0 520 1180" role="img" aria-label="Current manual defect management process flowchart">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#000000"/>
+    </marker>
+    <style>
+      text {
+        font-family: "Times New Roman", Times, serif;
+        font-size: 14px;
+        fill: #000000;
+        text-anchor: middle;
+      }
+      .label {
+        font-size: 12px;
+      }
+      .box, .oval, .diamond {
+        fill: #ffffff;
+        stroke: #000000;
+        stroke-width: 1.5;
+      }
+      .line {
+        fill: none;
+        stroke: #000000;
+        stroke-width: 1.5;
+        marker-end: url(#arrow);
+      }
+      .line-no-arrow {
+        fill: none;
+        stroke: #000000;
+        stroke-width: 1.5;
+      }
+    </style>
+  </defs>
+
+  <!-- Start -->
+  <ellipse class="oval" cx="260" cy="42" rx="148" ry="28"/>
+  <text x="260" y="47">Defect detected during production</text>
+
+  <!-- 1 -->
+  <rect class="box" x="110" y="88" width="300" height="44" rx="0"/>
+  <text x="260" y="115">Worker identifies defect</text>
+
+  <!-- 2 -->
+  <rect class="box" x="110" y="156" width="300" height="44" rx="0"/>
+  <text x="260" y="183">Worker records defect in paper notebook</text>
+
+  <!-- 3 -->
+  <rect class="box" x="110" y="224" width="300" height="44" rx="0"/>
+  <text x="260" y="251">Worker informs manager verbally</text>
+
+  <!-- 4 -->
+  <rect class="box" x="110" y="292" width="300" height="44" rx="0"/>
+  <text x="260" y="319">Manager reviews defect informally</text>
+
+  <!-- 5 -->
+  <rect class="box" x="110" y="360" width="300" height="44" rx="0"/>
+  <text x="260" y="387">Identify defect category</text>
+
+  <!-- 6 -->
+  <rect class="box" x="110" y="428" width="300" height="44" rx="0"/>
+  <text x="260" y="455">Decide corrective action</text>
+
+  <!-- 7 -->
+  <rect class="box" x="110" y="496" width="300" height="44" rx="0"/>
+  <text x="260" y="523">Manager/worker executes corrective action</text>
+
+  <!-- Decision -->
+  <polygon class="diamond" points="260,572 360,632 260,692 160,632"/>
+  <text x="260" y="637">Verification required?</text>
+
+  <!-- Yes branch -->
+  <rect class="box" x="40" y="736" width="220" height="44" rx="0"/>
+  <text x="150" y="763">Manager checks informally</text>
+
+  <!-- No branch -->
+  <rect class="box" x="260" y="736" width="220" height="44" rx="0"/>
+  <text x="370" y="763">Skip verification</text>
+
+  <!-- 8 -->
+  <rect class="box" x="110" y="820" width="300" height="44" rx="0"/>
+  <text x="260" y="847">Update paper notebook and file record locally</text>
+
+  <!-- End -->
+  <ellipse class="oval" cx="260" cy="918" rx="118" ry="28"/>
+  <text x="260" y="923">Case closed informally</text>
+
+  <!-- Vertical connectors -->
+  <line class="line" x1="260" y1="70" x2="260" y2="88"/>
+  <line class="line" x1="260" y1="132" x2="260" y2="156"/>
+  <line class="line" x1="260" y1="200" x2="260" y2="224"/>
+  <line class="line" x1="260" y1="268" x2="260" y2="292"/>
+  <line class="line" x1="260" y1="336" x2="260" y2="360"/>
+  <line class="line" x1="260" y1="404" x2="260" y2="428"/>
+  <line class="line" x1="260" y1="472" x2="260" y2="496"/>
+  <line class="line" x1="260" y1="540" x2="260" y2="572"/>
+
+  <!-- Decision to branches -->
+  <line class="line" x1="210" y1="662" x2="150" y2="736"/>
+  <text class="label" x="168" y="700">Yes</text>
+  <line class="line" x1="310" y1="662" x2="370" y2="736"/>
+  <text class="label" x="352" y="700">No</text>
+
+  <!-- Merge to step 8 -->
+  <line class="line-no-arrow" x1="150" y1="780" x2="150" y2="804"/>
+  <line class="line-no-arrow" x1="370" y1="780" x2="370" y2="804"/>
+  <line class="line-no-arrow" x1="150" y1="804" x2="370" y2="804"/>
+  <line class="line" x1="260" y1="804" x2="260" y2="820"/>
+
+  <!-- Step 8 to End -->
+  <line class="line" x1="260" y1="864" x2="260" y2="890"/>
+</svg>

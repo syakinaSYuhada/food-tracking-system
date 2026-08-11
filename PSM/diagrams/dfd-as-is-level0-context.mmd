@@ -1,0 +1,27 @@
+%% Figure 3.x — DFD Level 0 (Context Diagram)
+%% Current System — Manual Quality Defect Management at Retort Niaga / Kak Norie (As-Is)
+%% Methodology: SSADM — Data Flow Diagram
+%% Export: https://mermaid.live
+
+flowchart LR
+    subgraph external["External Entities"]
+        W[["Worker<br/>(Production Staff)"]]
+        M[["Manager<br/>(Quality Manager)"]]
+    end
+
+    P(("0.0<br/>Manual Quality Defect<br/>Management Process<br/><i>Retort Niaga — As-Is</i>"))
+
+    W -->|"D1: Defect details<br/>(product, batch, type, qty, stage)"| P
+    P -->|"D2: Verbal corrective instructions<br/>(relabel, discard, segregate)"| W
+    W -->|"D3: Verbal defect notification"| M
+    M -->|"D4: Review decision & action approval"| P
+    P -->|"D5: Verbal status update<br/>(no formal tracking)"| M
+    M -->|"D6: Management queries<br/>(loss, recurrence, batch check)"| P
+    P -->|"D7: Ad-hoc verbal / paper summary<br/>(no standard report)"| M
+
+    CAP["Figure 3.x: DFD Level 0 — Context Diagram of Current Manual Defect Management (As-Is)"]
+
+    style W fill:#dbeafe,stroke:#1e40af
+    style M fill:#dbeafe,stroke:#1e40af
+    style P fill:#fef3c7,stroke:#b45309
+    style CAP fill:#f8fafc,stroke:#64748b

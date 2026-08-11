@@ -1,0 +1,35 @@
+%% Figure 4.1 — Three-Tier System Architecture
+%% B&W academic style, no figure title, Word-ready export
+
+flowchart TB
+    W[Worker]
+    M[Manager]
+
+    subgraph PT["Presentation Tier"]
+        REACT["React SPA<br/>Pages and Components"]
+    end
+
+    subgraph AT["Application Tier"]
+        RT[Routes]
+        MW[Middleware<br/>JWT / Upload]
+        CT[Controllers]
+        SV[Services]
+        RT --> MW --> CT --> SV
+    end
+
+    subgraph DT["Data Tier"]
+        DB[(PostgreSQL Database<br/>13 tables)]
+        FS[Evidence File Storage]
+    end
+
+    W -->|uses browser| REACT
+    M -->|uses browser| REACT
+    REACT -->|HTTP JSON REST API| RT
+    SV -->|SQL| DB
+    SV -->|file I/O| FS
+
+    classDef bw fill:#ffffff,stroke:#000000,color:#000000,stroke-width:1.5px
+    class W,M,REACT,RT,MW,CT,SV,DB,FS bw
+    style PT fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000
+    style AT fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000
+    style DT fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000

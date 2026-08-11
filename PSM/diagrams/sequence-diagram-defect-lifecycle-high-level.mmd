@@ -1,0 +1,120 @@
+%% Figure 4.3 — Sequence Diagram of Defect Lifecycle (Dynamic View)
+%% High-level academic version for Word A4 landscape
+%% Export: https://mermaid.live → SVG (preferred) or PNG width ≥ 2500 px
+
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#ffffff",
+    "primaryTextColor": "#000000",
+    "primaryBorderColor": "#000000",
+    "lineColor": "#000000",
+    "actorBkg": "#ffffff",
+    "actorBorder": "#000000",
+    "actorTextColor": "#000000",
+    "signalColor": "#000000",
+    "signalTextColor": "#000000",
+    "labelBoxBkgColor": "#ffffff",
+    "labelBoxBorderColor": "#000000",
+    "labelTextColor": "#000000",
+    "loopTextColor": "#000000",
+    "noteBkgColor": "#ffffff",
+    "noteBorderColor": "#000000",
+    "noteTextColor": "#000000",
+    "activationBkgColor": "#eeeeee",
+    "activationBorderColor": "#000000",
+    "sequenceNumberColor": "#000000",
+    "fontFamily": "Arial, Helvetica, sans-serif",
+    "fontSize": "13px"
+  }
+}}%%
+sequenceDiagram
+    autonumber
+
+    actor Worker
+    actor Manager
+    participant UI as QDTS Interface
+    participant Defect as Defect Module
+    participant CA as Corrective Action Module
+    participant Loss as Loss Service
+    participant DB as PostgreSQL Database
+
+    Note over Worker,DB: Defect Reporting
+
+    Worker->>UI: Report defect (product, batch, stage, qty affected)
+    UI->>Defect: Submit defect report
+    activate Defect
+    Defect->>DB: Create defect record (status = New)
+    DB-->>Defect: Defect saved
+    Note right of Defect: qty_affected ≤ batch quantity
+    Defect-->>UI: Defect created
+    deactivate Defect
+    UI-->>Worker: Confirmation shown
+
+    Note over Worker,DB: Manager Review and Assignment
+
+    Manager->>UI: Open defect for review
+    UI->>Defect: Start review
+    activate Defect
+    Defect->>DB: Update status = Under Review
+    DB-->>Defect: Updated
+    Defect-->>UI: Under Review
+    deactivate Defect
+
+    Manager->>UI: Assign corrective action
+    UI->>CA: Assign action to worker
+    activate CA
+    CA->>DB: Create corrective action (status = Assigned)
+    DB-->>CA: Action saved
+    CA->>Defect: Sync defect status
+    Defect->>DB: Update defect status
+    CA-->>UI: Action assigned
+    deactivate CA
+    UI-->>Manager: Assignment confirmed
+
+    Note over Worker,DB: Corrective Action Completion
+
+    Worker->>UI: Complete assigned action (quantities, notes, evidence)
+    UI->>CA: Submit completion
+    activate CA
+    CA->>Loss: Validate handled quantities
+    Loss-->>CA: Valid
+    CA->>Loss: Calculate loss from discarded units
+    Loss-->>CA: calculated_loss
+    CA->>DB: Update action and defect quantities
+    DB-->>CA: Saved (Pending Review)
+    CA-->>UI: Submitted for verification
+    deactivate CA
+    UI-->>Worker: Completion recorded
+
+    Note over Worker,DB: Verification and Closure
+
+    Manager->>UI: Verify corrective action
+    UI->>CA: Verify action
+    activate CA
+    CA->>DB: Update action status = Verified
+    DB-->>CA: Verified
+    CA-->>UI: Verification complete
+    deactivate CA
+
+    Manager->>UI: Confirm root cause
+    UI->>Defect: Confirm root cause
+    activate Defect
+    Defect->>DB: Update root cause investigation
+    DB-->>Defect: Confirmed
+    Defect-->>UI: Root cause confirmed
+    deactivate Defect
+
+    Manager->>UI: Close defect
+    UI->>Defect: Close defect case
+    activate Defect
+    Defect->>Loss: Determine loss status
+    Loss-->>Defect: loss_status
+    Defect->>DB: Update status = Closed
+    DB-->>Defect: Closed
+    Defect->>DB: Record activity log entry
+    Defect-->>UI: Case closed
+    deactivate Defect
+    UI-->>Manager: Closure confirmed
+
+    Note over Worker,DB: Defect closes only after root cause confirmed and all non-cancelled corrective actions verified

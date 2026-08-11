@@ -1,0 +1,31 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "smoke": "node scripts/smoke-test.js",
+    "test:api": "node scripts/api-integration-test.js",
+    "test": "node scripts/smoke-test.js && node scripts/api-integration-test.js",
+    "test:unit": "node --test scripts/batch-expiry.test.js",
+    "fix:batch-expiry": "node scripts/fix-batch-expiry.js",
+    "reseed": "node scripts/reseed-database.js",
+    "erd": "node scripts/generate-erd-svg.js && node scripts/generate-erd-svg.js simple && node scripts/generate-erd-svg.js core"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.0.2",
+    "nodemon": "^3.1.14",
+    "pg": "^8.21.0"
+  }
+}

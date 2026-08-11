@@ -1,0 +1,37 @@
+%% Figure 3.4 — Proposed QDTS Workflow Activity Diagram
+%% B&W academic style, no title, Word-ready export
+
+flowchart TD
+    START([Worker or Manager reports defect])
+
+    subgraph worker["Worker"]
+        W1[Report defect - status New]
+        W2[Start assigned corrective action]
+        W3[Complete action with evidence]
+        W4[Submit suspected root cause]
+    end
+
+    subgraph manager["Manager"]
+        M1[Start review - Under Review]
+        M2[Assign corrective actions - Actions Assigned]
+        M3{Verify action?}
+        M4[Verify action - Verified]
+        M5[Reject action - Rejected]
+        M6{All non-cancelled CAs verified?}
+        M7[Confirm root cause - Confirmed]
+        M8[Close defect - Closed]
+        DONE([Reports and activity log updated])
+    end
+
+    START --> W1 --> M1 --> M2 --> W2 --> W3 --> M3
+    M3 -->|Verify| M4 --> M6
+    M3 -->|Reject| M5 --> W2
+    M6 -->|No| M2
+    M6 -->|Yes| W4 --> M7 --> M8 --> DONE
+
+    classDef bw fill:#ffffff,stroke:#000000,color:#000000,stroke-width:1.5px
+
+    class START,W1,W2,W3,W4,M1,M2,M3,M4,M5,M6,M7,M8,DONE bw
+
+    style worker fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000
+    style manager fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000

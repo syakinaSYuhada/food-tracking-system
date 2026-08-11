@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1346" height="875" viewBox="0 0 1346 875" role="img" aria-label="QDTS Core ERD (report)">
+  <defs>
+    <style>
+      .title { font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-weight: bold; fill: #000; text-anchor: middle; }
+      .key { font-family: Arial, Helvetica, sans-serif; font-size: 10px; fill: #000; text-anchor: middle; }
+      .attr { font-family: Arial, Helvetica, sans-serif; font-size: 10px; fill: #000; text-anchor: start; }
+      .box { fill: #fff; stroke: #000; stroke-width: 1.1; }
+      .line { fill: none; stroke: #000; stroke-width: 1.1; }
+    </style>
+  </defs>
+
+  <g id="users">
+    <rect class="box" x="520" y="30" width="246" height="115"/>
+    <line class="line" x1="520" y1="54" x2="766" y2="54"/>
+    <line class="line" x1="552" y1="54" x2="552" y2="145"/>
+    <text class="title" x="643" y="47">users</text>
+    <text class="key" x="536" y="67">PK</text>
+    <text class="attr" x="559" y="67">id</text>
+    <line class="line" x1="559" y1="69" x2="571" y2="69"/>
+    <text class="key" x="536" y="84"></text>
+    <text class="attr" x="559" y="84">username</text>
+    <text class="key" x="536" y="101"></text>
+    <text class="attr" x="559" y="101">role</text>
+    <text class="key" x="536" y="118"></text>
+    <text class="attr" x="559" y="118">full_name</text>
+    <text class="key" x="536" y="135"></text>
+    <text class="attr" x="559" y="135">account_status</text>
+  </g>
+
+  <g id="products">
+    <rect class="box" x="60" y="170" width="246" height="132"/>
+    <line class="line" x1="60" y1="194" x2="306" y2="194"/>
+    <line class="line" x1="92" y1="194" x2="92" y2="302"/>
+    <text class="title" x="183" y="187">products</text>
+    <text class="key" x="76" y="207">PK</text>
+    <text class="attr" x="99" y="207">id</text>
+    <line class="line" x1="99" y1="209" x2="111" y2="209"/>
+    <text class="key" x="76" y="224"></text>
+    <text class="attr" x="99" y="224">product_code</text>
+    <text class="key" x="76" y="241"></text>
+    <text class="attr" x="99" y="241">product_name</text>
+    <text class="key" x="76" y="258"></text>
+    <text class="attr" x="99" y="258">shelf_life_months</text>
+    <text class="key" x="76" y="275"></text>
+    <text class="attr" x="99" y="275">loss_rate_per_unit</text>
+    <text class="key" x="76" y="292"></text>
+    <text class="attr" x="99" y="292">product_status</text>
+  </g>
+
+  <g id="batches">
+    <rect class="box" x="360" y="170" width="246" height="166"/>
+    <line class="line" x1="360" y1="194" x2="606" y2="194"/>
+    <line class="line" x1="392" y1="194" x2="392" y2="336"/>
+    <text class="title" x="483" y="187">batches</text>
+    <text class="key" x="376" y="207">PK</text>
+    <text class="attr" x="399" y="207">id</text>
+    <line class="line" x1="399" y1="209" x2="411" y2="209"/>
+    <text class="key" x="376" y="224">FK</text>
+    <text class="attr" x="399" y="224">product_id</text>
+    <text class="key" x="376" y="241"></text>
+    <text class="attr" x="399" y="241">batch_number</text>
+    <text class="key" x="376" y="258"></text>
+    <text class="attr" x="399" y="258">retort_date</text>
+    <text class="key" x="376" y="275"></text>
+    <text class="attr" x="399" y="275">correct_expiry_date</text>
+    <text class="key" x="376" y="292"></text>
+    <text class="attr" x="399" y="292">printed_expiry_date</text>
+    <text class="key" x="376" y="309"></text>
+    <text class="attr" x="399" y="309">quantity_produced</text>
+    <text class="key" x="376" y="326"></text>
+    <text class="attr" x="399" y="326">batch_status</text>
+  </g>
+
+  <g id="defects">
+    <rect class="box" x="360" y="430" width="246" height="217"/>
+    <line class="line" x1="360" y1="454" x2="606" y2="454"/>
+    <line class="line" x1="392" y1="454" x2="392" y2="647"/>
+    <text class="title" x="483" y="447">defects</text>
+    <text class="key" x="376" y="467">PK</text>
+    <text class="attr" x="399" y="467">id</text>
+    <line class="line" x1="399" y1="469" x2="411" y2="469"/>
+    <text class="key" x="376" y="484"></text>
+    <text class="attr" x="399" y="484">defect_code</text>
+    <text class="key" x="376" y="501">FK</text>
+    <text class="attr" x="399" y="501">product_id</text>
+    <text class="key" x="376" y="518">FK</text>
+    <text class="attr" x="399" y="518">batch_id</text>
+    <text class="key" x="376" y="535"></text>
+    <text class="attr" x="399" y="535">detected_at_stage</text>
+    <text class="key" x="376" y="552"></text>
+    <text class="attr" x="399" y="552">defect_type</text>
+    <text class="key" x="376" y="569"></text>
+    <text class="attr" x="399" y="569">problem_level</text>
+    <text class="key" x="376" y="586"></text>
+    <text class="attr" x="399" y="586">qty_affected</text>
+    <text class="key" x="376" y="603"></text>
+    <text class="attr" x="399" y="603">defect_status</text>
+    <text class="key" x="376" y="620"></text>
+    <text class="attr" x="399" y="620">loss_status</text>
+    <text class="key" x="376" y="637">FK</text>
+    <text class="attr" x="399" y="637">created_by</text>
+  </g>
+
+  <g id="root_cause_investigation">
+    <rect class="box" x="360" y="700" width="246" height="115"/>
+    <line class="line" x1="360" y1="724" x2="606" y2="724"/>
+    <line class="line" x1="392" y1="724" x2="392" y2="815"/>
+    <text class="title" x="483" y="717">root_cause_investigation</text>
+    <text class="key" x="376" y="737">PK</text>
+    <text class="attr" x="399" y="737">id</text>
+    <line class="line" x1="399" y1="739" x2="411" y2="739"/>
+    <text class="key" x="376" y="754">FK</text>
+    <text class="attr" x="399" y="754">defect_id</text>
+    <text class="key" x="376" y="771"></text>
+    <text class="attr" x="399" y="771">root_cause_status</text>
+    <text class="key" x="376" y="788"></text>
+    <text class="attr" x="399" y="788">confirmed_root_cause</text>
+    <text class="key" x="376" y="805">FK</text>
+    <text class="attr" x="399" y="805">confirmed_by</text>
+  </g>
+
+  <g id="corrective_actions">
+    <rect class="box" x="700" y="430" width="246" height="200"/>
+    <line class="line" x1="700" y1="454" x2="946" y2="454"/>
+    <line class="line" x1="732" y1="454" x2="732" y2="630"/>
+    <text class="title" x="823" y="447">corrective_actions</text>
+    <text class="key" x="716" y="467">PK</text>
+    <text class="attr" x="739" y="467">id</text>
+    <line class="line" x1="739" y1="469" x2="751" y2="469"/>
+    <text class="key" x="716" y="484"></text>
+    <text class="attr" x="739" y="484">action_code</text>
+    <text class="key" x="716" y="501">FK</text>
+    <text class="attr" x="739" y="501">defect_id</text>
+    <text class="key" x="716" y="518"></text>
+    <text class="attr" x="739" y="518">action_type</text>
+    <text class="key" x="716" y="535"></text>
+    <text class="attr" x="739" y="535">task</text>
+    <text class="key" x="716" y="552">FK</text>
+    <text class="attr" x="739" y="552">assigned_to</text>
+    <text class="key" x="716" y="569">FK</text>
+    <text class="attr" x="739" y="569">assigned_by</text>
+    <text class="key" x="716" y="586"></text>
+    <text class="attr" x="739" y="586">due_date</text>
+    <text class="key" x="716" y="603"></text>
+    <text class="attr" x="739" y="603">ca_status</text>
+    <text class="key" x="716" y="620"></text>
+    <text class="attr" x="739" y="620">calculated_loss</text>
+  </g>
+
+  <g id="evidence">
+    <rect class="box" x="700" y="700" width="246" height="115"/>
+    <line class="line" x1="700" y1="724" x2="946" y2="724"/>
+    <line class="line" x1="732" y1="724" x2="732" y2="815"/>
+    <text class="title" x="823" y="717">evidence</text>
+    <text class="key" x="716" y="737">PK</text>
+    <text class="attr" x="739" y="737">id</text>
+    <line class="line" x1="739" y1="739" x2="751" y2="739"/>
+    <text class="key" x="716" y="754">FK</text>
+    <text class="attr" x="739" y="754">defect_id</text>
+    <text class="key" x="716" y="771">FK</text>
+    <text class="attr" x="739" y="771">corrective_action_id</text>
+    <text class="key" x="716" y="788"></text>
+    <text class="attr" x="739" y="788">file_name</text>
+    <text class="key" x="716" y="805">FK</text>
+    <text class="attr" x="739" y="805">uploaded_by</text>
+  </g>
+
+  <g id="activity_logs">
+    <rect class="box" x="1040" y="170" width="246" height="132"/>
+    <line class="line" x1="1040" y1="194" x2="1286" y2="194"/>
+    <line class="line" x1="1072" y1="194" x2="1072" y2="302"/>
+    <text class="title" x="1163" y="187">activity_logs</text>
+    <text class="key" x="1056" y="207">PK</text>
+    <text class="attr" x="1079" y="207">id</text>
+    <line class="line" x1="1079" y1="209" x2="1091" y2="209"/>
+    <text class="key" x="1056" y="224">FK</text>
+    <text class="attr" x="1079" y="224">user_id</text>
+    <text class="key" x="1056" y="241"></text>
+    <text class="attr" x="1079" y="241">action_type</text>
+    <text class="key" x="1056" y="258"></text>
+    <text class="attr" x="1079" y="258">entity_type</text>
+    <text class="key" x="1056" y="275"></text>
+    <text class="attr" x="1079" y="275">entity_id</text>
+    <text class="key" x="1056" y="292"></text>
+    <text class="attr" x="1079" y="292">description</text>
+  </g>
+
+  <g id="relationships">
+  <path class="line" d="M 183 302 C 183 236, 483 236, 483 170"/>
+  <line class="line" x1="178" y1="302" x2="188" y2="302"/>
+  <line class="line" x1="478" y1="166" x2="483" y2="170"/>
+  <line class="line" x1="478" y1="174" x2="483" y2="170"/>
+  <line class="line" x1="478" y1="170" x2="483" y2="170"/>
+  <path class="line" d="M 183 302 C 183 366, 483 366, 483 430"/>
+  <line class="line" x1="178" y1="302" x2="188" y2="302"/>
+  <line class="line" x1="478" y1="426" x2="483" y2="430"/>
+  <line class="line" x1="478" y1="434" x2="483" y2="430"/>
+  <line class="line" x1="478" y1="430" x2="483" y2="430"/>
+  <path class="line" d="M 483 336 C 483 383, 483 383, 483 430"/>
+  <line class="line" x1="478" y1="336" x2="488" y2="336"/>
+  <line class="line" x1="478" y1="426" x2="483" y2="430"/>
+  <line class="line" x1="478" y1="434" x2="483" y2="430"/>
+  <line class="line" x1="478" y1="430" x2="483" y2="430"/>
+  <path class="line" d="M 643 145 C 643 287.5, 483 287.5, 483 430"/>
+  <line class="line" x1="638" y1="145" x2="648" y2="145"/>
+  <line class="line" x1="478" y1="426" x2="483" y2="430"/>
+  <line class="line" x1="478" y1="434" x2="483" y2="430"/>
+  <line class="line" x1="478" y1="430" x2="483" y2="430"/>
+  <path class="line" d="M 483 647 C 483 673.5, 483 673.5, 483 700"/>
+  <line class="line" x1="478" y1="647" x2="488" y2="647"/>
+  <line class="line" x1="478" y1="696" x2="483" y2="700"/>
+  <line class="line" x1="478" y1="704" x2="483" y2="700"/>
+  <line class="line" x1="478" y1="700" x2="483" y2="700"/>
+  <path class="line" d="M 643 145 C 643 422.5, 483 422.5, 483 700"/>
+  <line class="line" x1="638" y1="145" x2="648" y2="145"/>
+  <line class="line" x1="478" y1="696" x2="483" y2="700"/>
+  <line class="line" x1="478" y1="704" x2="483" y2="700"/>
+  <line class="line" x1="478" y1="700" x2="483" y2="700"/>
+  <path class="line" d="M 483 647 C 483 538.5, 823 538.5, 823 430"/>
+  <line class="line" x1="478" y1="647" x2="488" y2="647"/>
+  <line class="line" x1="818" y1="426" x2="823" y2="430"/>
+  <line class="line" x1="818" y1="434" x2="823" y2="430"/>
+  <line class="line" x1="818" y1="430" x2="823" y2="430"/>
+  <path class="line" d="M 643 145 C 643 287.5, 823 287.5, 823 430"/>
+  <line class="line" x1="638" y1="145" x2="648" y2="145"/>
+  <line class="line" x1="818" y1="426" x2="823" y2="430"/>
+  <line class="line" x1="818" y1="434" x2="823" y2="430"/>
+  <line class="line" x1="818" y1="430" x2="823" y2="430"/>
+  <path class="line" d="M 643 145 C 643 287.5, 823 287.5, 823 430"/>
+  <line class="line" x1="638" y1="145" x2="648" y2="145"/>
+  <line class="line" x1="818" y1="426" x2="823" y2="430"/>
+  <line class="line" x1="818" y1="434" x2="823" y2="430"/>
+  <line class="line" x1="818" y1="430" x2="823" y2="430"/>
+  <path class="line" d="M 483 647 C 483 673.5, 823 673.5, 823 700"/>
+  <line class="line" x1="478" y1="647" x2="488" y2="647"/>
+  <line class="line" x1="818" y1="696" x2="823" y2="700"/>
+  <line class="line" x1="818" y1="704" x2="823" y2="700"/>
+  <line class="line" x1="818" y1="700" x2="823" y2="700"/>
+  <path class="line" d="M 823 630 C 823 665, 823 665, 823 700"/>
+  <line class="line" x1="818" y1="630" x2="828" y2="630"/>
+  <line class="line" x1="818" y1="696" x2="823" y2="700"/>
+  <line class="line" x1="818" y1="704" x2="823" y2="700"/>
+  <line class="line" x1="818" y1="700" x2="823" y2="700"/>
+  <path class="line" d="M 643 145 C 643 422.5, 823 422.5, 823 700"/>
+  <line class="line" x1="638" y1="145" x2="648" y2="145"/>
+  <line class="line" x1="818" y1="696" x2="823" y2="700"/>
+  <line class="line" x1="818" y1="704" x2="823" y2="700"/>
+  <line class="line" x1="818" y1="700" x2="823" y2="700"/>
+  <path class="line" d="M 643 145 C 643 157.5, 1163 157.5, 1163 170"/>
+  <line class="line" x1="638" y1="145" x2="648" y2="145"/>
+  <line class="line" x1="1158" y1="166" x2="1163" y2="170"/>
+  <line class="line" x1="1158" y1="174" x2="1163" y2="170"/>
+  <line class="line" x1="1158" y1="170" x2="1163" y2="170"/>
+  </g>
+</svg>

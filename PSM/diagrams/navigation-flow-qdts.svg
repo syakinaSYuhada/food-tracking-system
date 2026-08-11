@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="820" viewBox="0 0 720 820" role="img" aria-label="Figure 4.2 Navigation Flow of QDTS">
+  <defs>
+    <style>
+      .title { font-family: Arial, Helvetica, sans-serif; font-size: 13px; font-weight: bold; fill: #000; text-anchor: middle; }
+      .node { font-family: Arial, Helvetica, sans-serif; font-size: 11px; fill: #000; text-anchor: middle; }
+      .section { font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: bold; fill: #000; }
+      .box { fill: #fff; stroke: #000; stroke-width: 1.2; }
+      .line { fill: none; stroke: #000; stroke-width: 1.1; marker-end: url(#arrow); }
+      .branch { fill: none; stroke: #000; stroke-width: 1.1; }
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#000"/>
+    </marker>
+  </defs>
+
+  <text class="title" x="360" y="24">Figure 4.2: Navigation Flow of QDTS</text>
+
+  <!-- Manager flow (main tree) -->
+  <text class="section" x="30" y="48">Manager navigation</text>
+
+  <rect class="box" x="300" y="58" width="120" height="32" rx="16"/>
+  <text class="node" x="360" y="78">Login</text>
+  <line class="line" x1="360" y1="90" x2="360" y2="118"/>
+
+  <rect class="box" x="280" y="120" width="160" height="32" rx="16"/>
+  <text class="node" x="360" y="140">Dashboard</text>
+  <line class="line" x1="360" y1="152" x2="360" y2="178"/>
+
+  <!-- Branch hub -->
+  <line class="branch" x1="360" y1="178" x2="360" y2="200"/>
+  <line class="branch" x1="80" y1="200" x2="640" y2="200"/>
+  <line class="line" x1="80" y1="200" x2="80" y2="228"/>
+  <line class="line" x1="200" y1="200" x2="200" y2="228"/>
+  <line class="line" x1="320" y1="200" x2="320" y2="228"/>
+  <line class="line" x1="440" y1="200" x2="440" y2="228"/>
+  <line class="line" x1="560" y1="200" x2="560" y2="228"/>
+  <line class="line" x1="640" y1="200" x2="640" y2="228"/>
+
+  <rect class="box" x="30" y="230" width="100" height="30"/><text class="node" x="80" y="249">Products</text>
+  <rect class="box" x="150" y="230" width="100" height="30"/><text class="node" x="200" y="249">Batches</text>
+  <rect class="box" x="270" y="230" width="100" height="30"/><text class="node" x="320" y="249">Defects</text>
+  <rect class="box" x="390" y="230" width="100" height="30"/><text class="node" x="440" y="249">Reports</text>
+  <rect class="box" x="510" y="230" width="100" height="30"/><text class="node" x="560" y="249">Activity Log</text>
+  <rect class="box" x="590" y="230" width="100" height="30"/><text class="node" x="640" y="249">Users</text>
+
+  <!-- Defects subtree -->
+  <line class="line" x1="320" y1="260" x2="320" y2="290"/>
+  <rect class="box" x="255" y="292" width="130" height="30"/><text class="node" x="320" y="311">Defect Details</text>
+  <line class="line" x1="320" y1="322" x2="320" y2="352"/>
+  <rect class="box" x="235" y="354" width="170" height="30"/><text class="node" x="320" y="373">Corrective Actions</text>
+
+  <!-- Corrective Actions from dashboard path -->
+  <line class="line" x1="360" y1="152" x2="480" y2="180"/>
+  <line class="line" x1="480" y1="180" x2="480" y2="228"/>
+  <rect class="box" x="420" y="170" width="120" height="30"/><text class="node" x="480" y="189">Corrective Actions</text>
+
+  <!-- Worker flow -->
+  <text class="section" x="30" y="420">Worker navigation</text>
+  <rect class="box" x="300" y="435" width="120" height="32" rx="16"/>
+  <text class="node" x="360" y="455">Login</text>
+  <line class="line" x1="360" y1="467" x2="360" y2="495"/>
+  <rect class="box" x="280" y="497" width="160" height="32" rx="16"/>
+  <text class="node" x="360" y="517">Dashboard</text>
+  <line class="line" x1="360" y1="529" x2="360" y2="555"/>
+  <line class="branch" x1="240" y1="555" x2="480" y2="555"/>
+  <line class="line" x1="240" y1="555" x2="240" y2="585"/>
+  <line class="line" x1="480" y1="555" x2="480" y2="585"/>
+  <rect class="box" x="180" y="587" width="120" height="30"/><text class="node" x="240" y="606">My Defects</text>
+  <rect class="box" x="420" y="587" width="120" height="30"/><text class="node" x="480" y="606">My Actions</text>
+  <line class="line" x1="240" y1="617" x2="240" y2="647"/>
+  <rect class="box" x="175" y="649" width="130" height="30"/><text class="node" x="240" y="668">Defect Details</text>
+  <line class="line" x1="480" y1="617" x2="480" y2="647"/>
+  <rect class="box" x="415" y="649" width="130" height="30"/><text class="node" x="480" y="668">Action Details</text>
+
+  <!-- Navigation controls legend -->
+  <rect class="box" x="40" y="710" width="640" height="88"/>
+  <text class="section" x="55" y="730">Navigation controls used in QDTS</text>
+  <text class="node" x="55" y="748" style="text-anchor:start;">" Sidebar links (desktop) and hamburger menu (mobile)</text>
+  <text class="node" x="55" y="766" style="text-anchor:start;">" KPI cards, table row actions, and notification bell for deep links</text>
+  <text class="node" x="55" y="784" style="text-anchor:start;">" Breadcrumb-style page headers and tab navigation on Reports / Defect Details</text>
+
+</svg>

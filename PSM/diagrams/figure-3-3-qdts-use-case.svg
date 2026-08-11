@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="820" viewBox="0 0 1020 820" role="img" aria-label="QDTS Use Case Diagram">
+  <defs>
+    <style>
+      .system-title { font-family: Arial, Helvetica, sans-serif; font-size: 13px; font-weight: bold; fill: #000; text-anchor: middle; }
+      .uc-label { font-family: Arial, Helvetica, sans-serif; font-size: 11px; fill: #000; text-anchor: middle; }
+      .actor-label { font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-weight: bold; fill: #000; text-anchor: middle; }
+      .stereo { font-family: Arial, Helvetica, sans-serif; font-size: 9px; fill: #000; text-anchor: middle; }
+      .boundary { fill: #fff; stroke: #000; stroke-width: 1.4; }
+      .uc { fill: #fff; stroke: #000; stroke-width: 1.2; }
+      .assoc { fill: none; stroke: #000; stroke-width: 1.1; }
+      .include { fill: none; stroke: #000; stroke-width: 1; stroke-dasharray: 5 4; marker-end: url(#arrow); }
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#000"/>
+    </marker>
+  </defs>
+
+  <rect class="boundary" x="155" y="45" width="710" height="700"/>
+  <text class="system-title" x="510" y="68">Quality Defect Tracking System (QDTS)</text>
+
+  <g id="worker-actor">
+    <circle cx="62" cy="300" r="13" fill="#fff" stroke="#000" stroke-width="1.2"/>
+    <line class="assoc" x1="62" y1="313" x2="62" y2="355"/>
+    <line class="assoc" x1="40" y1="332" x2="84" y2="332"/>
+    <line class="assoc" x1="62" y1="355" x2="44" y2="386"/>
+    <line class="assoc" x1="62" y1="355" x2="80" y2="386"/>
+    <text class="actor-label" x="62" y="408">Worker</text>
+  </g>
+
+  <g id="manager-actor">
+    <circle cx="958" cy="300" r="13" fill="#fff" stroke="#000" stroke-width="1.2"/>
+    <line class="assoc" x1="958" y1="313" x2="958" y2="355"/>
+    <line class="assoc" x1="936" y1="332" x2="980" y2="332"/>
+    <line class="assoc" x1="958" y1="355" x2="940" y2="386"/>
+    <line class="assoc" x1="958" y1="355" x2="976" y2="386"/>
+    <text class="actor-label" x="958" y="408">Manager</text>
+  </g>
+
+  <g id="use-cases">
+    <ellipse class="uc" cx="510" cy="105" rx="42" ry="20"/><text class="uc-label" x="510" y="109">Login</text>
+    <ellipse class="uc" cx="510" cy="165" rx="68" ry="20"/><text class="uc-label" x="510" y="169">View Dashboard</text>
+    <ellipse class="uc" cx="280" cy="235" rx="72" ry="20"/><text class="uc-label" x="280" y="239">Report / Add Defect</text>
+    <ellipse class="uc" cx="510" cy="235" rx="76" ry="20"/><text class="uc-label" x="510" y="239">View Defect Records</text>
+    <ellipse class="uc" cx="740" cy="235" rx="62" ry="20"/><text class="uc-label" x="740" y="239">Review Defect</text>
+    <ellipse class="uc" cx="280" cy="325" rx="86" ry="20"/><text class="uc-label" x="280" y="329">Execute Corrective Action</text>
+    <ellipse class="uc" cx="280" cy="415" rx="78" ry="20"/><text class="uc-label" x="280" y="419">Upload Action Evidence</text>
+    <ellipse class="uc" cx="620" cy="325" rx="86" ry="20"/><text class="uc-label" x="620" y="329">Assign Corrective Action</text>
+    <ellipse class="uc" cx="740" cy="405" rx="78" ry="20"/><text class="uc-label" x="740" y="409">Verify / Reject Action</text>
+    <ellipse class="uc" cx="740" cy="485" rx="78" ry="20"/><text class="uc-label" x="740" y="489">Confirm Root Cause</text>
+    <ellipse class="uc" cx="620" cy="565" rx="72" ry="20"/><text class="uc-label" x="620" y="569">Close Defect Case</text>
+    <ellipse class="uc" cx="400" cy="565" rx="102" ry="20"/><text class="uc-label" x="400" y="569">Manage Products and Batches</text>
+    <ellipse class="uc" cx="740" cy="645" rx="72" ry="20"/><text class="uc-label" x="740" y="649">Generate Reports</text>
+    <ellipse class="uc" cx="740" cy="715" rx="62" ry="20"/><text class="uc-label" x="740" y="719">Export Reports</text>
+    <ellipse class="uc" cx="510" cy="645" rx="86" ry="20"/><text class="uc-label" x="510" y="649">Manage User Accounts</text>
+    <ellipse class="uc" cx="510" cy="715" rx="72" ry="20"/><text class="uc-label" x="510" y="719">View Activity Log</text>
+  </g>
+
+  <line class="include" x1="740" y1="255" x2="740" y2="465"/>
+  <text class="stereo" x="768" y="365">&lt;&lt;include&gt;&gt;</text>
+  <line class="include" x1="280" y1="345" x2="280" y2="395"/>
+  <text class="stereo" x="308" y="375">&lt;&lt;include&gt;&gt;</text>
+  <line class="include" x1="740" y1="665" x2="740" y2="695"/>
+  <text class="stereo" x="768" y="685">&lt;&lt;include&gt;&gt;</text>
+
+  <line class="assoc" x1="75" y1="305" x2="468" y2="105"/>
+  <line class="assoc" x1="75" y1="310" x2="442" y2="165"/>
+  <line class="assoc" x1="75" y1="315" x2="218" y2="235"/>
+  <line class="assoc" x1="75" y1="320" x2="434" y2="235"/>
+  <line class="assoc" x1="75" y1="325" x2="194" y2="325"/>
+  <line class="assoc" x1="75" y1="330" x2="202" y2="415"/>
+  <line class="assoc" x1="945" y1="305" x2="552" y2="105"/>
+  <line class="assoc" x1="945" y1="310" x2="578" y2="165"/>
+  <line class="assoc" x1="945" y1="315" x2="586" y2="235"/>
+  <line class="assoc" x1="945" y1="318" x2="352" y2="235"/>
+  <line class="assoc" x1="945" y1="320" x2="802" y2="235"/>
+  <line class="assoc" x1="945" y1="325" x2="818" y2="485"/>
+  <line class="assoc" x1="945" y1="330" x2="706" y2="325"/>
+  <line class="assoc" x1="945" y1="335" x2="818" y2="405"/>
+  <line class="assoc" x1="945" y1="340" x2="692" y2="565"/>
+  <line class="assoc" x1="945" y1="345" x2="812" y2="645"/>
+  <line class="assoc" x1="945" y1="350" x2="802" y2="715"/>
+  <line class="assoc" x1="945" y1="355" x2="502" y2="565"/>
+  <line class="assoc" x1="945" y1="360" x2="596" y2="645"/>
+  <line class="assoc" x1="945" y1="365" x2="582" y2="715"/>
+</svg>

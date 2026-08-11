@@ -1,0 +1,57 @@
+%% Figure 3.2 — Current Manual Defect Handling Sequence Diagram
+%% B&W academic style, no title, Word-ready export
+
+%%{init: {'theme':'base','themeVariables':{
+  'primaryColor':'#ffffff',
+  'primaryTextColor':'#000000',
+  'primaryBorderColor':'#000000',
+  'secondaryColor':'#ffffff',
+  'tertiaryColor':'#ffffff',
+  'lineColor':'#000000',
+  'textColor':'#000000',
+  'mainBkg':'#ffffff',
+  'actorBkg':'#ffffff',
+  'actorBorder':'#000000',
+  'actorTextColor':'#000000',
+  'actorLineColor':'#000000',
+  'signalColor':'#000000',
+  'signalTextColor':'#000000',
+  'labelBoxBkgColor':'#ffffff',
+  'labelBoxBorderColor':'#000000',
+  'labelTextColor':'#000000',
+  'loopTextColor':'#000000',
+  'noteBkgColor':'#ffffff',
+  'noteTextColor':'#000000',
+  'noteBorderColor':'#000000',
+  'activationBkgColor':'#ffffff',
+  'activationBorderColor':'#000000',
+  'sequenceNumberColor':'#000000'
+}}}%%
+
+sequenceDiagram
+    autonumber
+    actor Worker
+    actor Manager
+    participant Floor as Production Floor
+    participant Notebook as Paper Notebook
+
+    Worker->>Floor: Detect quality issue
+    Worker->>Notebook: Write product, date, quantity
+    Note over Notebook: Inconsistent format, no batch code on every run
+
+    Worker->>Manager: Inform manager verbally
+    Manager->>Manager: Review defect informally
+    Manager->>Worker: Decide corrective action without assignment
+
+    Worker->>Floor: Perform physical action on floor
+    Manager->>Floor: May assist with corrective action
+
+    opt Loss recording
+        Manager->>Notebook: Note defective units manually
+    end
+
+    Manager->>Manager: Optional informal verification
+    Note over Worker,Manager: No structured workflow or management report
+
+    Manager->>Notebook: File paper record locally
+    Note over Notebook: Case closed informally, defects may recur

@@ -1,0 +1,148 @@
+%% High-Level Class Diagram — QDTS (Static View)
+%% Export: https://mermaid.live
+
+classDiagram
+    direction TB
+
+    class User {
+        +id
+        +username
+        +role
+        +full_name
+        +login()
+    }
+
+    class Product {
+        +id
+        +product_code
+        +product_name
+        +shelf_life_months
+        +loss_rate_per_unit
+    }
+
+    class Batch {
+        +id
+        +batch_number
+        +retort_date
+        +correct_expiry_date
+        +printed_expiry_date
+        +quantity_produced
+    }
+
+    class Defect {
+        +id
+        +defect_code
+        +detected_at_stage
+        +defect_type
+        +qty_affected
+        +defect_status
+        +estimated_loss
+    }
+
+    class RootCauseInvestigation {
+        +id
+        +root_cause_status
+        +confirmed_root_cause
+    }
+
+    class CorrectiveAction {
+        +id
+        +action_code
+        +action_type
+        +ca_status
+        +due_date
+        +calculated_loss
+    }
+
+    class Evidence {
+        +id
+        +file_name
+        +file_path
+    }
+
+    class ActivityLog {
+        +id
+        +action_type
+        +entity_type
+        +description
+    }
+
+    class AuthController {
+        +login()
+        +getCurrentUser()
+    }
+
+    class DefectController {
+        +createDefect()
+        +startReview()
+        +confirmRootCause()
+        +closeDefect()
+    }
+
+    class CorrectiveActionController {
+        +assignCorrectiveAction()
+        +startCorrectiveAction()
+        +completeCorrectiveAction()
+        +verifyCorrectiveAction()
+    }
+
+    class ReportController {
+        +getDashboardSummary()
+        +getLossReport()
+        +getExpiryIssueReport()
+    }
+
+    class LossService {
+        +calculateEstimatedLoss()
+        +validateHandledQuantities()
+        +determineLossStatus()
+    }
+
+    class ApiClient {
+        +post()
+        +get()
+        +patch()
+    }
+
+    class DefectsPage {
+        +renderForm()
+        +submitDefect()
+    }
+
+    class DefectDetailsPage {
+        +reviewDefect()
+        +assignAction()
+        +closeDefect()
+    }
+
+    class CorrectiveActionDetailsPage {
+        +startAction()
+        +completeAction()
+        +verifyAction()
+    }
+
+    User "1" --> "*" Defect : creates
+    User "1" --> "*" CorrectiveAction : assigned_to
+    Product "1" --> "*" Batch : has
+    Product "1" --> "*" Defect : references
+    Batch "1" --> "*" Defect : references
+    Defect "1" --> "1" RootCauseInvestigation : has
+    Defect "1" --> "*" CorrectiveAction : has
+    CorrectiveAction "1" --> "*" Evidence : has
+    Defect "1" --> "*" Evidence : has
+    User "1" --> "*" ActivityLog : performs
+
+    DefectsPage --> ApiClient
+    DefectDetailsPage --> ApiClient
+    CorrectiveActionDetailsPage --> ApiClient
+    ApiClient --> AuthController
+    ApiClient --> DefectController
+    ApiClient --> CorrectiveActionController
+    ApiClient --> ReportController
+
+    DefectController --> LossService
+    CorrectiveActionController --> LossService
+    DefectController --> Defect
+    CorrectiveActionController --> CorrectiveAction
+    ReportController --> Defect
+    ReportController --> Batch

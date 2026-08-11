@@ -1,0 +1,25 @@
+%% Current Process Flowchart — Chapter 3 (As-Is, B&W academic style)
+%% No title. General steps only. Export SVG/PNG via mermaid.live if needed.
+
+flowchart TD
+    START([Defect detected during production])
+    P1[Worker identifies defect]
+    P2[Worker records defect in paper notebook]
+    P3[Worker informs manager verbally]
+    P4[Manager reviews defect informally]
+    P5[Identify defect category]
+    P6[Decide corrective action]
+    P7[Manager/worker executes corrective action]
+    D1{Verification required?}
+    P8[Manager checks informally]
+    P9[Skip verification]
+    P10[Update paper notebook and file record locally]
+    END([Case closed informally])
+
+    START --> P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7 --> D1
+    D1 -->|Yes| P8 --> P10
+    D1 -->|No| P9 --> P10
+    P10 --> END
+
+    classDef bw fill:#fff,stroke:#000,color:#000,stroke-width:1.5px
+    class START,P1,P2,P3,P4,P5,P6,P7,D1,P8,P9,P10,END bw

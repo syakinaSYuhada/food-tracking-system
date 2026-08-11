@@ -1,0 +1,69 @@
+%% Sequence Diagram — Defect Lifecycle (Dynamic View)
+%% Export: https://mermaid.live
+
+sequenceDiagram
+    autonumber
+    actor Worker
+    actor Manager
+    participant DefectsPage
+    participant DefectDetailsPage
+    participant CA_Page as CorrectiveActionDetailsPage
+    participant API as ApiClient
+    participant DefectCtrl as DefectController
+    participant CACtrl as CorrectiveActionController
+    participant LossSvc as LossService
+    participant DB as PostgreSQL
+
+    Worker->>DefectsPage: Fill defect report form
+    DefectsPage->>API: POST /defects
+    API->>DefectCtrl: createDefect()
+    DefectCtrl->>DB: Validate batch qty and insert defect
+    DB-->>DefectCtrl: Defect created (status = new)
+    DefectCtrl-->>API: Success response
+    API-->>DefectsPage: Show new defect
+
+    Manager->>DefectDetailsPage: Open defect record
+    DefectDetailsPage->>API: PATCH /defects/:id/start-review
+    API->>DefectCtrl: startReview()
+    DefectCtrl->>DB: Update defect_status = under_review
+    DB-->>DefectCtrl: Updated defect
+    DefectCtrl-->>DefectDetailsPage: Under Review
+
+    Manager->>DefectDetailsPage: Assign corrective action
+    DefectDetailsPage->>API: POST /corrective-actions/defects/:id/assign
+    API->>CACtrl: assignCorrectiveAction()
+    CACtrl->>DB: Insert corrective action
+    DB-->>CACtrl: Action assigned
+    CACtrl-->>DefectDetailsPage: Assigned to worker
+
+    Worker->>CA_Page: Start and complete action
+    CA_Page->>API: PATCH /corrective-actions/:id/complete
+    API->>CACtrl: completeCorrectiveAction()
+    CACtrl->>LossSvc: validateHandledQuantities()
+    LossSvc-->>CACtrl: Valid quantities
+    CACtrl->>LossSvc: calculateEstimatedLoss()
+    LossSvc-->>CACtrl: calculated_loss
+    CACtrl->>DB: Update action and defect quantities
+    DB-->>CACtrl: Completed action
+    CACtrl-->>CA_Page: Status = completed
+
+    Manager->>CA_Page: Verify action
+    CA_Page->>API: PATCH /corrective-actions/:id/verify
+    API->>CACtrl: verifyCorrectiveAction()
+    CACtrl->>DB: Update ca_status = verified
+    DB-->>CACtrl: Verified action
+
+    Manager->>DefectDetailsPage: Confirm root cause
+    DefectDetailsPage->>API: PATCH /defects/:id/root-cause
+    API->>DefectCtrl: confirmRootCause()
+    DefectCtrl->>DB: Update root_cause_investigation
+    DB-->>DefectCtrl: Root cause confirmed
+
+    Manager->>DefectDetailsPage: Close defect
+    DefectDetailsPage->>API: PATCH /defects/:id/close
+    API->>DefectCtrl: closeDefect()
+    DefectCtrl->>LossSvc: determineLossStatus()
+    LossSvc-->>DefectCtrl: loss_status
+    DefectCtrl->>DB: Update defect_status = closed
+    DB-->>DefectCtrl: Closed defect
+    DefectCtrl-->>DefectDetailsPage: Case closed

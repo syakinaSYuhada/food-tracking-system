@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="800" viewBox="0 0 720 800" role="img" aria-label="QDTS Navigation Flow">
+  <defs>
+    <style>
+      .node { font-family: Arial, Helvetica, sans-serif; font-size: 11px; fill: #000; text-anchor: middle; }
+      .section { font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: bold; fill: #000; }
+      .note { font-family: Arial, Helvetica, sans-serif; font-size: 10px; fill: #000; text-anchor: start; }
+      .box { fill: #fff; stroke: #000; stroke-width: 1.2; }
+      .line { fill: none; stroke: #000; stroke-width: 1.1; marker-end: url(#arrow); }
+      .branch { fill: none; stroke: #000; stroke-width: 1.1; }
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#000"/>
+    </marker>
+  </defs>
+
+  <text class="section" x="30" y="28">Manager navigation</text>
+
+  <rect class="box" x="300" y="38" width="120" height="32" rx="16"/>
+  <text class="node" x="360" y="58">Login</text>
+  <line class="line" x1="360" y1="70" x2="360" y2="98"/>
+
+  <rect class="box" x="280" y="100" width="160" height="32" rx="16"/>
+  <text class="node" x="360" y="120">Dashboard</text>
+  <line class="line" x1="360" y1="132" x2="360" y2="158"/>
+
+  <line class="branch" x1="360" y1="158" x2="360" y2="180"/>
+  <line class="branch" x1="60" y1="180" x2="660" y2="180"/>
+  <line class="line" x1="60" y1="180" x2="60" y2="208"/>
+  <line class="line" x1="160" y1="180" x2="160" y2="208"/>
+  <line class="line" x1="260" y1="180" x2="260" y2="208"/>
+  <line class="line" x1="360" y1="180" x2="360" y2="208"/>
+  <line class="line" x1="460" y1="180" x2="460" y2="208"/>
+  <line class="line" x1="560" y1="180" x2="560" y2="208"/>
+  <line class="line" x1="660" y1="180" x2="660" y2="208"/>
+
+  <rect class="box" x="10" y="210" width="100" height="30"/><text class="node" x="60" y="229">Products</text>
+  <rect class="box" x="110" y="210" width="100" height="30"/><text class="node" x="160" y="229">Batches</text>
+  <rect class="box" x="210" y="210" width="100" height="30"/><text class="node" x="260" y="229">Defects</text>
+  <rect class="box" x="310" y="210" width="100" height="30"/><text class="node" x="360" y="229">Corrective Actions</text>
+  <rect class="box" x="410" y="210" width="100" height="30"/><text class="node" x="460" y="229">Reports</text>
+  <rect class="box" x="510" y="210" width="100" height="30"/><text class="node" x="560" y="229">Activity Log</text>
+  <rect class="box" x="610" y="210" width="100" height="30"/><text class="node" x="660" y="229">Users</text>
+
+  <line class="line" x1="260" y1="240" x2="260" y2="270"/>
+  <rect class="box" x="195" y="272" width="130" height="30"/><text class="node" x="260" y="291">Defect Details</text>
+  <line class="line" x1="360" y1="240" x2="360" y2="270"/>
+  <rect class="box" x="295" y="272" width="130" height="30"/><text class="node" x="360" y="291">Action Details</text>
+
+  <text class="section" x="30" y="340">Worker navigation</text>
+  <rect class="box" x="300" y="355" width="120" height="32" rx="16"/>
+  <text class="node" x="360" y="375">Login</text>
+  <line class="line" x1="360" y1="387" x2="360" y2="415"/>
+  <rect class="box" x="280" y="417" width="160" height="32" rx="16"/>
+  <text class="node" x="360" y="437">Dashboard</text>
+  <line class="line" x1="360" y1="449" x2="360" y2="475"/>
+  <line class="branch" x1="240" y1="475" x2="480" y2="475"/>
+  <line class="line" x1="240" y1="475" x2="240" y2="505"/>
+  <line class="line" x1="480" y1="475" x2="480" y2="505"/>
+  <rect class="box" x="180" y="507" width="120" height="30"/><text class="node" x="240" y="526">My Defects</text>
+  <rect class="box" x="420" y="507" width="120" height="30"/><text class="node" x="480" y="526">My Actions</text>
+  <line class="line" x1="240" y1="537" x2="240" y2="567"/>
+  <rect class="box" x="175" y="569" width="130" height="30"/><text class="node" x="240" y="588">Defect Details</text>
+  <line class="line" x1="480" y1="537" x2="480" y2="567"/>
+  <rect class="box" x="415" y="569" width="130" height="30"/><text class="node" x="480" y="588">Action Details</text>
+
+  <rect class="box" x="40" y="640" width="640" height="88"/>
+  <text class="section" x="55" y="660">Navigation controls</text>
+  <text class="note" x="55" y="678">- Sidebar links (desktop) and hamburger menu (mobile)</text>
+  <text class="note" x="55" y="696">- KPI cards, table row actions, notification bell deep links</text>
+  <text class="note" x="55" y="714">- Tab navigation on Reports and Defect Details pages</text>
+</svg>

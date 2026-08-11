@@ -1,0 +1,43 @@
+%% Figure 3.1 — Current Manual Defect Handling Activity Diagram
+%% B&W academic style, no title, Word-ready export
+
+flowchart TD
+    START([Defect detected during production<br/>Packing · Sealing · Labelling · Storage · Delivery])
+
+    subgraph worker["Worker"]
+        W1[Identify and inspect defect]
+        W2[Record in paper notebook<br/>product · approximate date · quantity]
+        W3[Inform manager verbally]
+        W5[Execute corrective action on floor<br/>discard · relabel · adjust machine · hold stock]
+    end
+
+    subgraph manager["Manager"]
+        M1[Review defect informally]
+        M2[Decide corrective action<br/>no formal assignment or due date]
+        M4{Verification needed?<br/>depends on defect type}
+        M5[Informal check by manager]
+        M6[Update paper notebook]
+        DONE([Case closed informally])
+    end
+
+    subgraph limits["Limitations"]
+        L1[No central search of old records]
+        L2[Loss recorded manually - units only]
+        L3[No audit trail or user timestamp]
+        L4[Same defect may recur]
+    end
+
+    START --> W1 --> W2 --> W3 --> M1 --> M2 --> W5 --> M4
+    M4 -->|Yes| M5 --> M6 --> DONE
+    M4 -->|No| M6 --> DONE
+    DONE -.-> limits
+
+    classDef bw fill:#ffffff,stroke:#000000,color:#000000,stroke-width:1.5px
+    classDef bwDash fill:#ffffff,stroke:#000000,color:#000000,stroke-width:1px,stroke-dasharray:4 4
+
+    class START,W1,W2,W3,W5,M1,M2,M4,M5,M6,DONE bw
+    class L1,L2,L3,L4 bwDash
+
+    style worker fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000
+    style manager fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000
+    style limits fill:#ffffff,stroke:#000000,stroke-width:1px,stroke-dasharray:4 4,color:#000000

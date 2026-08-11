@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="820" viewBox="0 0 1080 820" role="img" aria-label="QDTS Entity Relationship Diagram">
+  <defs>
+    <style>
+      .title { font-family: Arial, Helvetica, sans-serif; font-size: 13px; font-weight: bold; fill: #000; text-anchor: middle; }
+      .key { font-family: Arial, Helvetica, sans-serif; font-size: 11px; fill: #000; text-anchor: middle; }
+      .attr { font-family: Arial, Helvetica, sans-serif; font-size: 11px; fill: #000; text-anchor: start; }
+      .box { fill: #fff; stroke: #000; stroke-width: 1.2; }
+      .line { fill: none; stroke: #000; stroke-width: 1.2; }
+    </style>
+  </defs>
+
+  <!-- USERS -->
+  <g id="users">
+    <rect class="box" x="420" y="24" width="200" height="118"/>
+    <line class="line" x1="420" y1="52" x2="620" y2="52"/>
+    <line class="line" x1="458" y1="52" x2="458" y2="142"/>
+    <text class="title" x="520" y="44">users</text>
+    <text class="key" x="439" y="70">PK</text><text class="attr" x="466" y="70">id</text><line class="line" x1="466" y1="72" x2="484" y2="72"/>
+    <text class="attr" x="466" y="90">username</text>
+    <text class="attr" x="466" y="110">role</text>
+    <text class="attr" x="466" y="130">full_name</text>
+  </g>
+
+  <!-- PRODUCTS -->
+  <g id="products">
+    <rect class="box" x="70" y="168" width="220" height="138"/>
+    <line class="line" x1="70" y1="196" x2="290" y2="196"/>
+    <line class="line" x1="108" y1="196" x2="108" y2="306"/>
+    <text class="title" x="180" y="188">products</text>
+    <text class="key" x="89" y="214">PK</text><text class="attr" x="116" y="214">id</text><line class="line" x1="116" y1="216" x2="134" y2="216"/>
+    <text class="attr" x="116" y="234">product_code</text>
+    <text class="attr" x="116" y="254">product_name</text>
+    <text class="attr" x="116" y="274">shelf_life_months</text>
+    <text class="attr" x="116" y="294">loss_rate_per_unit</text>
+  </g>
+
+  <!-- BATCHES -->
+  <g id="batches">
+    <rect class="box" x="760" y="168" width="220" height="138"/>
+    <line class="line" x1="760" y1="196" x2="980" y2="196"/>
+    <line class="line" x1="798" y1="196" x2="798" y2="306"/>
+    <text class="title" x="870" y="188">batches</text>
+    <text class="key" x="779" y="214">PK</text><text class="attr" x="806" y="214">id</text><line class="line" x1="806" y1="216" x2="824" y2="216"/>
+    <text class="key" x="779" y="234">FK</text><text class="attr" x="806" y="234">product_id</text>
+    <text class="attr" x="806" y="254">batch_number</text>
+    <text class="attr" x="806" y="274">retort_date</text>
+    <text class="attr" x="806" y="294">quantity_produced</text>
+  </g>
+
+  <!-- DEFECTS -->
+  <g id="defects">
+    <rect class="box" x="360" y="340" width="250" height="178"/>
+    <line class="line" x1="360" y1="368" x2="610" y2="368"/>
+    <line class="line" x1="398" y1="368" x2="398" y2="518"/>
+    <text class="title" x="485" y="360">defects</text>
+    <text class="key" x="379" y="386">PK</text><text class="attr" x="406" y="386">id</text><line class="line" x1="406" y1="388" x2="424" y2="388"/>
+    <text class="key" x="379" y="406">FK</text><text class="attr" x="406" y="406">product_id</text>
+    <text class="key" x="379" y="426">FK</text><text class="attr" x="406" y="426">batch_id</text>
+    <text class="key" x="379" y="446">FK</text><text class="attr" x="406" y="446">created_by</text>
+    <text class="attr" x="406" y="466">defect_code</text>
+    <text class="attr" x="406" y="486">defect_status</text>
+    <text class="attr" x="406" y="506">qty_affected</text>
+  </g>
+
+  <!-- ROOT_CAUSE_INVESTIGATION -->
+  <g id="root_cause">
+    <rect class="box" x="50" y="560" width="250" height="118"/>
+    <line class="line" x1="50" y1="588" x2="300" y2="588"/>
+    <line class="line" x1="88" y1="588" x2="88" y2="678"/>
+    <text class="title" x="175" y="580">root_cause_investigation</text>
+    <text class="key" x="69" y="606">PK</text><text class="attr" x="96" y="606">id</text><line class="line" x1="96" y1="608" x2="114" y2="608"/>
+    <text class="key" x="69" y="626">FK</text><text class="attr" x="96" y="626">defect_id</text>
+    <text class="attr" x="96" y="646">root_cause_status</text>
+    <text class="attr" x="96" y="666">confirmed_root_cause</text>
+  </g>
+
+  <!-- CORRECTIVE_ACTIONS -->
+  <g id="corrective_actions">
+    <rect class="box" x="670" y="560" width="250" height="138"/>
+    <line class="line" x1="670" y1="588" x2="920" y2="588"/>
+    <line class="line" x1="708" y1="588" x2="708" y2="698"/>
+    <text class="title" x="795" y="580">corrective_actions</text>
+    <text class="key" x="689" y="606">PK</text><text class="attr" x="716" y="606">id</text><line class="line" x1="716" y1="608" x2="734" y2="608"/>
+    <text class="key" x="689" y="626">FK</text><text class="attr" x="716" y="626">defect_id</text>
+    <text class="key" x="689" y="646">FK</text><text class="attr" x="716" y="646">assigned_to</text>
+    <text class="attr" x="716" y="666">action_code</text>
+    <text class="attr" x="716" y="686">ca_status</text>
+  </g>
+
+  <!-- EVIDENCE -->
+  <g id="evidence">
+    <rect class="box" x="250" y="720" width="230" height="98"/>
+    <line class="line" x1="250" y1="748" x2="480" y2="748"/>
+    <line class="line" x1="288" y1="748" x2="288" y2="818"/>
+    <text class="title" x="365" y="740">evidence</text>
+    <text class="key" x="269" y="766">PK</text><text class="attr" x="296" y="766">id</text><line class="line" x1="296" y1="768" x2="314" y2="768"/>
+    <text class="key" x="269" y="786">FK</text><text class="attr" x="296" y="786">defect_id</text>
+    <text class="key" x="269" y="806">FK</text><text class="attr" x="296" y="806">corrective_action_id</text>
+  </g>
+
+  <!-- ACTIVITY_LOGS -->
+  <g id="activity_logs">
+    <rect class="box" x="700" y="720" width="230" height="98"/>
+    <line class="line" x1="700" y1="748" x2="930" y2="748"/>
+    <line class="line" x1="738" y1="748" x2="738" y2="818"/>
+    <text class="title" x="815" y="740">activity_logs</text>
+    <text class="key" x="719" y="766">PK</text><text class="attr" x="746" y="766">id</text><line class="line" x1="746" y1="768" x2="764" y2="768"/>
+    <text class="key" x="719" y="786">FK</text><text class="attr" x="746" y="786">user_id</text>
+    <text class="attr" x="746" y="806">entity_type, description</text>
+  </g>
+
+  <!-- RELATIONSHIPS -->
+
+  <!-- products 1 -> batches many -->
+  <path class="line" d="M 290 230 C 420 230, 520 230, 760 230"/>
+  <line class="line" x1="290" y1="224" x2="290" y2="236"/>
+  <line class="line" x1="754" y1="224" x2="760" y2="230"/><line class="line" x1="754" y1="236" x2="760" y2="230"/><line class="line" x1="754" y1="230" x2="766" y2="230"/>
+
+  <!-- products 1 -> defects many -->
+  <path class="line" d="M 180 306 C 180 330, 300 330, 406 340"/>
+  <line class="line" x1="180" y1="300" x2="180" y2="312"/>
+  <line class="line" x1="400" y1="334" x2="406" y2="340"/><line class="line" x1="400" y1="346" x2="406" y2="340"/><line class="line" x1="400" y1="340" x2="412" y2="340"/>
+
+  <!-- batches 1 -> defects many -->
+  <path class="line" d="M 870 306 C 870 330, 560 330, 604 340"/>
+  <line class="line" x1="870" y1="300" x2="870" y2="312"/>
+  <line class="line" x1="598" y1="334" x2="604" y2="340"/><line class="line" x1="598" y1="346" x2="604" y2="340"/><line class="line" x1="598" y1="340" x2="610" y2="340"/>
+
+  <!-- users 1 -> defects many -->
+  <path class="line" d="M 520 142 C 520 250, 520 300, 485 340"/>
+  <line class="line" x1="520" y1="136" x2="520" y2="148"/>
+  <line class="line" x1="479" y1="334" x2="485" y2="340"/><line class="line" x1="479" y1="346" x2="485" y2="340"/><line class="line" x1="479" y1="340" x2="491" y2="340"/>
+
+  <!-- defects 1 -> root_cause 0..1 -->
+  <path class="line" d="M 360 430 C 280 430, 220 500, 175 560"/>
+  <line class="line" x1="360" y1="424" x2="360" y2="436"/>
+  <circle class="line" cx="181" cy="560" r="4" fill="#fff"/>
+  <line class="line" x1="175" y1="554" x2="175" y2="566"/>
+
+  <!-- defects 1 -> corrective_actions many -->
+  <path class="line" d="M 610 430 C 700 430, 760 500, 795 560"/>
+  <line class="line" x1="610" y1="424" x2="610" y2="436"/>
+  <line class="line" x1="789" y1="554" x2="795" y2="560"/><line class="line" x1="789" y1="566" x2="795" y2="560"/><line class="line" x1="789" y1="560" x2="801" y2="560"/>
+
+  <!-- users 1 -> corrective_actions many -->
+  <path class="line" d="M 590 142 C 720 142, 860 360, 716 560"/>
+  <line class="line" x1="590" y1="136" x2="590" y2="148"/>
+  <line class="line" x1="710" y1="554" x2="716" y2="560"/><line class="line" x1="710" y1="566" x2="716" y2="560"/><line class="line" x1="710" y1="560" x2="722" y2="560"/>
+
+  <!-- defects 1 -> evidence 0..many -->
+  <path class="line" d="M 430 518 C 400 600, 360 680, 340 720"/>
+  <line class="line" x1="430" y1="512" x2="430" y2="524"/>
+  <circle class="line" cx="346" cy="720" r="4" fill="#fff"/>
+  <line class="line" x1="334" y1="714" x2="346" y2="720"/><line class="line" x1="334" y1="726" x2="346" y2="720"/><line class="line" x1="334" y1="720" x2="352" y2="720"/>
+
+  <!-- corrective_actions 1 -> evidence 0..many -->
+  <path class="line" d="M 795 698 C 620 698, 500 720, 480 748"/>
+  <line class="line" x1="795" y1="692" x2="795" y2="704"/>
+  <circle class="line" cx="486" cy="748" r="4" fill="#fff"/>
+  <line class="line" x1="474" y1="742" x2="486" y2="748"/><line class="line" x1="474" y1="754" x2="486" y2="748"/><line class="line" x1="474" y1="748" x2="492" y2="748"/>
+
+  <!-- users 1 -> activity_logs 0..many -->
+  <path class="line" d="M 560 142 C 760 142, 860 500, 815 720"/>
+  <line class="line" x1="560" y1="136" x2="560" y2="148"/>
+  <circle class="line" cx="821" cy="720" r="4" fill="#fff"/>
+  <line class="line" x1="809" y1="714" x2="821" y2="720"/><line class="line" x1="809" y1="726" x2="821" y2="720"/><line class="line" x1="809" y1="720" x2="827" y2="720"/>
+
+</svg>

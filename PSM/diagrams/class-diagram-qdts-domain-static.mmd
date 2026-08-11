@@ -1,0 +1,146 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#ffffff",
+    "primaryTextColor": "#000000",
+    "primaryBorderColor": "#000000",
+    "lineColor": "#000000",
+    "secondaryColor": "#ffffff",
+    "tertiaryColor": "#ffffff",
+    "background": "#ffffff",
+    "mainBkg": "#ffffff",
+    "classText": "#000000",
+    "classBorder": "#000000"
+  }
+}}%%
+classDiagram
+    direction LR
+
+    class User {
+        +userId
+        +username
+        +fullName
+        +role
+        +accountStatus
+        +login()
+    }
+
+    class Product {
+        +productId
+        +productCode
+        +productName
+        +shelfLifeMonths
+        +lossRatePerUnit
+        +productStatus
+        +archiveProduct()
+    }
+
+    class Batch {
+        +batchId
+        +batchNumber
+        +productionDate
+        +retortDate
+        +correctExpiryDate
+        +printedExpiryDate
+        +quantityProduced
+        +batchStatus
+        +generateBatchNumber()
+        +calculateCorrectExpiry()
+        +validateBatchDates()
+    }
+
+    class Defect {
+        +defectId
+        +defectCode
+        +detectedAtStage
+        +defectType
+        +problemLevel
+        +priority
+        +reviewDueDate
+        +qtyAffected
+        +defectStatus
+        +estimatedLoss
+        +lossStatus
+        +reportDefect()
+        +startReview()
+        +updateStatus()
+        +closeDefect()
+    }
+
+    class CorrectiveAction {
+        +actionId
+        +actionCode
+        +actionType
+        +task
+        +dueDate
+        +caStatus
+        +calculatedLoss
+        +assignAction()
+        +startAction()
+        +completeAction()
+        +verifyAction()
+        +rejectAction()
+    }
+
+    class RootCauseInvestigation {
+        +investigationId
+        +rootCauseStatus
+        +suspectedRootCause
+        +confirmedRootCause
+        +relatedToolMachine
+        +submitSuspectedCause()
+        +confirmRootCause()
+    }
+
+    class RootCause {
+        +rootCauseId
+        +rootCauseSource
+        +rootCauseName
+        +isActive
+    }
+
+    class EvidenceFile {
+        +evidenceId
+        +fileName
+        +filePath
+        +evidenceNote
+        +upload()
+    }
+
+    class ActivityLog {
+        +logId
+        +actionType
+        +entityType
+        +entityId
+        +description
+        +recordActivity()
+    }
+
+    class DefectType {
+        +defectTypeId
+        +defectTypeName
+        +defectCategory
+        +defaultProblemLevel
+        +isActive
+    }
+
+    Product "1" --> "0..*" Batch : contains
+    Batch "1" --> "0..*" Defect : traced through
+    Product "1" --> "0..*" Defect : referenced by
+    Defect "1" --> "0..*" CorrectiveAction : has
+    Defect "1" --> "1" RootCauseInvestigation : has
+    Defect "1" --> "0..*" EvidenceFile : attaches
+    Defect "1" --> "0..*" ActivityLog : logs
+    CorrectiveAction "1" --> "0..*" EvidenceFile : supports
+
+    RootCauseInvestigation "0..*" --> "1" RootCause : selects
+    Defect "0..*" --> "1" DefectType : classified as
+
+    User "1" --> "0..*" Defect : reports
+    User "1" --> "0..*" CorrectiveAction : assigned to
+    User "1" --> "0..*" CorrectiveAction : assigns / verifies
+    User "1" --> "0..*" EvidenceFile : uploads
+    User "1" --> "0..*" ActivityLog : performs
+
+    classDef domain fill:#ffffff,stroke:#000000,color:#000000
+    class User,Product,Batch,Defect,CorrectiveAction,RootCauseInvestigation,RootCause,EvidenceFile,ActivityLog,DefectType domain

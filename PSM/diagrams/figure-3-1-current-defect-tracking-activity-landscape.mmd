@@ -1,0 +1,75 @@
+%% Figure 3.1 — Current Defect Tracking Activity Flow (landscape swimlanes)
+%% Export: https://mermaid.live → SVG (preferred) or PNG scale 2–3
+%% Word: A4 landscape, width ~24–25 cm
+
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#ffffff",
+    "primaryTextColor": "#000000",
+    "primaryBorderColor": "#000000",
+    "lineColor": "#000000",
+    "secondaryColor": "#ffffff",
+    "tertiaryColor": "#ffffff",
+    "fontSize": "14px",
+    "fontFamily": "Arial, Helvetica, sans-serif"
+  },
+  "flowchart": {
+    "htmlLabels": true,
+    "curve": "linear",
+    "padding": 12,
+    "nodeSpacing": 40,
+    "rankSpacing": 55
+  }
+}}%%
+flowchart TB
+
+    subgraph Worker ["Worker"]
+        direction LR
+        START([Defect detected<br/>during production process])
+        W1[Identify and<br/>inspect defect]
+        W2[Record in paper notebook<br/>(product, date, quantity)]
+        W3[Inform manager<br/>verbally]
+        W4[Perform corrective action<br/>(discard, relabel, adjust machine, hold stock)]
+        W5[Update paper notebook]
+        DONE([Case closed informally])
+
+        START --> W1 --> W2 --> W3
+        W4 --> W5 --> DONE
+    end
+
+    subgraph Manager ["Manager"]
+        direction LR
+        M1[Review defect<br/>informally]
+        M2[Decide corrective action<br/>(no formal assignment or due date)]
+        M4{Verification<br/>needed?}
+        M5[Informal check<br/>by manager]
+
+        M1 --> M2 --> M4
+        M4 -->|Yes| M5
+    end
+
+    subgraph Limits ["Current Process Limitations"]
+        direction LR
+        LIM["• No central search of old records<br/>• Loss recorded manually<br/>• No audit trail or user timestamp<br/>• Same defect may recur"]
+    end
+
+    W3 --> M1
+    M2 --> W4
+    W4 --> M4
+    M5 --> W5
+    M4 -->|No| W5
+    DONE --> LIM
+
+    classDef bw fill:#ffffff,stroke:#000000,color:#000000,stroke-width:1.5px
+    classDef bwStart fill:#ffffff,stroke:#000000,color:#000000,stroke-width:2px
+    classDef bwEnd fill:#ffffff,stroke:#000000,color:#000000,stroke-width:2px
+    classDef bwLimit fill:#ffffff,stroke:#000000,color:#000000,stroke-width:1.5px,stroke-dasharray:4 4
+
+    class START,DONE bwStart
+    class W1,W2,W3,W4,W5,M1,M2,M4,M5 bw
+    class LIM bwLimit
+
+    style Worker fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style Manager fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
+    style Limits fill:#ffffff,stroke:#000000,stroke-width:1.5px,stroke-dasharray:6 4,color:#000000

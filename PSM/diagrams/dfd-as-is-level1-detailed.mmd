@@ -1,0 +1,68 @@
+%% Figure 3.x — DFD Level 1 (Logical Data Flow)
+%% Current System — Manual Quality Defect Management at Retort Niaga / Kak Norie (As-Is)
+%% Methodology: SSADM — exploded view of Process 0.0
+%% Export: https://mermaid.live
+
+flowchart TB
+    subgraph entities["External Entities"]
+        W[["Worker"]]
+        M[["Manager"]]
+    end
+
+    P1(("1.0<br/>Record Defect<br/>in Notebook"))
+    P2(("2.0<br/>Notify Manager<br/>Verbally"))
+    P3(("3.0<br/>Review Defect<br/>Informally"))
+    P4(("4.0<br/>Decide Corrective<br/>Action"))
+    P5(("5.0<br/>Execute Corrective<br/>Action"))
+    P6(("6.0<br/>Verify Action<br/><i>if required</i>"))
+    P7(("7.0<br/>File Paper<br/>Record"))
+    P8(("8.0<br/>Prepare Management<br/>Report <i>ad-hoc</i>"))
+
+    D1[("D1<br/>Paper Defect<br/>Notebook")]
+    D2[("D2<br/>Batch / Production<br/>Log <i>inconsistent</i>")]
+    D3[("D3<br/>Photo Evidence<br/><i>phone / camera</i>")]
+
+    W -->|"defect details"| P1
+    P1 -->|"written defect record"| D1
+    P1 -->|"batch reference"| D2
+    P1 -->|"optional photo"| D3
+    P1 -->|"record confirmation"| P2
+
+    P2 -->|"verbal notification"| M
+    M -->|"review request"| P3
+    D1 -->|"defect record read"| P3
+    D2 -->|"batch & expiry check"| P3
+
+    P3 -->|"review notes"| P4
+    P4 -->|"action decision"| P5
+    P4 -->|"verbal instructions"| W
+    P4 -->|"machine adjustment order<br/>(sealing, mould, retort)"| W
+
+    W -->|"action completion feedback"| P5
+    P5 -->|"updated quantities / notes"| D1
+
+    P5 -->|"completion notice"| P6
+    M -->|"verify / skip decision"| P6
+    P6 -->|"verification result"| P7
+
+    P7 -->|"filed case record"| D1
+    D1 -->|"historical records"| P8
+    M -->|"report request"| P8
+    P8 -->|"manual summary<br/>(loss units only, no auto-calc)"| M
+
+    CAP["Figure 3.x: DFD Level 1 — Current Manual Defect Management Process (As-Is) at Retort Niaga"]
+
+    style W fill:#dbeafe,stroke:#1e40af
+    style M fill:#dbeafe,stroke:#1e40af
+    style D1 fill:#dcfce7,stroke:#166534
+    style D2 fill:#dcfce7,stroke:#166534
+    style D3 fill:#dcfce7,stroke:#166534
+    style P1 fill:#fef3c7,stroke:#b45309
+    style P2 fill:#fef3c7,stroke:#b45309
+    style P3 fill:#fef3c7,stroke:#b45309
+    style P4 fill:#fef3c7,stroke:#b45309
+    style P5 fill:#fef3c7,stroke:#b45309
+    style P6 fill:#fef3c7,stroke:#b45309
+    style P7 fill:#fef3c7,stroke:#b45309
+    style P8 fill:#fef3c7,stroke:#b45309
+    style CAP fill:#f8fafc,stroke:#64748b

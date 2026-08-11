@@ -1,0 +1,29 @@
+%% QDTS Three-Tier Architecture (corrected)
+%% Primary file: architecture-qdts-three-tier.svg
+
+flowchart TB
+    W[Worker]
+    M[Manager]
+
+    subgraph PT["Presentation Tier"]
+        REACT["React SPA<br/>Pages & Components"]
+    end
+
+    subgraph AT["Application Tier"]
+        RT[Routes]
+        MW[Middleware<br/>JWT / Upload]
+        CT[Controllers]
+        SV[Services<br/>loss, batch, defect]
+        RT --> MW --> CT --> SV
+    end
+
+    subgraph DT["Data Tier"]
+        DB[(PostgreSQL Database)]
+        FS[Evidence File Storage]
+    end
+
+    W -->|uses browser| REACT
+    M -->|uses browser| REACT
+    REACT -->|HTTP JSON REST API| RT
+    SV -->|SQL| DB
+    SV -->|file I/O| FS
