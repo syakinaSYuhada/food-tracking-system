@@ -14,7 +14,7 @@ import { getDefectWorkflow } from '../utils/defectWorkflow'
 import { isActionOverdue } from '../utils/dueDate'
 import { printDefectSummary } from '../utils/defectExport'
 import { hasExpiryMismatch } from '../utils/expiry'
-import { resolveAssetUrl } from '../utils/assetUrl'
+import { fetchEvidenceBlobUrl } from '../utils/assetUrl'
 import { formatDefectPriorityLabel, getReviewDueBadge, isUrgentDefectPriority } from '../utils/defectReviewDue'
 
 function formatDate(value) {
@@ -515,10 +515,13 @@ export default function DefectDetails({ user }) {
       const [defectRes, usersRes] = await Promise.all(requests)
       const data = defectRes.data.data
 
-      const photos = (data.evidence || []).map((item) => ({
-        url: resolveAssetUrl(item.file_path),
-        fileName: item.file_name || item.file_path?.split('/').pop()
-      }))
+      const photos = await Promise.all(
+        (data.evidence || []).map(async (item) => ({
+          id: item.id,
+          url: await fetchEvidenceBlobUrl(item.id),
+          fileName: item.file_name || item.file_path?.split('/').pop()
+        }))
+      )
       setDefect({ ...data, photos })
       setUsers(usersRes?.data?.data || [])
       const ruleRes = await api.get(`/defects/rules/by-type/${encodeURIComponent(data.defect_type)}`)
@@ -545,6 +548,16 @@ export default function DefectDetails({ user }) {
   }
 
   useEffect(() => { load() }, [id])
+
+  useEffect(() => {
+    const blobUrls = (defect?.photos || [])
+      .map((photo) => photo.url)
+      .filter((url) => typeof url === 'string' && url.startsWith('blob:'))
+
+    return () => {
+      blobUrls.forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [defect?.photos])
 
   const managerView = isManager(user)
   const currentUser = user

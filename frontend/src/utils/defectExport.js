@@ -1,4 +1,4 @@
-import { resolveAssetUrl } from './assetUrl'
+import { fetchEvidenceBlob, getAuthToken, resolveEvidenceFileUrl } from './assetUrl'
 
 function escapeHtml(value) {
   return String(value ?? '-')
@@ -36,11 +36,31 @@ function blobToDataUrl(blob) {
   })
 }
 
+async function loadEvidenceAsDataUrl(evidenceId) {
+  if (!evidenceId) return null
+
+  try {
+    const blob = await fetchEvidenceBlob(evidenceId)
+    if (!blob || !blob.type.startsWith('image/')) return null
+    return await blobToDataUrl(blob)
+  } catch (error) {
+    console.warn('Defect summary print: could not preload evidence image', evidenceId, error)
+    return null
+  }
+}
+
 async function loadImageAsDataUrl(url) {
   if (!url) return null
 
+  const token = getAuthToken()
+  if (!token) return null
+
   try {
-    const response = await fetch(url)
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
     if (!response.ok) return null
     const blob = await response.blob()
     if (!blob.type.startsWith('image/')) return null
@@ -55,34 +75,34 @@ function getDefectPhotos(defect) {
   if (defect.photos?.length) {
     return defect.photos.map((photo, index) => {
       if (typeof photo === 'string') {
-        const url = resolveAssetUrl(photo)
         return {
-          url,
+          evidenceId: null,
+          url: null,
           fileName: photo.split('/').pop() || `Photo ${index + 1}`
         }
       }
 
-      const url = resolveAssetUrl(photo.file_path || photo.url)
       return {
-        url,
-        fileName: photo.fileName || photo.file_name || url.split('/').pop() || `Photo ${index + 1}`
+        evidenceId: photo.id ?? null,
+        url: photo.url || (photo.id ? resolveEvidenceFileUrl(photo.id) : null),
+        fileName: photo.fileName || photo.file_name || `Photo ${index + 1}`
       }
-    }).filter((photo) => photo.url)
+    }).filter((photo) => photo.evidenceId || photo.url)
   }
 
-  return (defect.evidence || []).map((item, index) => {
-    const url = resolveAssetUrl(item.file_path)
-    return {
-      url,
-      fileName: item.file_name || item.file_path?.split('/').pop() || `Photo ${index + 1}`
-    }
-  }).filter((photo) => photo.url)
+  return (defect.evidence || []).map((item, index) => ({
+    evidenceId: item.id,
+    url: resolveEvidenceFileUrl(item.id),
+    fileName: item.file_name || item.file_path?.split('/').pop() || `Photo ${index + 1}`
+  })).filter((photo) => photo.evidenceId)
 }
 
 async function preloadEvidencePhotos(photos) {
   return Promise.all(photos.map(async (photo) => ({
     ...photo,
-    dataUrl: await loadImageAsDataUrl(photo.url)
+    dataUrl: photo.evidenceId
+      ? await loadEvidenceAsDataUrl(photo.evidenceId)
+      : await loadImageAsDataUrl(photo.url)
   })))
 }
 

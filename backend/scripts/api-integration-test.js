@@ -58,6 +58,64 @@ async function requestStatus(path, options = {}, expectedStatus) {
   return body
 }
 
+async function requestFileStatus(path, options = {}, expectedStatus) {
+  const res = await fetch(`${BASE}${path}`, options)
+
+  if (res.status !== expectedStatus) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(
+      body.message || `Expected ${expectedStatus}, got ${res.status} ${res.statusText}`
+    )
+  }
+
+  return res
+}
+
+const MINIMAL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
+  'base64'
+)
+
+async function uploadDefectEvidence(defectId, session) {
+  const form = new FormData()
+  form.append('evidence', new Blob([MINIMAL_PNG], { type: 'image/png' }), 'test-evidence.png')
+
+  const res = await fetch(`${BASE}/defects/${defectId}/evidence`, {
+    method: 'POST',
+    headers: {
+      Authorization: session.headers.Authorization
+    },
+    body: form
+  })
+
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok || body.success === false) {
+    throw new Error(body.message || `Evidence upload failed: ${res.status}`)
+  }
+
+  return body.data
+}
+
+async function uploadCorrectiveActionEvidence(actionId, session) {
+  const form = new FormData()
+  form.append('evidence', new Blob([MINIMAL_PNG], { type: 'image/png' }), 'test-ca-evidence.png')
+
+  const res = await fetch(`${BASE}/corrective-actions/${actionId}/evidence`, {
+    method: 'POST',
+    headers: {
+      Authorization: session.headers.Authorization
+    },
+    body: form
+  })
+
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok || body.success === false) {
+    throw new Error(body.message || `CA evidence upload failed: ${res.status}`)
+  }
+
+  return body.data
+}
+
 async function login(username) {
   const body = await request('/auth/login', {
     method: 'POST',
@@ -794,6 +852,91 @@ async function main() {
     if (body.data?.review_due_date) {
       throw new Error('Expected review_due_date to remain empty when omitted')
     }
+  })
+
+  await check('Worker without defect access cannot fetch defect evidence file', async () => {
+    const reporterSession = await login(WORKER_USER)
+    const otherWorkerSession = await login('hairul_nizam')
+
+    const createBody = await request('/defects', {
+      method: 'POST',
+      headers: reporterSession.headers,
+      body: JSON.stringify({
+        product_id: 1,
+        batch_id: 6,
+        detected_at_stage: 'Sealing',
+        defect_type: 'Loose Sealing',
+        problem_level: 'Hold for Review',
+        description: 'Evidence access control test defect.',
+        qty_affected: 2
+      })
+    })
+
+    const defectId = createBody.data.id
+    const evidence = await uploadDefectEvidence(defectId, reporterSession)
+
+    await requestFileStatus(
+      `/evidence/${evidence.id}/file`,
+      { headers: otherWorkerSession.headers },
+      403
+    )
+  })
+
+  await check('Reporter can fetch defect evidence but not CA evidence unless assigned', async () => {
+    const reporterSession = await login(WORKER_USER)
+    const assigneeSession = await login('hairul_nizam')
+
+    const createBody = await request('/defects', {
+      method: 'POST',
+      headers: reporterSession.headers,
+      body: JSON.stringify({
+        product_id: 1,
+        batch_id: 6,
+        detected_at_stage: 'Sealing',
+        defect_type: 'Loose Sealing',
+        problem_level: 'Hold for Review',
+        description: 'Evidence reporter vs assignee access test.',
+        qty_affected: 2
+      })
+    })
+
+    const defectId = createBody.data.id
+    const defectEvidence = await uploadDefectEvidence(defectId, reporterSession)
+
+    await request(`/defects/${defectId}/start-review`, { method: 'PATCH', headers: manager.headers })
+
+    const assignBody = await request(`/corrective-actions/defects/${defectId}/assign`, {
+      method: 'POST',
+      headers: manager.headers,
+      body: JSON.stringify({
+        action_type: 'machine_process_check',
+        task: 'Evidence access assignee task',
+        assigned_to: assigneeSession.user.id,
+        assigned_by: manager.user.id,
+        due_date: '2026-12-31',
+        priority: 'medium',
+        evidence_required: false
+      })
+    })
+
+    const actionId = assignBody.data.id
+    const caEvidence = await uploadCorrectiveActionEvidence(actionId, assigneeSession)
+
+    const defectFileRes = await requestFileStatus(
+      `/evidence/${defectEvidence.id}/file`,
+      { headers: reporterSession.headers },
+      200
+    )
+    const defectContentType = defectFileRes.headers.get('content-type') || ''
+    if (!defectContentType.startsWith('image/')) {
+      throw new Error(`Expected image content type for defect evidence, got ${defectContentType}`)
+    }
+
+    await requestFileStatus(
+      `/evidence/${caEvidence.id}/file`,
+      { headers: reporterSession.headers },
+      403
+    )
   })
 
   console.log(`\nResult: ${passed} passed, ${failed} failed`)
