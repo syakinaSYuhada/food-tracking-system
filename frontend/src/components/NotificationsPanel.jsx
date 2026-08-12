@@ -10,36 +10,10 @@ import {
   Info,
   X
 } from 'lucide-react'
-import api from '../api/client'
 import Button from './Button'
 import { isManager } from '../utils/roleAccess'
 import { buildNotifications } from '../utils/notifications'
-
-async function fetchNotificationData(user) {
-  if (isManager(user)) {
-    const [actionsRes, defectsRes] = await Promise.all([
-      api.get('/corrective-actions'),
-      api.get('/defects')
-    ])
-    return {
-      actions: actionsRes.data.data || [],
-      defects: defectsRes.data.data || []
-    }
-  }
-
-  if (user?.id) {
-    const [actionsRes, defectsRes] = await Promise.all([
-      api.get('/corrective-actions', { params: { assigned_to: user.id } }),
-      api.get('/defects')
-    ])
-    return {
-      actions: actionsRes.data.data || [],
-      defects: defectsRes.data.data || []
-    }
-  }
-
-  return { actions: [], defects: [] }
-}
+import { fetchNotificationData } from '../utils/notificationData'
 
 const toneStyles = {
   red: 'bg-red-50 text-red-700 ring-red-100',
@@ -52,6 +26,9 @@ const toneStyles = {
 function getNotificationVisual(item) {
   if (item.kind === 'new-assignment') {
     return { tone: 'blue', Icon: Info }
+  }
+  if (item.kind === 'evidence-required') {
+    return { tone: 'amber', Icon: AlertTriangle }
   }
   if (item.kind === 'overdue' || item.id.startsWith('overdue-ca')) {
     return { tone: 'red', Icon: AlertTriangle }
@@ -115,6 +92,7 @@ export default function NotificationsPanel({ user, onClose, onNavigate }) {
           </div>
           <div className="min-w-0">
             <div className="text-sm font-semibold text-brand-ink">Notifications</div>
+            <div className="text-[0.6875rem] leading-4 text-brand-muted">In-app notifications</div>
             <div className="text-[0.6875rem] leading-4 text-brand-muted">
               {loading
                 ? 'Checking for updates...'

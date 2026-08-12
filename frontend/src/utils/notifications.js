@@ -73,6 +73,10 @@ function getUrgentReviewNotification(defect) {
   return null
 }
 
+function isEvidenceRequiredAction(action) {
+  return Boolean(action.evidence_required ?? action.evidenceRequired)
+}
+
 function buildWorkerActionNotifications(actions = []) {
   const notifications = []
   const seenActionIds = new Set()
@@ -92,6 +96,25 @@ function buildWorkerActionNotifications(actions = []) {
         subtitle: `CA due ${formatDueDate(action.due_date)} · ${action.task}`,
         path: `/corrective-actions/${action.id}`,
         priority: 0
+      })
+    })
+
+  openActions
+    .filter((action) => {
+      const status = getActionStatus(action)
+      if (!['assigned', 'in_progress'].includes(status)) return false
+      if (seenActionIds.has(action.id)) return false
+      return isEvidenceRequiredAction(action)
+    })
+    .forEach((action) => {
+      seenActionIds.add(action.id)
+      notifications.push({
+        id: `ca-evidence-${action.id}`,
+        kind: 'evidence-required',
+        title: `${action.action_code} — evidence required`,
+        subtitle: `${action.task} · upload evidence before completing`,
+        path: `/corrective-actions/${action.id}`,
+        priority: 1
       })
     })
 
@@ -131,7 +154,7 @@ const MAX_OVERDUE_BEFORE_NEW_ASSIGNMENTS = 3
 
 function selectNotificationItems(notifications, limit = PANEL_ITEM_LIMIT) {
   const pinned = notifications.filter((item) =>
-    item.kind === 'new-assignment' || item.kind === 'attention'
+    item.kind === 'new-assignment' || item.kind === 'attention' || item.kind === 'evidence-required'
   )
 
   if (pinned.length === 0) {

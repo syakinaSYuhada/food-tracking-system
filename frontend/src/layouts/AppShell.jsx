@@ -16,37 +16,11 @@ import {
   Bell,
   Menu
 } from 'lucide-react'
-import api from '../api/client'
 import BrandLogo from '../components/BrandLogo'
 import NotificationsPanel from '../components/NotificationsPanel'
 import { getDefaultPathForRole, getUserInitials, isManager, isManagerOnlyPath } from '../utils/roleAccess'
 import { buildNotifications } from '../utils/notifications'
-
-async function fetchNotificationData(user) {
-  if (isManager(user)) {
-    const [actionsRes, defectsRes] = await Promise.all([
-      api.get('/corrective-actions'),
-      api.get('/defects')
-    ])
-    return {
-      actions: actionsRes.data.data || [],
-      defects: defectsRes.data.data || []
-    }
-  }
-
-  if (user?.id) {
-    const [actionsRes, defectsRes] = await Promise.all([
-      api.get('/corrective-actions', { params: { assigned_to: user.id } }),
-      api.get('/defects')
-    ])
-    return {
-      actions: actionsRes.data.data || [],
-      defects: defectsRes.data.data || []
-    }
-  }
-
-  return { actions: [], defects: [] }
-}
+import { fetchNotificationData } from '../utils/notificationData'
 
 const managerLinks = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard },
