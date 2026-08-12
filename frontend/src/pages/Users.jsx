@@ -206,7 +206,7 @@ export default function Users() {
 
         title="Users"
 
-        subtitle="Registered accounts and role assignments."
+        subtitle="Registered accounts and role assignments. Showing active accounts only."
 
       >
 
