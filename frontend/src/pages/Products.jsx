@@ -11,6 +11,7 @@ import EntityRow from '../components/EntityRow'
 import ProductFormModal from '../components/ProductFormModal'
 import ListPagination from '../components/ListPagination'
 import { normalizeProduct, productIcon } from '../utils/product'
+import { isManager } from '../utils/roleAccess'
 
 function titleCase(value) {
   if (!value) return '-'
@@ -60,7 +61,7 @@ function DeleteModal({ onClose, onArchive }) {
   )
 }
 
-function ProductRow({ product, onReload }) {
+function ProductRow({ product, onReload, managerView }) {
   const navigate = useNavigate()
   const [expanded, setExpanded] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
@@ -111,8 +112,10 @@ function ProductRow({ product, onReload }) {
         ]}
         actions={[
           { intent: 'view', onClick: () => navigate(`/products/${product.id}`) },
-          { icon: Edit, label: 'Edit', tone: 'slate', onClick: () => setShowEdit(true) },
-          { icon: Archive, label: 'Archive', tone: 'amber', onClick: () => setShowDelete(true) }
+          ...(managerView ? [
+            { icon: Edit, label: 'Edit', tone: 'slate', onClick: () => setShowEdit(true) },
+            { icon: Archive, label: 'Archive', tone: 'amber', onClick: () => setShowDelete(true) }
+          ] : [])
         ]}
         expanded={expanded}
         onToggle={() => setExpanded((current) => !current)}
@@ -174,7 +177,8 @@ function ProductRow({ product, onReload }) {
   )
 }
 
-function Products() {
+function Products({ user }) {
+  const managerView = isManager(user)
   const [products, setProducts] = useState([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -262,7 +266,7 @@ function Products() {
 
   return (
     <div className="list-page">
-      {showAdd && (
+      {showAdd && managerView && (
         <ProductFormModal mode="add" onClose={() => setShowAdd(false)} onSaved={loadProducts} />
       )}
 
@@ -270,10 +274,12 @@ function Products() {
         title="Products"
         subtitle="Manage product records, shelf life, and batch traceability."
       >
-        <Button onClick={() => setShowAdd(true)}>
-          <Plus size={15} />
-          Add Product
-        </Button>
+        {managerView && (
+          <Button onClick={() => setShowAdd(true)}>
+            <Plus size={15} />
+            Add Product
+          </Button>
+        )}
       </PageHeader>
 
       <div className="list-kpi-grid">
@@ -387,13 +393,13 @@ function Products() {
               icon={Package}
               title="No products found"
               description="Try adjusting your search or filters, or add a new product."
-              actionLabel="Add Product"
-              onAction={() => setShowAdd(true)}
+              actionLabel={managerView ? 'Add Product' : undefined}
+              onAction={managerView ? () => setShowAdd(true) : undefined}
             />
           ) : (
             <div className="compact-list-stack">
               {paged.items.map((product) => (
-                <ProductRow key={product.id} product={product} onReload={loadProducts} />
+                <ProductRow key={product.id} product={product} onReload={loadProducts} managerView={managerView} />
               ))}
             </div>
           )}

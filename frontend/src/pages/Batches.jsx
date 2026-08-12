@@ -29,6 +29,7 @@ import {
 import { createdInReportPeriod } from '../components/ReportPeriodFilter'
 import { parseAttentionPeriod } from '../utils/attentionNavigation'
 import { addMonthsToDateOnly } from '../utils/dateOnly'
+import { isManager } from '../utils/roleAccess'
 
 function formatDate(date) {
   if (!date) return '-'
@@ -434,7 +435,7 @@ function DetailRow({ label, value, valueClassName = 'text-brand-ink' }) {
   )
 }
 
-function BatchRow({ batch, onEdit }) {
+function BatchRow({ batch, onEdit, managerView }) {
   const navigate = useNavigate()
   const [expanded, setExpanded] = useState(false)
   const [defects, setDefects] = useState([])
@@ -497,12 +498,12 @@ function BatchRow({ batch, onEdit }) {
           tone: 'blue',
           onClick: () => navigate(`/batches/${batch.id}`)
         },
-        {
+        ...(managerView ? [{
           icon: Edit,
           label: 'Edit Batch',
           tone: 'slate',
           onClick: () => onEdit(batch)
-        }
+        }] : [])
       ]}
       expanded={expanded}
       onToggle={handleToggle}
@@ -646,7 +647,8 @@ function BatchRow({ batch, onEdit }) {
   )
 }
 
-function Batches() {
+function Batches({ user }) {
+  const managerView = isManager(user)
   const [searchParams, setSearchParams] = useSearchParams()
   const [batches, setBatches] = useState([])
   const [search, setSearch] = useState('')
@@ -854,7 +856,7 @@ function Batches() {
 
   return (
     <div className="list-page">
-      {showAdd && (
+      {showAdd && managerView && (
         <BatchFormModal
           mode="add"
           onClose={() => setShowAdd(false)}
@@ -868,7 +870,7 @@ function Batches() {
         />
       )}
 
-      {editingBatch && (
+      {editingBatch && managerView && (
         <BatchFormModal
           mode="edit"
           batch={editingBatch}
@@ -888,10 +890,12 @@ function Batches() {
         title="Batch Management"
         subtitle="Track production batches, expiry validation, defect records, and batch-level traceability."
       >
-        <Button onClick={() => setShowAdd(true)}>
-          <Plus size={15} />
-          Add Batch
-        </Button>
+        {managerView && (
+          <Button onClick={() => setShowAdd(true)}>
+            <Plus size={15} />
+            Add Batch
+          </Button>
+        )}
       </PageHeader>
 
       {message && (
@@ -1067,13 +1071,13 @@ function Batches() {
               icon={Package}
               title="No batches found"
               description="Try adjusting your search or filters, or add a new production batch."
-              actionLabel="Add Batch"
-              onAction={() => setShowAdd(true)}
+              actionLabel={managerView ? 'Add Batch' : undefined}
+              onAction={managerView ? () => setShowAdd(true) : undefined}
             />
           ) : (
             <div className="compact-list-stack">
               {paged.items.map((batch) => (
-                <BatchRow key={batch.id} batch={batch} onEdit={setEditingBatch} />
+                <BatchRow key={batch.id} batch={batch} onEdit={setEditingBatch} managerView={managerView} />
               ))}
             </div>
           )}
