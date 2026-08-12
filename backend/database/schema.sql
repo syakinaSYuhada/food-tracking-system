@@ -271,7 +271,7 @@ CREATE TABLE corrective_actions (
   action_type VARCHAR(40) NOT NULL DEFAULT 'product_handling'
     CHECK (action_type IN ('product_handling', 'machine_process_check')),
   task TEXT,
-  action_description TEXT,
+  action_description TEXT, -- DEPRECATED: unused; assignment text lives in task
   evidence_required BOOLEAN NOT NULL DEFAULT FALSE,
 
   containment_actions TEXT, -- DEPRECATED: unused; assignment text lives in task

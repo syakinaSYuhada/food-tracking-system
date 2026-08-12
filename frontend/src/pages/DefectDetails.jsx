@@ -185,7 +185,6 @@ function AssignActionModal({ defect, rule, workers, users, assignedBy, defaultTy
     action_type: defaultType || 'product_handling',
     task: initialTask,
     custom_task: '',
-    description: '',
     assigned_to: defaultAssigneeId ? String(defaultAssigneeId) : '',
     due_date: '',
     evidence_required: true,
@@ -222,7 +221,6 @@ function AssignActionModal({ defect, rule, workers, users, assignedBy, defaultTy
       await api.post(`/corrective-actions/defects/${defect.id}/assign`, {
         action_type: form.action_type,
         task: taskToSend,
-        description: form.description || null,
         assigned_to: Number(form.assigned_to),
         assigned_by: assignedById,
         due_date: form.due_date || null,
@@ -282,13 +280,6 @@ function AssignActionModal({ defect, rule, workers, users, assignedBy, defaultTy
             onChange={(v) => update('custom_task', v)}
           />
         )}
-
-        <TextArea
-          label="Description"
-          value={form.description}
-          onChange={(v) => update('description', v)}
-          rows={3}
-        />
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Select
