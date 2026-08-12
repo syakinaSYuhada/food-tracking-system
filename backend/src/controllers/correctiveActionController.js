@@ -276,7 +276,10 @@ async function getCorrectiveActions(req, res) {
         started_user.full_name AS started_by_name,
         completed_user.full_name AS completed_by_name,
         verified_user.full_name AS verified_by_name,
-        rejected_user.full_name AS rejected_by_name
+        rejected_user.full_name AS rejected_by_name,
+        EXISTS (
+          SELECT 1 FROM evidence e WHERE e.corrective_action_id = ca.id
+        ) AS has_evidence
       FROM corrective_actions ca
       JOIN defects d ON ca.defect_id = d.id
       JOIN products p ON d.product_id = p.id

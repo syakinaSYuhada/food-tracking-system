@@ -248,7 +248,10 @@ async function getDefectById(req, res) {
         assigned_by_user.full_name AS assigned_by_name,
         started_user.full_name AS started_by_name,
         completed_user.full_name AS completed_by_name,
-        verified_user.full_name AS verified_by_name
+        verified_user.full_name AS verified_by_name,
+        EXISTS (
+          SELECT 1 FROM evidence e WHERE e.corrective_action_id = ca.id
+        ) AS has_evidence
       FROM corrective_actions ca
       LEFT JOIN users assigned_to_user ON ca.assigned_to = assigned_to_user.id
       LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
