@@ -179,7 +179,18 @@ function AppShell({ children, user, onLogout }) {
 
         {(!collapsed || isMobile) && (
           <div className="border-b border-white/10 px-4 py-4">
-            <div className="flex items-center gap-3">
+            <NavLink
+              to="/profile"
+              onClick={() => {
+                if (isMobile) setMobileNavOpen(false)
+              }}
+              className={({ isActive }) =>
+                [
+                  'flex items-center gap-3 rounded-2xl px-1 py-1 transition-colors duration-200',
+                  isActive ? 'bg-white/10' : 'hover:bg-white/5'
+                ].join(' ')
+              }
+            >
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-brand-500 text-xs font-bold text-white ring-2 ring-white/10">
                 {getUserInitials(user?.full_name)}
               </div>
@@ -191,7 +202,7 @@ function AppShell({ children, user, onLogout }) {
                   {user?.role}
                 </span>
               </div>
-            </div>
+            </NavLink>
           </div>
         )}
 
@@ -247,11 +258,19 @@ function AppShell({ children, user, onLogout }) {
                 <Menu size={18} />
               </button>
             )}
-            <div className="text-body text-brand-muted">
+            <NavLink
+              to="/profile"
+              className={({ isActive }) =>
+                [
+                  'text-body text-brand-muted rounded-xl px-2 py-1 transition-colors duration-200',
+                  isActive ? 'bg-brand-50 text-brand-ink' : 'hover:bg-brand-50/60 hover:text-brand-ink'
+                ].join(' ')
+              }
+            >
               Signed in as <span className="font-semibold text-brand-ink">{user?.full_name}</span>
               <span className="mx-2 text-brand-border">·</span>
               <span className="font-semibold capitalize text-brand-500">{user?.role}</span>
-            </div>
+            </NavLink>
           </div>
 
           <div className="flex items-center gap-3">

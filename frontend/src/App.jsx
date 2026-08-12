@@ -15,6 +15,7 @@ import CorrectiveActionDetails from './pages/CorrectiveActionDetails'
 import Reports from './pages/Reports'
 import Users from './pages/Users'
 import ActivityLog from './pages/ActivityLog'
+import Profile from './pages/Profile'
 import api from './api/client'
 
 function App() {
@@ -82,6 +83,7 @@ function App() {
             <Route path="/reports" element={<Reports user={user} />} />
             <Route path="/users" element={<Users />} />
             <Route path="/activity-log" element={<ActivityLog />} />
+            <Route path="/profile" element={<Profile user={user} />} />
           </Routes>
         </RequireRole>
       </AppShell>
