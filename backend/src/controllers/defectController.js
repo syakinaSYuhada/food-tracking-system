@@ -707,6 +707,11 @@ async function closeDefect(req, res) {
     }
 
     const defect = check.rows[0]
+    if (defect.defect_status === 'closed') {
+      await client.query('ROLLBACK')
+      return errorResponse(res, 'Defect is already closed', 400, 'DEFECT_CLOSED')
+    }
+
     if (defect.root_cause_status !== 'confirmed') {
       await client.query('ROLLBACK')
       return errorResponse(res, 'Root cause must be confirmed before closing defect', 400, 'ROOT_CAUSE_NOT_CONFIRMED')
