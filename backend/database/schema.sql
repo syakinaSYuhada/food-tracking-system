@@ -342,7 +342,9 @@ CREATE TABLE evidence (
   file_type VARCHAR(80),
   evidence_note TEXT,
   uploaded_by INT REFERENCES users(id),
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_evidence_has_parent
+    CHECK (defect_id IS NOT NULL OR corrective_action_id IS NOT NULL)
 );
 
 -- =========================================================
