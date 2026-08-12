@@ -258,7 +258,7 @@ export default function Dashboard({ user }) {
 
         <div className="list-kpi-grid lg:grid-cols-5">
           <KPICard density="command" title="My Reports" value={reportedDefects.length} subtitle="Submitted" icon={<ClipboardList size={18} />} tone="blue" />
-          <KPICard density="command" title="Awaiting Manager" value={awaitingManager} subtitle="Reports waiting for manager review" icon={<AlertCircle size={18} />} tone="amber" highlight={awaitingManager > 0} />
+          <KPICard density="command" title="Awaiting Manager" value={awaitingManager} subtitle="Reports waiting for manager review" helperText="Your manager will review and assign corrective work." icon={<AlertCircle size={18} />} tone="amber" highlight={awaitingManager > 0} />
           <KPICard density="command" title="Assigned Actions" value={workerActions.length} subtitle="Assigned to you" icon={<CheckSquare size={18} />} tone="purple" />
           <KPICard
             density="command"

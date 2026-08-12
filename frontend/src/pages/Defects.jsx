@@ -102,12 +102,13 @@ function normalizeBatch(row) {
   }
 }
 
-function KpiCard({ label, value, subtitle, active, onClick, highlight, icon, tone = 'brand' }) {
+function KpiCard({ label, value, subtitle, helperText, active, onClick, highlight, icon, tone = 'brand' }) {
   return (
     <KPICard
       title={label}
       value={value}
       subtitle={subtitle}
+      helperText={helperText}
       icon={icon}
       tone={tone}
       active={active}
@@ -868,6 +869,7 @@ export default function Defects({ user }) {
             label="Awaiting Manager"
             value={defects.filter((d) => Number(d.createdBy) === Number(currentUser?.id) && ['new', 'under_review'].includes(d.status)).length}
             subtitle="Submitted and pending assignment"
+            helperText="Your manager will review and assign corrective work."
             active={statusFilter === 'new'}
             highlight
             tone="amber"

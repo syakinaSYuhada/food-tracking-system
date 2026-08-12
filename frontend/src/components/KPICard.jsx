@@ -78,6 +78,7 @@ function KPICard({
   title,
   value,
   subtitle,
+  helperText,
   zeroHint,
   icon,
   tone = 'brand',
@@ -97,6 +98,7 @@ function KPICard({
   const isEmphasis = density === 'emphasis'
   const showZeroHint = Boolean(zeroHint) && isZeroValue(value)
   const displaySubtitle = !showZeroHint && subtitle && (showSubtitle || density === 'dashboard' || density === 'command' || density === 'emphasis')
+  const displayHelperText = !showZeroHint && helperText
   const resolvedVariantStyle = isEmphasis && emphasisVariantStyles[variant]
     ? emphasisVariantStyles[variant]
     : variantStyles[variant] || variantStyles.default
@@ -145,6 +147,15 @@ function KPICard({
             isWarning ? 'text-amber-700/90' : 'text-brand-muted'
           ].join(' ')}>
             {subtitle}
+          </div>
+        )}
+        {displayHelperText && (
+          <div className={[
+            'mt-0.5 line-clamp-2 text-xs leading-snug normal-case',
+            isCritical ? 'text-red-600/80' : '',
+            isWarning ? 'text-amber-700/80' : 'text-brand-muted'
+          ].join(' ')}>
+            {helperText}
           </div>
         )}
         {showZeroHint && (
