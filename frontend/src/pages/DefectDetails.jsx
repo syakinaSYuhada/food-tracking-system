@@ -669,11 +669,11 @@ export default function DefectDetails({ user }) {
   const workerReportedDefect = Number(defect?.created_by) === Number(currentUser?.id)
   const workerHasAccess = managerView || workerHasAssignedAction || workerReportedDefect
   const tabs = managerView
-    ? [['overview', 'Overview'], ['actions', 'Corrective Actions'], ['root', 'Root Cause'], ['activity', 'Activity']]
+    ? [['overview', 'Overview'], ['actions', 'Corrective Actions'], ['root', 'Investigation'], ['activity', 'Activity']]
     : [
         ['overview', 'Overview'],
         ...(workerHasAssignedAction ? [['actions', 'My Actions']] : []),
-        ...(workerHasAssignedAction || workerReportedDefect ? [['root', 'Root Cause']] : []),
+        ...(workerHasAssignedAction || workerReportedDefect ? [['root', 'Investigation']] : []),
         ['activity', 'Activity']
       ]
 

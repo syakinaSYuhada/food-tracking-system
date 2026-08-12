@@ -403,7 +403,7 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
         <div className={`grid grid-cols-1 gap-4 ${includePriority ? 'md:grid-cols-2' : ''}`}>
           {includePriority && (
             <Select
-              label="Defect Priority"
+              label="Review Urgency"
               value={form.priority}
               onChange={(v) => update('priority', v)}
               options={DEFECT_PRIORITY_OPTIONS.map((option) => option.value)}
@@ -818,7 +818,7 @@ export default function Defects({ user }) {
   return (
     <div className="list-page">
       <PageHeader
-        title={managerView ? 'Defect Records' : 'My Defects'}
+        title={managerView ? 'Defect Records' : 'My Reports'}
         subtitle={managerView
           ? 'Review floor reports, track open cases, and assign corrective actions.'
           : 'Defects you reported and defects with actions assigned to you.'}
@@ -840,7 +840,7 @@ export default function Defects({ user }) {
 
       <div className="list-kpi-grid">
         <KpiCard
-          label={managerView ? 'Total Defects' : 'My Defects'}
+          label={managerView ? 'Total Defects' : 'My Reports'}
           value={kpis.total}
           subtitle={managerView ? 'All records in the system' : 'Linked to your account'}
           active={statusFilter === 'all' && severityFilter === 'all' && stageFilter === 'all' && urgencyFilter === 'all'}

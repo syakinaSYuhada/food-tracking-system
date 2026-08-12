@@ -35,7 +35,7 @@ const managerLinks = [
 
 const workerLinks = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { label: 'My Defects', path: '/defects', icon: FileText },
+  { label: 'My Reports', path: '/defects', icon: FileText },
   { label: 'My Actions', path: '/corrective-actions', icon: CheckSquare }
 ]
 
