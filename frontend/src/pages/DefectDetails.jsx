@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, Eye, Play, Plus, Printer, Save, XCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Edit, Eye, Play, Plus, Printer, Save, XCircle } from 'lucide-react'
 import api from '../api/client'
 import StatusBadge from '../components/StatusBadge'
 import BaseModal from '../components/BaseModal'
@@ -15,7 +15,7 @@ import { isActionOverdue } from '../utils/dueDate'
 import { printDefectSummary } from '../utils/defectExport'
 import { hasExpiryMismatch } from '../utils/expiry'
 import { fetchEvidenceBlobUrl } from '../utils/assetUrl'
-import { formatDefectPriorityLabel, getReviewDueBadge, isUrgentDefectPriority } from '../utils/defectReviewDue'
+import { formatDefectPriorityLabel, getReviewDueBadge, isUrgentDefectPriority, DEFECT_PRIORITY_OPTIONS, todayDateString, formatReviewDueDate } from '../utils/defectReviewDue'
 
 function formatDate(value) {
   if (!value) return '-'
@@ -71,6 +71,104 @@ function normalizeAction(action) {
 function formatAssignActionTypeLabel(actionType) {
   if (actionType === 'machine_process_check') return 'Machine / Process Check'
   return 'Product Handling'
+}
+
+function validateDefectDetailsForm(form) {
+  if (form.review_due_date && form.review_due_date < todayDateString()) {
+    return 'Manager review due date cannot be before today'
+  }
+
+  if (form.priority === 'urgent' && !form.urgency_reason?.trim()) {
+    return 'Please explain why this defect needs urgent manager review.'
+  }
+
+  return null
+}
+
+function EditDefectDetailsModal({ defect, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    priority: defect.priority || 'medium',
+    review_due_date: formatReviewDueDate(defect.review_due_date) || '',
+    urgency_reason: defect.urgency_reason || ''
+  })
+  const [saving, setSaving] = useState(false)
+
+  function update(field, value) {
+    setForm((current) => ({ ...current, [field]: value }))
+  }
+
+  async function submit() {
+    const validationError = validateDefectDetailsForm(form)
+    if (validationError) {
+      alert(validationError)
+      return
+    }
+
+    setSaving(true)
+    try {
+      await api.patch(`/defects/${defect.id}/details`, {
+        priority: form.priority,
+        review_due_date: form.review_due_date || null,
+        urgency_reason: form.urgency_reason.trim() || null
+      })
+      await onSaved()
+      onClose()
+    } catch (error) {
+      console.error(error)
+      alert(error.response?.data?.message || 'Could not update defect details.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const reviewToday = form.review_due_date === todayDateString()
+
+  return (
+    <BaseModal
+      title="Edit Defect Details"
+      subtitle="Update review priority, manager review due date, and urgency reason."
+      onClose={onClose}
+      size="lg"
+      footer={(
+        <>
+          <Button color="slate" variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button color="brand" onClick={submit} disabled={saving}>
+            {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </>
+      )}
+    >
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Select
+            label="Defect Priority"
+            value={form.priority}
+            onChange={(v) => update('priority', v)}
+            options={DEFECT_PRIORITY_OPTIONS.map((option) => option.value)}
+          />
+          <Input
+            label="Manager Review Due Date"
+            type="date"
+            value={form.review_due_date}
+            min={todayDateString()}
+            onChange={(v) => update('review_due_date', v)}
+          />
+        </div>
+        <p className="text-xs text-brand-muted">
+          Use this when the defect must be reviewed quickly to prevent further loss or damage.
+        </p>
+        {reviewToday && (
+          <p className="text-xs font-medium text-amber-700">Needs review today</p>
+        )}
+        <TextArea
+          label={form.priority === 'urgent' ? 'Urgency Reason (required)' : 'Urgency Reason (optional)'}
+          value={form.urgency_reason}
+          onChange={(v) => update('urgency_reason', v)}
+          rows={2}
+        />
+      </div>
+    </BaseModal>
+  )
 }
 
 function AssignActionModal({ defect, rule, workers, users, assignedBy, defaultType, defaultAssigneeId, defaultTask, onClose, onAssigned }) {
@@ -493,6 +591,7 @@ export default function DefectDetails({ user }) {
   const [investigationNotes, setInvestigationNotes] = useState('')
   const [savingSuspected, setSavingSuspected] = useState(false)
   const [printingSummary, setPrintingSummary] = useState(false)
+  const [showEditDetails, setShowEditDetails] = useState(false)
 
   function applyRootCauseSelection(value, options, setCause, setOther) {
     if (!value) return
@@ -917,12 +1016,32 @@ export default function DefectDetails({ user }) {
 
         {tab === 'overview' && (
           <div className="mt-6 space-y-5">
-            {(defect.review_due_date || defect.urgency_reason || isUrgentDefectPriority(defect)) && (
+            {showEditDetails && (
+              <EditDefectDetailsModal
+                defect={defect}
+                onClose={() => setShowEditDetails(false)}
+                onSaved={load}
+              />
+            )}
+
+            {((managerView && defect.defect_status !== 'closed') || defect.review_due_date || defect.urgency_reason || isUrgentDefectPriority(defect)) && (
               <div className="rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-4 text-sm text-amber-950">
-                <p className="font-semibold">Manager Review Urgency</p>
-                <p className="mt-1 text-xs text-amber-900/80">
-                  Set by the worker when reporting. This tells you how quickly to review the defect — not a corrective action due date.
-                </p>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">Manager Review Urgency</p>
+                    <p className="mt-1 text-xs text-amber-900/80">
+                      {managerView
+                        ? 'Set or adjust how quickly this defect needs manager review — not a corrective action due date.'
+                        : 'Set by the worker when reporting. This tells you how quickly to review the defect — not a corrective action due date.'}
+                    </p>
+                  </div>
+                  {managerView && defect.defect_status !== 'closed' && (
+                    <Button color="amber" variant="subtle" size="sm" onClick={() => setShowEditDetails(true)}>
+                      <Edit size={14} />
+                      Edit Details
+                    </Button>
+                  )}
+                </div>
                 <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
                   <Info label="Defect Priority" value={formatDefectPriorityLabel(defect.priority)} />
                   <Info label="Manager Review Due Date / Review Needed By" value={formatDate(defect.review_due_date) || '-'} />
@@ -933,11 +1052,15 @@ export default function DefectDetails({ user }) {
                     />
                   )}
                 </div>
-                {defect.urgency_reason && (
+                {defect.urgency_reason ? (
                   <div className="mt-3">
                     <Info label="Urgency Reason" value={defect.urgency_reason} />
                   </div>
-                )}
+                ) : managerView && defect.defect_status !== 'closed' ? (
+                  <div className="mt-3">
+                    <Info label="Urgency Reason" value="-" />
+                  </div>
+                ) : null}
               </div>
             )}
 
