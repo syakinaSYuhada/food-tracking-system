@@ -12,6 +12,7 @@ import EmptyState from '../components/EmptyState'
 import LoadingState from '../components/LoadingState'
 import NotificationCard from '../components/NotificationCard'
 import { isManager } from '../utils/roleAccess'
+import useObjectUrl from '../utils/useObjectUrl'
 import { paginateItems } from '../utils/pagination'
 import {
   compareDefectsForReviewUrgency,
@@ -315,6 +316,7 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
   const stepLabels = workerReport
     ? ['What & Where', 'Details & Photo']
     : ['Product Information', 'Defect Information', 'Evidence & Initial Suggestions']
+  const photoPreviewUrl = useObjectUrl(photo)
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -538,6 +540,13 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
                 <span className="field-label">Photo Evidence</span>
                 <input type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] || null)} className="field-control" />
                 <p className="mt-1 text-xs text-brand-muted">Upload a photo of the problem if possible.</p>
+                {photoPreviewUrl && (
+                  <img
+                    src={photoPreviewUrl}
+                    alt="Selected evidence preview"
+                    className="mt-2 h-24 w-24 rounded-lg border border-brand-border object-cover"
+                  />
+                )}
               </label>
               <TextArea label="Possible Cause (optional)" value={form.handling_notes} onChange={(v) => update('handling_notes', v)} />
             </div>
@@ -605,6 +614,13 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
               <label className="block">
                 <span className="field-label">Evidence Picture</span>
                 <input type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] || null)} className="field-control" />
+                {photoPreviewUrl && (
+                  <img
+                    src={photoPreviewUrl}
+                    alt="Selected evidence preview"
+                    className="mt-2 h-24 w-24 rounded-lg border border-brand-border object-cover"
+                  />
+                )}
               </label>
               <TextArea label="Notes" value={form.handling_notes} onChange={(v) => update('handling_notes', v)} />
             </div>

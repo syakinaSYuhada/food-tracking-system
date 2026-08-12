@@ -13,6 +13,7 @@ import { formatCaStatusLabel } from '../utils/caStatusLabel'
 import { printCorrectiveActionSummary } from '../utils/correctiveActionExport'
 import { isActionOverdue } from '../utils/dueDate'
 import { formatExpiryDate, hasExpiryMismatch } from '../utils/expiry'
+import useObjectUrl from '../utils/useObjectUrl'
 
 function titleCase(value) {
   if (!value) return '-'
@@ -207,6 +208,8 @@ export default function CorrectiveActionDetails({ user }) {
   useEffect(() => {
     load()
   }, [id, user])
+
+  const evidencePreviewUrl = useObjectUrl(form.evidence_file)
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -665,6 +668,16 @@ export default function CorrectiveActionDetails({ user }) {
                       onChange={(e) => handleEvidenceFileChange(e.target.files?.[0] || null)}
                       accept="image/*,.pdf"
                     />
+                    {evidencePreviewUrl && (
+                      <img
+                        src={evidencePreviewUrl}
+                        alt="Selected evidence preview"
+                        className="mt-2 h-24 w-24 rounded-lg border border-brand-border object-cover"
+                      />
+                    )}
+                    {form.evidence_file && !evidencePreviewUrl && (
+                      <p className="mt-2 text-sm text-brand-muted">{form.evidence_file.name}</p>
+                    )}
                     {evidenceError && (
                       <p className="mt-2 text-sm font-medium text-red-700" role="alert">
                         Evidence is required before completion.
