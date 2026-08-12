@@ -1,7 +1,10 @@
 const jwt = require('jsonwebtoken')
 const { errorResponse } = require('./responseHandler')
 
-const JWT_SECRET = process.env.JWT_SECRET || 'kak-norie-qdts-dev-secret'
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required')
+}
 
 function signUserToken(user) {
   return jwt.sign(
