@@ -135,6 +135,7 @@ function normalizeAction(row) {
     priority: row.priority,
     status: row.ca_status,
     evidenceRequired: row.evidence_required,
+    hasEvidence: Boolean(row.has_evidence),
     productName: row.product_name,
     batchId: row.batch_id,
     batchNumber: row.batch_number,

@@ -62,7 +62,9 @@ function normalizeAction(action) {
     qtyDiscarded: Number(action.qty_discarded || 0),
     qtyReleased: Number(action.qty_released || 0),
     qtyOnHold: Number(action.qty_on_hold || 0),
-    calculatedLoss: Number(action.calculated_loss || 0)
+    calculatedLoss: Number(action.calculated_loss || 0),
+    evidenceRequired: Boolean(action.evidence_required),
+    hasEvidence: Boolean(action.has_evidence)
   }
 }
 
@@ -1060,7 +1062,9 @@ export default function DefectDetails({ user }) {
                 <div className="mt-3 text-sm text-brand-muted">No actions assigned yet.</div>
               ) : (
                 <div className="mt-3 space-y-3">
-                  {visibleActions.map((action) => (
+                  {visibleActions.map((action) => {
+                    const verifyBlocked = action.evidenceRequired && !action.hasEvidence
+                    return (
                     <div key={action.id} className="flex items-center justify-between gap-3 rounded-2xl border border-brand-border/70 bg-white p-4 shadow-sm">
                       <div>
                         <div className="font-bold text-brand-ink">{action.code}</div>
@@ -1103,14 +1107,21 @@ export default function DefectDetails({ user }) {
                             <Button color="red" size="sm" onClick={() => setRejectActionId(action.id)}>
                               <XCircle size={14} /> Reject Action
                             </Button>
-                            <Button color="green" size="sm" onClick={() => verifyAction(action.id)}>
+                            <Button
+                              color="green"
+                              size="sm"
+                              onClick={() => verifyAction(action.id)}
+                              disabled={verifyBlocked}
+                              title={verifyBlocked ? 'Evidence is required before verification.' : undefined}
+                            >
                               <CheckCircle size={14} /> Verify Action
                             </Button>
                           </>
                         )}
                       </div>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>

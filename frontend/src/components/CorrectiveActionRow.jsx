@@ -85,6 +85,8 @@ export default function CorrectiveActionRow({
   const highPriority = priority === 'high' || priority === 'critical'
   const daysLate = getDaysLate(action.dueDate, action.status)
   const showManagerActions = managerView && action.status === 'completed'
+  const verifyBlocked = managerView && action.status === 'completed'
+    && action.evidenceRequired && !action.hasEvidence
   const accentClass = getAccentClass(action, managerView)
   const rowTint = getRowTint(action, managerView)
   const Badge = EntityRow.Badge
@@ -190,7 +192,12 @@ export default function CorrectiveActionRow({
           <ListActionButton intent="view" onClick={onOpen} />
           {showManagerActions && (
             <>
-              <ListActionButton intent="verify" onClick={onVerify} />
+              <ListActionButton
+                intent="verify"
+                onClick={onVerify}
+                disabled={verifyBlocked}
+                title={verifyBlocked ? 'Evidence is required before verification.' : undefined}
+              />
               <ListActionButton intent="reject" onClick={onReject} />
             </>
           )}
