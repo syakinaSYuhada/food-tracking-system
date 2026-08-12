@@ -324,6 +324,7 @@ async function getCorrectiveActionReport(req, res) {
         ca.ca_status,
         ca.priority,
         ca.due_date,
+        ca.task,
         ca.containment_actions,
         ca.corrective_actions,
         d.defect_code,
