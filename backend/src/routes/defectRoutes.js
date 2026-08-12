@@ -14,6 +14,7 @@ const {
   confirmRootCause,
   startReview,
   closeDefect,
+  updateDefectDetails,
   uploadDefectEvidence
 } = require('../controllers/defectController')
 const { requireManager } = require('../utils/accessControl')
@@ -37,6 +38,7 @@ router.get('/:id/activity', getDefectActivity)
 router.get('/:id', getDefectById)
 router.put('/:id', requireManager, updateDefect)
 router.patch('/:id/start-review', requireManager, startReview)
+router.patch('/:id/details', requireManager, updateDefectDetails)
 router.patch('/:id/root-cause', requireManager, confirmRootCause)
 router.patch('/:id/close', requireManager, closeDefect)
 router.post('/:id/evidence', uploadEvidence.single('evidence'), uploadDefectEvidence)

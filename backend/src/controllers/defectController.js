@@ -24,6 +24,19 @@ function parseOptionalDate(value) {
   return dateStr
 }
 
+function normalizeStoredReviewDueDate(value) {
+  if (value == null || value === '') return null
+  const parsed = parseOptionalDate(value)
+  if (parsed) return parsed
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const year = value.getFullYear()
+    const month = String(value.getMonth() + 1).padStart(2, '0')
+    const day = String(value.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+  return value
+}
+
 function resolveDefectPriority(priority, recommendedPriority) {
   const normalized = String(priority || recommendedPriority || 'medium').toLowerCase()
   return DEFECT_PRIORITIES.includes(normalized) ? normalized : 'medium'
@@ -823,6 +836,130 @@ async function getDefectActivity(req, res) {
   }
 }
 
+async function updateDefectDetails(req, res) {
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const { id } = req.params
+    const managerId = actorId(req)
+    const { priority, review_due_date, urgency_reason } = req.body
+
+    const defectResult = await client.query(
+      `
+      SELECT id, defect_code, defect_status, priority, review_due_date, urgency_reason
+      FROM defects
+      WHERE id = $1
+      `,
+      [id]
+    )
+
+    if (defectResult.rows.length === 0) {
+      await client.query('ROLLBACK')
+      return errorResponse(res, 'Defect not found', 404, 'DEFECT_NOT_FOUND')
+    }
+
+    const defect = defectResult.rows[0]
+
+    if (defect.defect_status === 'closed') {
+      await client.query('ROLLBACK')
+      return errorResponse(res, 'Cannot update details on a closed defect', 400, 'DEFECT_CLOSED')
+    }
+
+    const hasPriority = Object.prototype.hasOwnProperty.call(req.body, 'priority')
+    const hasReviewDueDate = Object.prototype.hasOwnProperty.call(req.body, 'review_due_date')
+    const hasUrgencyReason = Object.prototype.hasOwnProperty.call(req.body, 'urgency_reason')
+
+    const mergedPriority = hasPriority ? resolveDefectPriority(priority) : defect.priority
+    const mergedReviewDueDate = hasReviewDueDate
+      ? review_due_date
+      : normalizeStoredReviewDueDate(defect.review_due_date)
+    const mergedUrgencyReason = hasUrgencyReason ? urgency_reason : defect.urgency_reason
+
+    const urgencyValidation = validateDefectUrgencyFields({
+      priority: mergedPriority,
+      reviewDueDate: mergedReviewDueDate,
+      urgencyReason: mergedUrgencyReason
+    })
+
+    if (!urgencyValidation.valid) {
+      await client.query('ROLLBACK')
+      return errorResponse(res, urgencyValidation.message, 400, urgencyValidation.code)
+    }
+
+    const nextReviewDueDate = urgencyValidation.reviewDueDate
+    const nextUrgencyReason = urgencyValidation.urgencyReason
+
+    function formatDateForLog(value) {
+      if (value == null || value === '') return 'none'
+      return normalizeStoredReviewDueDate(value) || String(value).split('T')[0]
+    }
+
+    const oldParts = []
+    const newParts = []
+
+    if (hasPriority && mergedPriority !== defect.priority) {
+      oldParts.push(`priority: ${defect.priority}`)
+      newParts.push(`priority: ${mergedPriority}`)
+    }
+
+    if (hasReviewDueDate && formatDateForLog(defect.review_due_date) !== formatDateForLog(nextReviewDueDate)) {
+      oldParts.push(`review_due_date: ${formatDateForLog(defect.review_due_date)}`)
+      newParts.push(`review_due_date: ${formatDateForLog(nextReviewDueDate)}`)
+    }
+
+    if (hasUrgencyReason && String(defect.urgency_reason || '').trim() !== String(nextUrgencyReason || '').trim()) {
+      oldParts.push(`urgency_reason: ${defect.urgency_reason || 'none'}`)
+      newParts.push(`urgency_reason: ${nextUrgencyReason || 'none'}`)
+    }
+
+    const updateResult = await client.query(
+      `
+      UPDATE defects
+      SET priority = $1,
+          review_due_date = $2,
+          urgency_reason = $3,
+          updated_by = $4,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $5
+      RETURNING *
+      `,
+      [mergedPriority, nextReviewDueDate, nextUrgencyReason, managerId, id]
+    )
+
+    if (oldParts.length > 0) {
+      await client.query(
+        `
+        INSERT INTO activity_logs (
+          user_id,
+          action_type,
+          entity_type,
+          entity_id,
+          description,
+          old_value,
+          new_value
+        )
+        VALUES ($1, 'UPDATE_DEFECT_DETAILS', 'defect', $2, $3, $4, $5)
+        `,
+        [
+          managerId,
+          id,
+          `Manager updated defect ${defect.defect_code} details.`,
+          oldParts.join('; '),
+          newParts.join('; ')
+        ]
+      )
+    }
+
+    await client.query('COMMIT')
+    return successResponse(res, formatDefectRow(updateResult.rows[0]), 'Defect details updated successfully')
+  } catch (error) {
+    await client.query('ROLLBACK')
+    return errorResponse(res, error, 500, 'UPDATE_DEFECT_DETAILS_ERROR')
+  } finally {
+    client.release()
+  }
+}
+
 async function updateDefect(req, res) {
   return errorResponse(res, 'Use dedicated workflow endpoints instead of generic defect update for this version.', 405, 'GENERIC_UPDATE_DISABLED')
 }
@@ -841,5 +978,6 @@ module.exports = {
   confirmRootCause,
   startReview,
   closeDefect,
+  updateDefectDetails,
   uploadDefectEvidence
 }
