@@ -47,7 +47,6 @@ CREATE TABLE products (
   packaging_type VARCHAR(100) NOT NULL,
   size_weight VARCHAR(50) NOT NULL,
   shelf_life_months INT NOT NULL CHECK (shelf_life_months > 0),
-  selling_price DECIMAL(10, 2) DEFAULT 0,
   loss_rate_per_unit DECIMAL(10, 2) NOT NULL CHECK (loss_rate_per_unit >= 0),
   storage_condition VARCHAR(150),
   description TEXT,

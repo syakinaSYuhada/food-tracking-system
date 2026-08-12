@@ -12,14 +12,20 @@ function isValidEmail(value) {
 
 async function getUsers(req, res) {
   try {
-    const { role } = req.query
+    const { role, include_inactive } = req.query
     const values = []
-    let where = "WHERE account_status = 'active'"
+    const conditions = []
+
+    if (String(include_inactive).toLowerCase() !== 'true') {
+      conditions.push("account_status = 'active'")
+    }
 
     if (role) {
       values.push(role)
-      where += ` AND role = $${values.length}`
+      conditions.push(`role = $${values.length}`)
     }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
 
     const result = await pool.query(
       `
@@ -123,4 +129,50 @@ async function createUser(req, res) {
   }
 }
 
-module.exports = { getUsers, createUser }
+async function updateUserStatus(req, res) {
+  try {
+    const userId = Number(req.params.id)
+    const { account_status } = req.body
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return errorResponse(res, 'Invalid user id', 400, 'INVALID_USER_ID')
+    }
+
+    const normalizedStatus = String(account_status || '').trim().toLowerCase()
+
+    if (!['active', 'inactive'].includes(normalizedStatus)) {
+      return errorResponse(res, 'Account status must be active or inactive', 400, 'INVALID_ACCOUNT_STATUS')
+    }
+
+    if (
+      normalizedStatus === 'inactive' &&
+      Number(req.user?.id) === userId
+    ) {
+      return errorResponse(res, 'You cannot deactivate your own account', 400, 'CANNOT_DEACTIVATE_SELF')
+    }
+
+    const result = await pool.query(
+      `
+      UPDATE users
+      SET account_status = $1, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2
+      RETURNING id, username, email, full_name, role, account_status
+      `,
+      [normalizedStatus, userId]
+    )
+
+    if (result.rows.length === 0) {
+      return errorResponse(res, 'User not found', 404, 'USER_NOT_FOUND')
+    }
+
+    const message = normalizedStatus === 'active'
+      ? 'User activated successfully'
+      : 'User deactivated successfully'
+
+    return successResponse(res, result.rows[0], message)
+  } catch (error) {
+    return errorResponse(res, error, 500, 'UPDATE_USER_STATUS_ERROR')
+  }
+}
+
+module.exports = { getUsers, createUser, updateUserStatus }

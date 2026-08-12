@@ -36,7 +36,7 @@ function copyDemoEvidenceAssets() {
 
 async function verifyProducts(client) {
   const result = await client.query(`
-    SELECT product_code, product_name, size_weight, selling_price, loss_rate_per_unit
+    SELECT product_code, product_name, size_weight, loss_rate_per_unit
     FROM products
     WHERE product_code IN ('DD-060', 'DD-180', 'DSML-350')
     ORDER BY product_code
@@ -45,7 +45,7 @@ async function verifyProducts(client) {
   console.log('\nRetail SKU check:')
   for (const row of result.rows) {
     console.log(
-      `  ${row.product_code} | ${row.product_name} ${row.size_weight} | sell RM ${row.selling_price} | loss RM ${row.loss_rate_per_unit}`
+      `  ${row.product_code} | ${row.product_name} ${row.size_weight} | loss RM ${row.loss_rate_per_unit}`
     )
   }
 
