@@ -301,11 +301,11 @@ async function getCorrectiveActionReport(req, res) {
 
     const kpiResult = await pool.query(`
       SELECT
-        COUNT(*)::int AS actions_created,
+        COUNT(*) FILTER (WHERE ca_status != 'cancelled')::int AS actions_created,
         COUNT(*) FILTER (WHERE ca_status IN ('assigned', 'in_progress', 'rejected'))::int AS open_actions,
         COUNT(*) FILTER (WHERE ca_status = 'completed')::int AS completed_waiting_verification,
         COUNT(*) FILTER (WHERE ca_status = 'verified')::int AS verified_actions,
-        COUNT(*) FILTER (WHERE due_date < CURRENT_DATE AND ca_status != 'verified')::int AS overdue_actions
+        COUNT(*) FILTER (WHERE due_date < CURRENT_DATE AND ca_status != 'verified' AND ca_status != 'cancelled')::int AS overdue_actions
       FROM corrective_actions ca
       WHERE ${actionPeriod}
     `)
