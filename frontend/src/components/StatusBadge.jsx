@@ -83,7 +83,7 @@ const styles = {
   inactive: 'bg-slate-100 text-slate-600 border-slate-200/80'
 }
 
-function StatusBadge({ value, kind, audience, prefix }) {
+function StatusBadge({ value, kind, audience, prefix, title }) {
   const normalized = String(value || '').toLowerCase()
   const workerDefectLabels = {
     action_assigned: 'Work Assigned'
@@ -100,7 +100,7 @@ function StatusBadge({ value, kind, audience, prefix }) {
   const dotClass = dotColors[normalized] || 'bg-slate-400'
 
   return (
-    <span className={`badge ${styleClass}`}>
+    <span className={`badge ${styleClass}`} title={title}>
       <span className={`badge-dot ${dotClass}`} aria-hidden="true" />
       {label}
     </span>

@@ -7,6 +7,7 @@ import {
   getReviewDueBadge,
   getReviewDueStatus
 } from '../utils/defectReviewDue'
+import { defectStatusBadgeTitle } from '../utils/defectStatusHint'
 
 const ACCENT_BY_LEVEL = {
   'Food Safety Risk': 'bg-red-500',
@@ -111,7 +112,11 @@ export default function DefectRecordCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1">
             <span className="list-row-code">{defect.code}</span>
-            <StatusBadge value={defect.status} audience={managerView ? undefined : 'worker'} />
+            <StatusBadge
+              value={defect.status}
+              audience={managerView ? undefined : 'worker'}
+              title={managerView ? undefined : defectStatusBadgeTitle(defect.status, undefined)}
+            />
             {showWorkerReportBadge && <Badge tone="green">Worker report</Badge>}
             {reviewDueBadge && (
               <Badge

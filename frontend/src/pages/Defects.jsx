@@ -485,6 +485,9 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
         </>
       }
     >
+      <p className="mb-2 text-xs font-medium text-brand-muted">
+        Step {step} of {totalSteps}
+      </p>
       <div className={`mb-5 grid gap-3 text-sm font-semibold ${workerReport ? 'grid-cols-2' : 'grid-cols-3'}`}>
         {stepLabels.map((label, index) => (
           <div key={label} className={`rounded-xl px-4 py-3 ${step === index + 1 ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-100' : 'bg-brand-50/40 text-brand-muted'}`}>
@@ -668,6 +671,7 @@ export default function Defects({ user }) {
   const [createdPeriod, setCreatedPeriod] = useState(null)
   const [workerMineOnly, setWorkerMineOnly] = useState(false)
   const [expiryMismatchFilter, setExpiryMismatchFilter] = useState(false)
+  const [message, setMessage] = useState(null)
 
   const currentUser = user
   const managerView = isManager(user)
@@ -829,6 +833,21 @@ export default function Defects({ user }) {
           <Plus size={18} /> {managerView ? 'Add Defect' : 'Report Defect'}
         </Button>
       </PageHeader>
+
+      {message && (
+        <div
+          className={`mb-4 flex items-center justify-between rounded-xl px-4 py-3 text-sm ${
+            message.type === 'success'
+              ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+              : 'border border-red-200 bg-red-50 text-red-700'
+          }`}
+        >
+          <span>{message.text}</span>
+          <button type="button" onClick={() => setMessage(null)} className="font-bold">
+            ×
+          </button>
+        </div>
+      )}
 
       {!managerView && (workerMineOnly || expiryMismatchFilter) && (
         <p className="text-[0.6875rem] text-brand-muted">
@@ -1086,7 +1105,15 @@ export default function Defects({ user }) {
         <AddDefectModal
           workerReport={!managerView}
           onClose={() => setShowAdd(false)}
-          onCreated={loadDefects}
+          onCreated={() => {
+            loadDefects()
+            if (!managerView) {
+              setMessage({
+                type: 'success',
+                text: 'Report submitted successfully. Your manager will review it before assigning corrective work.'
+              })
+            }
+          }}
           createdBy={currentUser?.id}
         />
       )}

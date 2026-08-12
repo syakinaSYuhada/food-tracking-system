@@ -32,6 +32,7 @@ import {
   buildAttentionPrimaryPath,
   getAttentionActionLabel
 } from '../utils/attentionNavigation'
+import { defectStatusHint } from '../utils/defectStatusHint'
 
 const PIE_COLORS = ['#1F8F73', '#146356', '#C2410C', '#F59E0B', '#7EC6AE']
 
@@ -47,37 +48,6 @@ function money(value) {
 function formatDate(value) {
   if (!value) return '-'
   return String(value).split('T')[0]
-}
-
-function defectStatusHint(status, hasAssignedAction) {
-  const normalized = String(status || '').toLowerCase()
-
-  if (normalized === 'new') {
-    return 'Submitted — waiting for manager review. No task assigned yet.'
-  }
-  if (normalized === 'under_review') {
-    return 'Manager is reviewing your report.'
-  }
-  if (normalized === 'action_assigned' && !hasAssignedAction) {
-    return 'Actions assigned to other workers. You can track progress here.'
-  }
-  if (normalized === 'action_assigned' && hasAssignedAction) {
-    return 'You have been assigned corrective action(s). Open My Actions below.'
-  }
-  if (normalized === 'in_progress') {
-    return hasAssignedAction ? 'Your action is in progress.' : 'Corrective work is in progress.'
-  }
-  if (normalized === 'pending_verification') {
-    return 'Work submitted — waiting for manager verification.'
-  }
-  if (normalized === 'ready_verification') {
-    return 'All corrective actions verified — waiting for root cause confirmation and close.'
-  }
-  if (normalized === 'closed') {
-    return 'This defect has been closed.'
-  }
-
-  return 'Track the status of your report here.'
 }
 
 function actionButton(status, navigate, defectId) {
