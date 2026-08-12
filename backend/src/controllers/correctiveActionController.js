@@ -416,8 +416,6 @@ async function assignCorrectiveAction(req, res) {
     }
 
     const actionCode = await generateActionCode(client)
-    const containmentActions = action_type === 'product_handling' ? task : null
-    const correctiveActions = action_type === 'machine_process_check' ? task : null
 
     const result = await client.query(
       `
@@ -427,8 +425,6 @@ async function assignCorrectiveAction(req, res) {
         action_type,
         task,
         action_description,
-        containment_actions,
-        corrective_actions,
         assigned_to,
         assigned_by,
         due_date,
@@ -436,7 +432,7 @@ async function assignCorrectiveAction(req, res) {
         priority,
         ca_status
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'assigned')
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'assigned')
       RETURNING *
       `,
       [
@@ -445,8 +441,6 @@ async function assignCorrectiveAction(req, res) {
         action_type,
         task,
         description || null,
-        containmentActions,
-        correctiveActions,
         assigned_to,
         assignedBy,
         due_date || null,

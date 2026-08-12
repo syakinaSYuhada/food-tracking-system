@@ -274,8 +274,8 @@ CREATE TABLE corrective_actions (
   action_description TEXT,
   evidence_required BOOLEAN NOT NULL DEFAULT FALSE,
 
-  containment_actions TEXT,
-  corrective_actions TEXT,
+  containment_actions TEXT, -- DEPRECATED: unused; assignment text lives in task
+  corrective_actions TEXT, -- DEPRECATED: unused column (not the table); assignment text lives in task
 
   assigned_to INT NOT NULL REFERENCES users(id),
   assigned_by INT NOT NULL REFERENCES users(id),

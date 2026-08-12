@@ -417,13 +417,13 @@ lines.push('INSERT INTO root_cause_investigation (defect_id, root_cause_status, 
 lines.push(rootCauses.map((row, index) => `  (${row.defectId}, ${sqlString(row.status)}, ${sqlString(row.suspectedSource)}, ${sqlString(row.suspected)}, ${sqlString(row.tool)}, ${sqlString(row.confirmedSource)}, ${sqlString(row.confirmed)}, ${row.confirmedBy || 'NULL'}, ${sqlTs(row.confirmedDate)}, ${sqlString(row.notes)})${index === rootCauses.length - 1 ? ';' : ','}`).join('\n'))
 lines.push('')
 
-lines.push('INSERT INTO corrective_actions (action_code, defect_id, action_type, task, containment_actions, corrective_actions, assigned_to, assigned_by, due_date, priority, ca_status, started_by, started_date, completed_by, completed_date, completion_notes, verified_by, verified_date, verification_notes, rejected_by, rejected_date, rejection_reason, created_at) VALUES')
+lines.push('INSERT INTO corrective_actions (action_code, defect_id, action_type, task, assigned_to, assigned_by, due_date, priority, ca_status, started_by, started_date, completed_by, completed_date, completion_notes, verified_by, verified_date, verification_notes, rejected_by, rejected_date, rejection_reason, created_at) VALUES')
 lines.push(actions.map((action, index) => {
   const startedBy = action.started ? action.assignee : 'NULL'
   const completedBy = action.completed ? action.assignee : 'NULL'
   const verifiedBy = action.verified ? 1 : 'NULL'
   const rejectedBy = action.rejected ? 1 : 'NULL'
-  return `  (${sqlString(action.code)}, ${action.defectId}, ${sqlString(action.type)}, ${sqlString(action.task)}, ${sqlString(action.task)}, ${sqlString(action.task)}, ${action.assignee}, 1, ${sqlDate(action.due)}, ${sqlString(action.priority)}, ${sqlString(action.status)}, ${startedBy}, ${sqlTs(action.started)}, ${completedBy}, ${sqlTs(action.completed)}, ${sqlString(action.completed ? 'Completed in demo seed.' : null)}, ${verifiedBy}, ${sqlTs(action.verified)}, ${sqlString(action.verified ? 'Verified in demo seed.' : null)}, ${rejectedBy}, ${sqlTs(action.rejected)}, ${sqlString(action.rejectionReason)}, ${sqlTs(action.created)})${index === actions.length - 1 ? ';' : ','}`
+  return `  (${sqlString(action.code)}, ${action.defectId}, ${sqlString(action.type)}, ${sqlString(action.task)}, ${action.assignee}, 1, ${sqlDate(action.due)}, ${sqlString(action.priority)}, ${sqlString(action.status)}, ${startedBy}, ${sqlTs(action.started)}, ${completedBy}, ${sqlTs(action.completed)}, ${sqlString(action.completed ? 'Completed in demo seed.' : null)}, ${verifiedBy}, ${sqlTs(action.verified)}, ${sqlString(action.verified ? 'Verified in demo seed.' : null)}, ${rejectedBy}, ${sqlTs(action.rejected)}, ${sqlString(action.rejectionReason)}, ${sqlTs(action.created)})${index === actions.length - 1 ? ';' : ','}`
 }).join('\n'))
 lines.push('')
 
