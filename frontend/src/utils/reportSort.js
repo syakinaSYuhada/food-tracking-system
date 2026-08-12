@@ -13,8 +13,18 @@ const CA_STATUS_ORDER = {
   verified: 5
 }
 
+const EXPIRY_SORT_OPTIONS = {
+  defaultSortBy: 'difference_days',
+  defaultOrder: 'desc',
+  options: [
+    { value: 'difference_days', label: 'Days Difference', type: 'number' },
+    { value: 'qty_affected', label: 'Qty Affected', type: 'number' },
+    { value: 'latest_date', label: 'Latest Date', type: 'date' }
+  ]
+}
+
 export const REPORT_SORT_CONFIG = {
-  Loss: {
+  'By Defect': {
     defaultSortBy: 'loss_at_risk',
     defaultOrder: 'desc',
     options: [
@@ -25,7 +35,7 @@ export const REPORT_SORT_CONFIG = {
       { value: 'qty_discarded', label: 'Qty Discarded', type: 'number' }
     ]
   },
-  'Root Cause': {
+  'By Root Cause': {
     defaultSortBy: 'total',
     defaultOrder: 'desc',
     options: [
@@ -36,16 +46,9 @@ export const REPORT_SORT_CONFIG = {
       { value: 'root_cause', label: 'Root Cause', type: 'string' }
     ]
   },
-  'Expiry Issues': {
-    defaultSortBy: 'difference_days',
-    defaultOrder: 'desc',
-    options: [
-      { value: 'difference_days', label: 'Days Difference', type: 'number' },
-      { value: 'qty_affected', label: 'Qty Affected', type: 'number' },
-      { value: 'latest_date', label: 'Latest Date', type: 'date' }
-    ]
-  },
-  'Discarded Products': {
+  'Expiry Defect Cases': EXPIRY_SORT_OPTIONS,
+  'Batch Expiry Audit': EXPIRY_SORT_OPTIONS,
+  'Discarded Only': {
     defaultSortBy: 'estimated_loss',
     defaultOrder: 'desc',
     options: [
@@ -89,7 +92,7 @@ export const REPORT_SORT_CONFIG = {
       { value: 'process_stage', label: 'Detection Stage', type: 'string' }
     ]
   },
-  'Root Cause Area': {
+  'By Process Area': {
     defaultSortBy: 'cases',
     defaultOrder: 'desc',
     options: [
@@ -98,7 +101,7 @@ export const REPORT_SORT_CONFIG = {
       { value: 'status', label: 'Status', type: 'string' }
     ]
   },
-  'Process / Tool': {
+  'By Process/Tool': {
     defaultSortBy: 'cases',
     defaultOrder: 'desc',
     options: [

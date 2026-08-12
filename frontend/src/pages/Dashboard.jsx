@@ -438,7 +438,7 @@ export default function Dashboard({ user }) {
           icon={<AlertTriangle size={18} />}
           tone="red"
           highlight={Number(kpis.expiry_mismatch_batches) > 0}
-          onClick={() => navigate('/reports?tab=expiry')}
+          onClick={() => navigate('/reports?tab=traceability&view=expiry-defect-cases')}
         />
       </div>
 
