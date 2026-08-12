@@ -1157,7 +1157,12 @@ export default function DefectDetails({ user }) {
                         </ul>
                       </div>
                     )}
-                    <Button color="green" onClick={closeDefect} disabled={!canCloseDefect}>
+                    <Button
+                      color="green"
+                      onClick={closeDefect}
+                      disabled={!canCloseDefect}
+                      title={!canCloseDefect ? (closeBlockers.length ? closeBlockers.join(' · ') : 'Complete all workflow steps before closing.') : undefined}
+                    >
                       Close Defect
                     </Button>
                   </div>
@@ -1218,7 +1223,12 @@ export default function DefectDetails({ user }) {
                         </ul>
                       </div>
                     )}
-                    <Button onClick={confirmRootCause} disabled={!canConfirmRootCause} className="mt-4">
+                    <Button
+                      onClick={confirmRootCause}
+                      disabled={!canConfirmRootCause}
+                      className="mt-4"
+                      title={!canConfirmRootCause ? (confirmBlockers.length ? confirmBlockers.join(' · ') : 'Root cause confirmation is not available yet.') : undefined}
+                    >
                       Confirm Root Cause
                     </Button>
                   </div>
