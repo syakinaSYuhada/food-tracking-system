@@ -611,10 +611,23 @@ export default function CorrectiveActionDetails({ user }) {
 
                 {action.type === 'product_handling' && (
                   <div className="rounded-2xl border border-brand-border bg-brand-50/60 p-4">
-                    <div className="mb-3 flex justify-between text-sm font-semibold text-brand-ink">
-                      <span>Qty Affected: {affected}</span>
-                      <span className={!quantityValidation.valid ? 'text-red-600' : 'text-brand-muted'}>
-                        Accounted: {accounted}
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-brand-ink">
+                      <span
+                        className={
+                          !quantityValidation.valid
+                            ? 'text-red-600'
+                            : accounted === affected
+                              ? 'text-emerald-700'
+                              : 'text-amber-700'
+                        }
+                      >
+                        Units Handled:{' '}
+                        {Number(form.qty_relabelled || 0) +
+                          Number(form.qty_repacked || 0) +
+                          Number(form.qty_reworked || 0) +
+                          Number(form.qty_released || 0) +
+                          Number(form.qty_discarded || 0)}{' '}
+                        / {affected} affected
                       </span>
                     </div>
                     {!quantityValidation.valid && (
@@ -622,27 +635,55 @@ export default function CorrectiveActionDetails({ user }) {
                         {quantityValidation.message}
                       </div>
                     )}
-                    <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                      {[
-                        ['qty_relabelled', 'Relabelled'],
-                        ['qty_repacked', 'Repacked'],
-                        ['qty_reworked', 'Reworked'],
-                        ['qty_discarded', 'Discarded'],
-                        ['qty_released', 'Released'],
-                        ['qty_on_hold', 'On Hold']
-                      ].map(([field, label]) => (
-                        <label key={field} className="text-xs font-semibold text-brand-muted">
-                          {label}
-                          {field === 'qty_on_hold' ? (
-                            <>
-                              <input type="number" value={computedOnHold} readOnly className="field-control mt-1 bg-gray-50" />
-                              <p className="text-[11px] text-brand-muted mt-1">Automatically calculated from other quantities — not editable</p>
-                            </>
-                          ) : (
-                            <input type="number" value={form[field]} onChange={(e) => update(field, Number(e.target.value))} className="field-control mt-1" />
-                          )}
-                        </label>
-                      ))}
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-muted">
+                        How units were handled
+                      </p>
+                      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                        {[
+                          ['qty_relabelled', 'Relabelled'],
+                          ['qty_repacked', 'Repacked'],
+                          ['qty_reworked', 'Reworked'],
+                          ['qty_discarded', 'Discarded'],
+                          ['qty_released', 'Released']
+                        ].map(([field, label]) => (
+                          <label key={field} className="text-xs font-semibold text-brand-muted">
+                            {label}
+                            <input
+                              type="number"
+                              value={form[field]}
+                              onChange={(e) => update(field, Number(e.target.value))}
+                              className="field-control mt-1"
+                            />
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mt-4 rounded-xl border border-brand-border/70 bg-white/70 p-3">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-muted">
+                        Remaining on hold (calculated)
+                      </p>
+                      {action.containmentStatus === 'No Hold Needed' ? (
+                        <p className="mb-2 text-xs font-medium text-amber-700">
+                          Remaining unaccounted: {affected - accounted}
+                        </p>
+                      ) : (
+                        <p className="mb-2 text-xs font-medium text-brand-ink">
+                          On Hold (auto-calculated): {computedOnHold}
+                        </p>
+                      )}
+                      <label className="text-xs font-semibold text-brand-muted">
+                        On Hold
+                        <input
+                          type="number"
+                          value={computedOnHold}
+                          readOnly
+                          className="field-control mt-1 bg-gray-50"
+                        />
+                        <p className="mt-1 text-[11px] text-brand-muted">
+                          Automatically calculated from other quantities — not editable
+                        </p>
+                      </label>
                     </div>
                   </div>
                 )}
