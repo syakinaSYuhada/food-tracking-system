@@ -630,6 +630,11 @@ async function completeCorrectiveAction(req, res) {
       return errorResponse(res, 'Investigation / completion finding is required', 400, 'FINDING_REQUIRED')
     }
 
+    if (!action_taken || !String(action_taken).trim()) {
+      await client.query('ROLLBACK')
+      return errorResponse(res, 'Action taken is required', 400, 'ACTION_TAKEN_REQUIRED')
+    }
+
     if (!(await assertRequiredEvidence(client, res, action))) return
 
     const relabelled = Number(qty_relabelled || 0)

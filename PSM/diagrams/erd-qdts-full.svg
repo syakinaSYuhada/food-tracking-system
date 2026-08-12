@@ -37,9 +37,9 @@
   </g>
 
   <g id="products">
-    <rect class="box" x="60" y="170" width="246" height="302"/>
+    <rect class="box" x="60" y="170" width="246" height="285"/>
     <line class="line" x1="60" y1="194" x2="306" y2="194"/>
-    <line class="line" x1="92" y1="194" x2="92" y2="472"/>
+    <line class="line" x1="92" y1="194" x2="92" y2="455"/>
     <text class="title" x="183" y="187">products</text>
     <text class="key" x="76" y="207">PK</text>
     <text class="attr" x="99" y="207">id</text>
@@ -57,23 +57,21 @@
     <text class="key" x="76" y="309"></text>
     <text class="attr" x="99" y="309">shelf_life_months</text>
     <text class="key" x="76" y="326"></text>
-    <text class="attr" x="99" y="326">selling_price</text>
+    <text class="attr" x="99" y="326">loss_rate_per_unit</text>
     <text class="key" x="76" y="343"></text>
-    <text class="attr" x="99" y="343">loss_rate_per_unit</text>
+    <text class="attr" x="99" y="343">storage_condition</text>
     <text class="key" x="76" y="360"></text>
-    <text class="attr" x="99" y="360">storage_condition</text>
+    <text class="attr" x="99" y="360">description</text>
     <text class="key" x="76" y="377"></text>
-    <text class="attr" x="99" y="377">description</text>
-    <text class="key" x="76" y="394"></text>
-    <text class="attr" x="99" y="394">product_status</text>
+    <text class="attr" x="99" y="377">product_status</text>
+    <text class="key" x="76" y="394">FK</text>
+    <text class="attr" x="99" y="394">created_by</text>
     <text class="key" x="76" y="411">FK</text>
-    <text class="attr" x="99" y="411">created_by</text>
-    <text class="key" x="76" y="428">FK</text>
-    <text class="attr" x="99" y="428">updated_by</text>
+    <text class="attr" x="99" y="411">updated_by</text>
+    <text class="key" x="76" y="428"></text>
+    <text class="attr" x="99" y="428">created_at</text>
     <text class="key" x="76" y="445"></text>
-    <text class="attr" x="99" y="445">created_at</text>
-    <text class="key" x="76" y="462"></text>
-    <text class="attr" x="99" y="462">updated_at</text>
+    <text class="attr" x="99" y="445">updated_at</text>
   </g>
 
   <g id="batches">
@@ -167,9 +165,9 @@
   </g>
 
   <g id="defects">
-    <rect class="box" x="360" y="430" width="246" height="591"/>
+    <rect class="box" x="360" y="430" width="246" height="574"/>
     <line class="line" x1="360" y1="454" x2="606" y2="454"/>
-    <line class="line" x1="392" y1="454" x2="392" y2="1021"/>
+    <line class="line" x1="392" y1="454" x2="392" y2="1004"/>
     <text class="title" x="483" y="447">defects</text>
     <text class="key" x="376" y="467">PK</text>
     <text class="attr" x="399" y="467">id</text>
@@ -224,20 +222,18 @@
     <text class="attr" x="399" y="875">suggested_product_handling</text>
     <text class="key" x="376" y="892"></text>
     <text class="attr" x="399" y="892">suggested_machine_handling</text>
-    <text class="key" x="376" y="909"></text>
-    <text class="attr" x="399" y="909">handling_notes</text>
+    <text class="key" x="376" y="909">FK</text>
+    <text class="attr" x="399" y="909">created_by</text>
     <text class="key" x="376" y="926">FK</text>
-    <text class="attr" x="399" y="926">created_by</text>
+    <text class="attr" x="399" y="926">updated_by</text>
     <text class="key" x="376" y="943">FK</text>
-    <text class="attr" x="399" y="943">updated_by</text>
-    <text class="key" x="376" y="960">FK</text>
-    <text class="attr" x="399" y="960">closed_by</text>
+    <text class="attr" x="399" y="943">closed_by</text>
+    <text class="key" x="376" y="960"></text>
+    <text class="attr" x="399" y="960">created_at</text>
     <text class="key" x="376" y="977"></text>
-    <text class="attr" x="399" y="977">created_at</text>
+    <text class="attr" x="399" y="977">updated_at</text>
     <text class="key" x="376" y="994"></text>
-    <text class="attr" x="399" y="994">updated_at</text>
-    <text class="key" x="376" y="1011"></text>
-    <text class="attr" x="399" y="1011">closed_at</text>
+    <text class="attr" x="399" y="994">closed_at</text>
   </g>
 
   <g id="root_cause_investigation">

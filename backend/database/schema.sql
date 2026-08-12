@@ -203,7 +203,6 @@ CREATE TABLE defects (
     CHECK (containment_status IN ('Segregated / On Hold', 'Not Yet Segregated', 'No Hold Needed')),
   suggested_product_handling TEXT,
   suggested_machine_handling TEXT,
-  handling_notes TEXT,
 
   created_by INT REFERENCES users(id),
   updated_by INT REFERENCES users(id),
@@ -271,11 +270,7 @@ CREATE TABLE corrective_actions (
   action_type VARCHAR(40) NOT NULL DEFAULT 'product_handling'
     CHECK (action_type IN ('product_handling', 'machine_process_check')),
   task TEXT,
-  action_description TEXT, -- DEPRECATED: unused; assignment text lives in task
   evidence_required BOOLEAN NOT NULL DEFAULT FALSE,
-
-  containment_actions TEXT, -- DEPRECATED: unused; assignment text lives in task
-  corrective_actions TEXT, -- DEPRECATED: unused column (not the table); assignment text lives in task
 
   assigned_to INT NOT NULL REFERENCES users(id),
   assigned_by INT NOT NULL REFERENCES users(id),

@@ -98,8 +98,8 @@ async function login(username) {
         method: 'PATCH',
         headers: worker.headers,
         body: JSON.stringify({
-          investigation_finding: 'E2E test completion',
-          action_taken: 'No changes required',
+          investigation_finding: 'Visual check found loose seals on 7 pouches; no discard approved yet.',
+          action_taken: 'Segregated affected units on hold; no relabel, rework, or discard performed.',
           qty_relabelled: 0,
           qty_repacked: 0,
           qty_reworked: 0,

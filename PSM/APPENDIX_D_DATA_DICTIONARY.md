@@ -46,7 +46,6 @@ Core transactional tables are used for daily operations. Lookup and configuratio
 | packaging_type | VARCHAR(100) | | NN | Packaging type |
 | size_weight | VARCHAR(50) | | NN | Size or weight label |
 | shelf_life_months | INT | | NN, > 0 | Shelf life in months |
-| selling_price | DECIMAL(10,2) | | default 0 | Selling price |
 | loss_rate_per_unit | DECIMAL(10,2) | | NN, >= 0 | Loss rate per unit |
 | storage_condition | VARCHAR(150) | | | Storage condition |
 | description | TEXT | | | Product description |
@@ -114,7 +113,6 @@ Core transactional tables are used for daily operations. Lookup and configuratio
 | containment_status | VARCHAR(80) | | NN | Containment status label |
 | suggested_product_handling | TEXT | | | Suggested product handling text |
 | suggested_machine_handling | TEXT | | | Suggested machine/process handling text |
-| handling_notes | TEXT | | | Handling notes |
 | created_by | INT | FK | → users.id | User who reported defect |
 | updated_by | INT | FK | → users.id | User who last updated defect |
 | closed_by | INT | FK | → users.id | Manager who closed defect |

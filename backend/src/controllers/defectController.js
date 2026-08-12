@@ -317,7 +317,6 @@ async function createDefect(req, res) {
       suggested_product_handling,
       suggested_machine_handling,
       related_tool_machine,
-      handling_notes,
       investigation_notes,
       created_by
     } = req.body
@@ -432,10 +431,9 @@ async function createDefect(req, res) {
         containment_status,
         suggested_product_handling,
         suggested_machine_handling,
-        handling_notes,
         created_by
       )
-      VALUES ($1,$2,$3,$4,$5,$6,'mapped',$7,$8,$9,$10,$11,$12,0,0,0,$13,0,0,$14,0,'no_loss',$20,$15,$16,$17,$18,$19)
+      VALUES ($1,$2,$3,$4,$5,$6,'mapped',$7,$8,$9,$10,$11,$12,0,0,0,$13,0,0,$14,0,'no_loss',$19,$15,$16,$17,$18)
       RETURNING *
       `,
       [
@@ -456,7 +454,6 @@ async function createDefect(req, res) {
         containment_status,
         suggested_product_handling || null,
         suggested_machine_handling || null,
-        handling_notes || null,
         actorId(req) || created_by || null,
         defectStatus
       ]
@@ -478,7 +475,7 @@ async function createDefect(req, res) {
         investigation_notes = EXCLUDED.investigation_notes,
         updated_at = CURRENT_TIMESTAMP
       `,
-      [defect.id, related_tool_machine || null, investigation_notes || handling_notes || null]
+      [defect.id, related_tool_machine || null, investigation_notes || null]
     )
 
     const reporterId = actorId(req) || created_by || null

@@ -379,7 +379,6 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
       suggested_product_handling: suggestedProduct,
       suggested_machine_handling: suggestedMachine,
       related_tool_machine: relatedTool,
-      handling_notes: form.handling_notes || null,
       investigation_notes: form.handling_notes || null,
       created_by: createdBy
     }

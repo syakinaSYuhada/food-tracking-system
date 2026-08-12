@@ -6,6 +6,12 @@
 
 const fs = require('fs')
 const path = require('path')
+const {
+  calculateQtyOnHold,
+  calculateStillSellable
+} = require('../src/services/lossService')
+
+const COUNTED_CA_STATUSES = ['completed', 'verified']
 
 const PRODUCTS = {
   1: { code: 'DD-060', price: 4.99 },
@@ -252,6 +258,113 @@ function ca(code, defectId, assignee, due, priority, status, created, opts = {})
   return { code, defectId, type: opts.type || 'product_handling', task: opts.task || 'Complete corrective work per defect investigation.', assignee, due, priority, status, created, started: opts.started || null, completed: opts.completed || null, verified: opts.verified || null, rejected: opts.rejected || null, rejectionReason: opts.rejectionReason || null, evidenceRequired: opts.evidenceRequired || false }
 }
 
+function productHandlingTask(defect) {
+  if (defect.rework > 0) return 'Reset / adjust weighing tool; Recheck weighing procedure'
+  if (defect.discard > 0) return 'Separate affected batch; Discard defective product'
+  if (defect.relabel > 0) return 'Relabel affected products; Check all products in same batch'
+  return 'Complete corrective work per defect investigation.'
+}
+
+function hasCountedProductHandling(defectId, actionList) {
+  return actionList.some((action) =>
+    action.defectId === defectId &&
+    action.type === 'product_handling' &&
+    COUNTED_CA_STATUSES.includes(action.status)
+  )
+}
+
+function pickPrimaryProductHandlingCa(defectId, actionList) {
+  const productHandlingActions = actionList.filter((action) =>
+    action.defectId === defectId &&
+    action.type === 'product_handling' &&
+    COUNTED_CA_STATUSES.includes(action.status)
+  )
+  if (productHandlingActions.length === 0) return null
+
+  return productHandlingActions.sort((a, b) => {
+    const aVerified = a.status === 'verified' ? 1 : 0
+    const bVerified = b.status === 'verified' ? 1 : 0
+    if (aVerified !== bVerified) return bVerified - aVerified
+    return `${b.verified || b.completed || ''}`.localeCompare(`${a.verified || a.completed || ''}`)
+  })[0]
+}
+
+function emptyCaQuantities() {
+  return {
+    qty_relabelled: 0,
+    qty_repacked: 0,
+    qty_discarded: 0,
+    qty_reworked: 0,
+    qty_released: 0,
+    calculated_loss: 0
+  }
+}
+
+function buildCaQuantitiesMap(defectList, actionList) {
+  const quantitiesByCode = Object.fromEntries(actionList.map((action) => [action.code, emptyCaQuantities()]))
+
+  defectList.forEach((defect) => {
+    const primary = pickPrimaryProductHandlingCa(defect.id, actionList)
+    if (!primary) return
+
+    const hasHandling = defect.relabel + defect.discard + defect.rework > 0
+    if (!hasHandling) return
+
+    quantitiesByCode[primary.code] = {
+      qty_relabelled: defect.relabel,
+      qty_repacked: 0,
+      qty_discarded: defect.discard,
+      qty_reworked: defect.rework,
+      qty_released: 0,
+      calculated_loss: Number(defect.loss.toFixed(2))
+    }
+  })
+
+  return quantitiesByCode
+}
+
+function sumCaTotalsForDefect(defectId, actionList, quantitiesByCode) {
+  return actionList
+    .filter((action) =>
+      action.defectId === defectId &&
+      action.type === 'product_handling' &&
+      COUNTED_CA_STATUSES.includes(action.status)
+    )
+    .reduce((totals, action) => {
+      const quantities = quantitiesByCode[action.code]
+      totals.qty_relabelled += quantities.qty_relabelled
+      totals.qty_repacked += quantities.qty_repacked
+      totals.qty_discarded += quantities.qty_discarded
+      totals.qty_reworked += quantities.qty_reworked
+      totals.qty_released += quantities.qty_released
+      totals.calculated_loss += quantities.calculated_loss
+      return totals
+    }, emptyCaQuantities())
+}
+
+function computeDefectQuantitiesForInsert(defect, actionTotals) {
+  const handlingBase = {
+    qty_affected: defect.qty,
+    qty_relabelled: actionTotals.qty_relabelled,
+    qty_repacked: actionTotals.qty_repacked,
+    qty_reworked: actionTotals.qty_reworked,
+    qty_released: actionTotals.qty_released,
+    qty_discarded: actionTotals.qty_discarded
+  }
+
+  return {
+    qty_relabelled: handlingBase.qty_relabelled,
+    qty_repacked: handlingBase.qty_repacked,
+    qty_discarded: handlingBase.qty_discarded,
+    qty_reworked: handlingBase.qty_reworked,
+    qty_released: handlingBase.qty_released,
+    qty_on_hold: calculateQtyOnHold(handlingBase),
+    still_sellable: calculateStillSellable(handlingBase),
+    estimated_loss: Number(actionTotals.calculated_loss.toFixed(2)),
+    loss_rate_per_unit: PRODUCTS[defect.productId].price
+  }
+}
+
 const actions = [
   ca('CA001', 1, 2, '2026-06-08', 'medium', 'in_progress', '2026-06-02 09:30:00', { type: 'product_handling', task: 'Change expiry date mould; Test print expiry date before full labelling', started: '2026-06-04 09:00:00' }),
   ca('CA002', 2, 3, '2026-06-06', 'high', 'verified', '2026-06-03 10:00:00', { type: 'machine_process_check', task: 'Adjust sealing machine pressure; Test sealing sample', started: '2026-06-03 10:00:00', completed: '2026-06-04 11:20:00', verified: '2026-06-05 15:30:00', evidenceRequired: true }),
@@ -326,6 +439,51 @@ const monthlyActionSupplements = [
   ca('CA061', 17, 3, '2026-03-25', 'medium', 'completed', '2026-03-12 11:00:00', { type: 'machine_process_check', task: 'Check retort temperature; Adjust cooking temperature / time', started: '2026-03-14 09:00:00', completed: '2026-03-18 15:00:00' })
 ]
 actions.push(...monthlyActionSupplements)
+
+let nextResolvedCaCode = 62
+const resolvedProductHandlingCas = [
+  { defectId: 2, task: 'Separate affected batch; Discard defective product' },
+  { defectId: 4, task: 'Separate affected batch; Discard defective product' },
+  { defectId: 5, task: 'Reset / adjust weighing tool; Recheck weighing procedure' },
+  { defectId: 8, task: 'Separate affected batch; Discard defective product' },
+  { defectId: 9, task: 'Separate affected batch; Discard defective product' },
+  { defectId: 17, task: 'Separate affected batch; Discard defective product' },
+  { defectId: 20, task: 'Separate affected batch; Discard defective product' },
+  { defectId: 29, task: 'Reset / adjust weighing tool; Recheck weighing procedure' },
+  { defectId: 44, task: 'Relabel affected products; Check all products in same batch' }
+]
+resolvedProductHandlingCas.forEach((spec) => {
+  const defect = defects[spec.defectId - 1]
+  const due = (defect.closed || defect.updated).split(' ')[0]
+  actions.push(ca(`CA${String(nextResolvedCaCode).padStart(3, '0')}`, spec.defectId, defect.worker, due, defect.priority === 'urgent' ? 'high' : 'medium', 'verified', defect.created, {
+    task: spec.task,
+    started: defect.created,
+    completed: defect.updated,
+    verified: defect.closed || defect.updated
+  }))
+  nextResolvedCaCode += 1
+})
+
+defects.forEach((defect) => {
+  if (defect.status !== 'closed') return
+  const hasHandling = defect.relabel + defect.discard + defect.rework > 0
+  if (!hasHandling) return
+  if (hasCountedProductHandling(defect.id, actions)) return
+
+  const due = (defect.closed || defect.updated).split(' ')[0]
+  actions.push(ca(`CA${String(nextResolvedCaCode).padStart(3, '0')}`, defect.id, defect.worker, due, 'medium', 'verified', defect.created, {
+    task: productHandlingTask(defect),
+    started: defect.created,
+    completed: defect.updated,
+    verified: defect.closed || defect.updated
+  }))
+  nextResolvedCaCode += 1
+})
+
+const caQuantitiesByCode = buildCaQuantitiesMap(defects, actions)
+actions.forEach((action) => {
+  action.quantities = caQuantitiesByCode[action.code]
+})
 
 const rootCauses = buildRootCauses()
 
@@ -407,9 +565,9 @@ lines.push('')
 
 lines.push('INSERT INTO defects (defect_code, product_id, batch_id, detected_at_stage, defect_type, defect_type_other, mapping_status, problem_level, priority, review_due_date, urgency_reason, description, qty_affected, qty_relabelled, qty_repacked, qty_discarded, qty_on_hold, qty_reworked, still_sellable, loss_rate_per_unit, estimated_loss, loss_status, defect_status, created_by, closed_by, created_at, updated_at, closed_at) VALUES')
 lines.push(defects.map((defect, index) => {
-  const stillSellable = defect.relabel + defect.hold
-  const price = PRODUCTS[defect.productId].price
-  return `  (${sqlString(defect.code)}, ${defect.productId}, ${defect.batchId}, ${sqlString(defect.stage)}, ${sqlString(defect.type)}, ${sqlString(defect.defectOther)}, ${sqlString(defect.mapping)}, ${sqlString(defect.level)}, ${sqlString(defect.priority)}, ${sqlDate(defect.reviewDue)}, ${sqlString(defect.urgency)}, ${sqlString(defect.desc)}, ${defect.qty}, ${defect.relabel}, 0, ${defect.discard}, ${defect.hold}, ${defect.rework}, ${stillSellable}, ${price.toFixed(2)}, ${Number(defect.loss).toFixed(2)}, ${sqlString(defect.lossStatus)}, ${sqlString(defect.status)}, ${defect.worker}, ${defect.closed ? 1 : 'NULL'}, ${sqlTs(defect.created)}, ${sqlTs(defect.updated)}, ${sqlTs(defect.closed)})${index === defects.length - 1 ? ';' : ','}`
+  const actionTotals = sumCaTotalsForDefect(defect.id, actions, caQuantitiesByCode)
+  const quantities = computeDefectQuantitiesForInsert(defect, actionTotals)
+  return `  (${sqlString(defect.code)}, ${defect.productId}, ${defect.batchId}, ${sqlString(defect.stage)}, ${sqlString(defect.type)}, ${sqlString(defect.defectOther)}, ${sqlString(defect.mapping)}, ${sqlString(defect.level)}, ${sqlString(defect.priority)}, ${sqlDate(defect.reviewDue)}, ${sqlString(defect.urgency)}, ${sqlString(defect.desc)}, ${defect.qty}, ${quantities.qty_relabelled}, ${quantities.qty_repacked}, ${quantities.qty_discarded}, ${quantities.qty_on_hold}, ${quantities.qty_reworked}, ${quantities.still_sellable}, ${quantities.loss_rate_per_unit.toFixed(2)}, ${quantities.estimated_loss.toFixed(2)}, ${sqlString(defect.lossStatus)}, ${sqlString(defect.status)}, ${defect.worker}, ${defect.closed ? 1 : 'NULL'}, ${sqlTs(defect.created)}, ${sqlTs(defect.updated)}, ${sqlTs(defect.closed)})${index === defects.length - 1 ? ';' : ','}`
 }).join('\n'))
 lines.push('')
 
@@ -417,13 +575,14 @@ lines.push('INSERT INTO root_cause_investigation (defect_id, root_cause_status, 
 lines.push(rootCauses.map((row, index) => `  (${row.defectId}, ${sqlString(row.status)}, ${sqlString(row.suspectedSource)}, ${sqlString(row.suspected)}, ${sqlString(row.tool)}, ${sqlString(row.confirmedSource)}, ${sqlString(row.confirmed)}, ${row.confirmedBy || 'NULL'}, ${sqlTs(row.confirmedDate)}, ${sqlString(row.notes)})${index === rootCauses.length - 1 ? ';' : ','}`).join('\n'))
 lines.push('')
 
-lines.push('INSERT INTO corrective_actions (action_code, defect_id, action_type, task, assigned_to, assigned_by, due_date, priority, ca_status, started_by, started_date, completed_by, completed_date, completion_notes, verified_by, verified_date, verification_notes, rejected_by, rejected_date, rejection_reason, created_at) VALUES')
+lines.push('INSERT INTO corrective_actions (action_code, defect_id, action_type, task, assigned_to, assigned_by, due_date, priority, ca_status, started_by, started_date, completed_by, completed_date, completion_notes, qty_relabelled, qty_repacked, qty_discarded, qty_reworked, qty_released, calculated_loss, verified_by, verified_date, verification_notes, rejected_by, rejected_date, rejection_reason, created_at) VALUES')
 lines.push(actions.map((action, index) => {
   const startedBy = action.started ? action.assignee : 'NULL'
   const completedBy = action.completed ? action.assignee : 'NULL'
   const verifiedBy = action.verified ? 1 : 'NULL'
   const rejectedBy = action.rejected ? 1 : 'NULL'
-  return `  (${sqlString(action.code)}, ${action.defectId}, ${sqlString(action.type)}, ${sqlString(action.task)}, ${action.assignee}, 1, ${sqlDate(action.due)}, ${sqlString(action.priority)}, ${sqlString(action.status)}, ${startedBy}, ${sqlTs(action.started)}, ${completedBy}, ${sqlTs(action.completed)}, ${sqlString(action.completed ? 'Completed in demo seed.' : null)}, ${verifiedBy}, ${sqlTs(action.verified)}, ${sqlString(action.verified ? 'Verified in demo seed.' : null)}, ${rejectedBy}, ${sqlTs(action.rejected)}, ${sqlString(action.rejectionReason)}, ${sqlTs(action.created)})${index === actions.length - 1 ? ';' : ','}`
+  const quantities = action.quantities
+  return `  (${sqlString(action.code)}, ${action.defectId}, ${sqlString(action.type)}, ${sqlString(action.task)}, ${action.assignee}, 1, ${sqlDate(action.due)}, ${sqlString(action.priority)}, ${sqlString(action.status)}, ${startedBy}, ${sqlTs(action.started)}, ${completedBy}, ${sqlTs(action.completed)}, ${sqlString(action.completed ? 'Completed in demo seed.' : null)}, ${quantities.qty_relabelled}, ${quantities.qty_repacked}, ${quantities.qty_discarded}, ${quantities.qty_reworked}, ${quantities.qty_released}, ${quantities.calculated_loss.toFixed(2)}, ${verifiedBy}, ${sqlTs(action.verified)}, ${sqlString(action.verified ? 'Verified in demo seed.' : null)}, ${rejectedBy}, ${sqlTs(action.rejected)}, ${sqlString(action.rejectionReason)}, ${sqlTs(action.created)})${index === actions.length - 1 ? ';' : ','}`
 }).join('\n'))
 lines.push('')
 

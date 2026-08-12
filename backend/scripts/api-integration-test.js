@@ -569,7 +569,10 @@ async function main() {
     await request(`/corrective-actions/${actionId}/complete`, {
       method: 'PATCH',
       headers: assigneeSession.headers,
-      body: JSON.stringify({ investigation_finding: 'Seal pressure low.' })
+      body: JSON.stringify({
+        investigation_finding: 'Seal pressure low.',
+        action_taken: 'Adjusted pressure to 1.3 bar; retested 10 units, all passed.'
+      })
     })
 
     await request(`/corrective-actions/${actionId}/verify`, {
@@ -654,7 +657,10 @@ async function main() {
     await request(`/corrective-actions/${rejectedId}/complete`, {
       method: 'PATCH',
       headers: assigneeSession.headers,
-      body: JSON.stringify({ investigation_finding: 'Done once.' })
+      body: JSON.stringify({
+        investigation_finding: 'Done once.',
+        action_taken: 'Adjusted seal pressure once; sample test still borderline.'
+      })
     })
     await request(`/corrective-actions/${rejectedId}/reject`, {
       method: 'PATCH',
@@ -686,7 +692,10 @@ async function main() {
     await request(`/corrective-actions/${activeId}/complete`, {
       method: 'PATCH',
       headers: assigneeSession.headers,
-      body: JSON.stringify({ investigation_finding: 'Done properly.' })
+      body: JSON.stringify({
+        investigation_finding: 'Done properly.',
+        action_taken: 'Adjusted pressure to 1.3 bar; retested 10 units, all passed.'
+      })
     })
     await request(`/corrective-actions/${activeId}/verify`, {
       method: 'PATCH',
@@ -775,7 +784,10 @@ async function main() {
       {
         method: 'PATCH',
         headers: assigneeSession.headers,
-        body: JSON.stringify({ investigation_finding: 'Missing evidence attempt.' })
+        body: JSON.stringify({
+          investigation_finding: 'Missing evidence attempt.',
+          action_taken: 'Adjusted seal pressure; retest completed but evidence not uploaded.'
+        })
       },
       400
     )
