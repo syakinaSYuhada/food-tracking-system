@@ -10,6 +10,10 @@ const {
   assertWorkerDefectAccess
 } = require('../utils/accessControl')
 const { formatActionRow } = require('../utils/formatActionRow')
+const {
+  reconcileDefectQuantities,
+  applyDefectQuantityReconciliation
+} = require('../services/reconciliationService')
 
 const DEFECT_PRIORITIES = ['low', 'medium', 'high', 'urgent', 'critical']
 
@@ -966,6 +970,33 @@ async function updateDefect(req, res) {
   return errorResponse(res, 'Use dedicated workflow endpoints instead of generic defect update for this version.', 405, 'GENERIC_UPDATE_DISABLED')
 }
 
+async function getDefectQuantityReconciliation(req, res) {
+  try {
+    const report = await reconcileDefectQuantities(req.params.id)
+    return successResponse(res, report, 'Defect quantity reconciliation report generated')
+  } catch (error) {
+    if (error.status) {
+      return errorResponse(res, error.message, error.status, error.code)
+    }
+    return errorResponse(res, error, 500, 'RECONCILE_DEFECT_QUANTITIES_ERROR')
+  }
+}
+
+async function applyDefectQuantityReconciliationHandler(req, res) {
+  try {
+    const result = await applyDefectQuantityReconciliation(req.params.id, actorId(req))
+    const message = result.inSync
+      ? 'Defect quantity fields are already in sync'
+      : 'Defect quantity fields reconciled successfully'
+    return successResponse(res, result, message)
+  } catch (error) {
+    if (error.status) {
+      return errorResponse(res, error.message, error.status, error.code)
+    }
+    return errorResponse(res, error, 500, 'APPLY_DEFECT_QUANTITY_RECONCILIATION_ERROR')
+  }
+}
+
 module.exports = {
   getDefects,
   getDefectById,
@@ -981,5 +1012,7 @@ module.exports = {
   startReview,
   closeDefect,
   updateDefectDetails,
-  uploadDefectEvidence
+  uploadDefectEvidence,
+  getDefectQuantityReconciliation,
+  applyDefectQuantityReconciliationHandler
 }

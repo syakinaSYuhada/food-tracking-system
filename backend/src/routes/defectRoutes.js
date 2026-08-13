@@ -15,7 +15,9 @@ const {
   startReview,
   closeDefect,
   updateDefectDetails,
-  uploadDefectEvidence
+  uploadDefectEvidence,
+  getDefectQuantityReconciliation,
+  applyDefectQuantityReconciliationHandler
 } = require('../controllers/defectController')
 const { requireManager } = require('../utils/accessControl')
 
@@ -35,6 +37,8 @@ router.get('/options/by-category/:category', getDefectTypesByStage)
 router.get('/root-cause-options', getRootCauseOptions)
 
 router.get('/:id/activity', getDefectActivity)
+router.get('/:id/reconcile', requireManager, getDefectQuantityReconciliation)
+router.post('/:id/reconcile', requireManager, applyDefectQuantityReconciliationHandler)
 router.get('/:id', getDefectById)
 router.put('/:id', requireManager, updateDefect)
 router.patch('/:id/start-review', requireManager, startReview)
