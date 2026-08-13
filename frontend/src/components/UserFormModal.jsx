@@ -2,6 +2,7 @@ import { useState } from 'react'
 import api from '../api/client'
 import Button from './Button'
 import BaseModal from './BaseModal'
+import FieldLabel from './FieldLabel'
 
 export default function UserFormModal({ onClose, onSaved }) {
   const [form, setForm] = useState({
@@ -61,7 +62,7 @@ export default function UserFormModal({ onClose, onSaved }) {
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block sm:col-span-1">
-          <span className="field-label">Username *</span>
+          <FieldLabel label="Username" required />
           <input
             type="text"
             value={form.username}
@@ -73,7 +74,7 @@ export default function UserFormModal({ onClose, onSaved }) {
         </label>
 
         <label className="block sm:col-span-1">
-          <span className="field-label">Email *</span>
+          <FieldLabel label="Email" required />
           <input
             type="email"
             value={form.email}
@@ -85,7 +86,7 @@ export default function UserFormModal({ onClose, onSaved }) {
         </label>
 
         <label className="block sm:col-span-2">
-          <span className="field-label">Full Name *</span>
+          <FieldLabel label="Full Name" required />
           <input
             type="text"
             value={form.full_name}
@@ -96,7 +97,7 @@ export default function UserFormModal({ onClose, onSaved }) {
         </label>
 
         <label className="block sm:col-span-1">
-          <span className="field-label">Role *</span>
+          <FieldLabel label="Role" required />
           <select
             value={form.role}
             onChange={(e) => update('role', e.target.value)}
@@ -120,7 +121,7 @@ export default function UserFormModal({ onClose, onSaved }) {
         </label>
 
         <label className="block sm:col-span-2">
-          <span className="field-label">Password *</span>
+          <FieldLabel label="Password" required />
           <input
             type="password"
             value={form.password}

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import api from '../api/client'
 import Button from '../components/Button'
+import FieldLabel from '../components/FieldLabel'
 import KPICard from '../components/KPICard'
 import PageHeader from '../components/PageHeader'
 import LoadingState from '../components/LoadingState'
@@ -280,7 +281,7 @@ function BatchFormModal({ mode, batch, onClose, onSaved }) {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="field-label">Product *</label>
+            <FieldLabel label="Product" required />
             <select
               value={form.product_id}
               onChange={(e) => setForm({ ...form, product_id: e.target.value })}
@@ -296,7 +297,7 @@ function BatchFormModal({ mode, batch, onClose, onSaved }) {
           </div>
 
           <div>
-            <label className="field-label">Production Date *</label>
+            <FieldLabel label="Production Date" required />
             <input
               type="date"
               value={form.production_date}
@@ -309,7 +310,7 @@ function BatchFormModal({ mode, batch, onClose, onSaved }) {
           </div>
 
           <div>
-            <label className="field-label">Retort Date *</label>
+            <FieldLabel label="Retort Date" required />
             <input
               type="date"
               value={form.retort_date}
@@ -340,7 +341,7 @@ function BatchFormModal({ mode, batch, onClose, onSaved }) {
           </div>
 
           <div>
-            <label className="field-label">Printed Expiry Date *</label>
+            <FieldLabel label="Printed Expiry Date" required />
             <input
               type="date"
               value={form.printed_expiry_date}
@@ -350,7 +351,7 @@ function BatchFormModal({ mode, batch, onClose, onSaved }) {
           </div>
 
           <div>
-            <label className="field-label">Quantity Produced *</label>
+            <FieldLabel label="Quantity Produced" required />
             <input
               type="number"
               value={form.quantity_produced}
