@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, Edit, Eye, Play, Plus, Printer, Save, XCircle } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, CheckCircle, Edit, Eye, Play, Plus, Printer, Save, XCircle } from 'lucide-react'
 import api from '../api/client'
 import StatusBadge from '../components/StatusBadge'
 import BaseModal from '../components/BaseModal'
@@ -332,6 +332,26 @@ function ClosedDefectSummary({ defect, users = [] }) {
       <p className="font-semibold text-slate-900">Defect Closed</p>
       <p className="mt-2"><b>Closed by:</b> {resolveClosedByName(defect, users)}</p>
       <p><b>Closed on:</b> {formatDate(defect?.closed_at)}</p>
+    </div>
+  )
+}
+
+function BlockerBanner({ title, items, strongBorder = false, className = '' }) {
+  const borderClass = strongBorder ? 'border-amber-300' : 'border-amber-200'
+
+  return (
+    <div className={`rounded-2xl border ${borderClass} bg-amber-50 px-4 py-4 text-sm text-amber-950 ${className}`.trim()}>
+      <div className="flex items-start gap-3">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 ring-1 ring-amber-200/80">
+          <AlertTriangle size={16} aria-hidden="true" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold">{title}</p>
+          <ul className="mt-2 list-disc pl-5">
+            {items.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </div>
+      </div>
     </div>
   )
 }
@@ -1270,12 +1290,11 @@ export default function DefectDetails({ user }) {
                 ) : managerView && (
                   <div className="mt-4 space-y-3">
                     {closeBlockers.length > 0 && (
-                      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                        <p className="font-semibold">Before closing this defect:</p>
-                        <ul className="mt-2 list-disc pl-5">
-                          {closeBlockers.map((item) => <li key={item}>{item}</li>)}
-                        </ul>
-                      </div>
+                      <BlockerBanner
+                        title="Before closing this defect:"
+                        items={closeBlockers}
+                        strongBorder
+                      />
                     )}
                     <Button
                       color="green"
@@ -1336,12 +1355,11 @@ export default function DefectDetails({ user }) {
                       {rootCause === 'Other' && <Input label="Please specify confirmed root cause" value={otherRootCause} onChange={setOtherRootCause} />}
                     </div>
                     {confirmBlockers.length > 0 && (
-                      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                        <p className="font-semibold">Confirm root cause is locked until:</p>
-                        <ul className="mt-2 list-disc pl-5">
-                          {confirmBlockers.map((item) => <li key={item}>{item}</li>)}
-                        </ul>
-                      </div>
+                      <BlockerBanner
+                        className="mt-4"
+                        title="Confirm root cause is locked until:"
+                        items={confirmBlockers}
+                      />
                     )}
                     <Button
                       onClick={confirmRootCause}
