@@ -11,6 +11,7 @@ import BaseModal from '../components/BaseModal'
 import EmptyState from '../components/EmptyState'
 import LoadingState from '../components/LoadingState'
 import NotificationCard from '../components/NotificationCard'
+import FieldLabel from '../components/FieldLabel'
 import { isManager } from '../utils/roleAccess'
 import useObjectUrl from '../utils/useObjectUrl'
 import { paginateItems } from '../utils/pagination'
@@ -408,6 +409,7 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
               value={form.priority}
               onChange={(v) => update('priority', v)}
               options={DEFECT_PRIORITY_OPTIONS.map((option) => option.value)}
+              required
             />
           )}
           <Input
@@ -425,10 +427,11 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
           <p className="text-xs font-medium text-amber-700">Needs review today</p>
         )}
         <TextArea
-          label={form.priority === 'urgent' ? 'Urgency Reason (required)' : 'Urgency Reason (optional)'}
+          label="Urgency Reason"
           value={form.urgency_reason}
           onChange={(v) => update('urgency_reason', v)}
           rows={2}
+          required={form.priority === 'urgent'}
         />
       </>
     )
@@ -501,14 +504,14 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
             <div className="space-y-5">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <label className="block">
-                  <span className="field-label">Product</span>
+                  <FieldLabel label="Product" required />
                   <select value={form.product_id} onChange={(e) => { update('product_id', e.target.value); update('batch_id', '') }} className="field-control">
                     <option value="">Select product</option>
                     {products.map((product) => <option key={product.id} value={product.id}>{product.name} ({product.code})</option>)}
                   </select>
                 </label>
                 <label className="block">
-                  <span className="field-label">Batch</span>
+                  <FieldLabel label="Batch" required />
                   <select value={form.batch_id} onChange={(e) => update('batch_id', e.target.value)} className="field-control">
                     <option value="">Select batch</option>
                     {availableBatches.map((batch) => <option key={batch.id} value={batch.id}>{batch.batchNumber}</option>)}
@@ -526,18 +529,25 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
               )}
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <Select label="Where Found (Stage)" value={form.detected_at_stage} onChange={(v) => { update('detected_at_stage', v); update('defect_type', '') }} options={stages} />
-                <Select label="Problem Type" value={form.defect_type} onChange={(v) => update('defect_type', v)} options={defectTypes} />
-                <Input label="Qty Affected" type="number" value={form.qty_affected} onChange={(v) => update('qty_affected', v)} />
+                <Select label="Where Found (Stage)" value={form.detected_at_stage} onChange={(v) => { update('detected_at_stage', v); update('defect_type', '') }} options={stages} required />
+                <Select label="Problem Type" value={form.defect_type} onChange={(v) => update('defect_type', v)} options={defectTypes} required />
+                <Input label="Qty Affected" type="number" value={form.qty_affected} onChange={(v) => update('qty_affected', v)} required />
               </div>
-              {form.defect_type === 'Other' && <Input label="Other Problem Type" value={form.defect_type_other} onChange={(v) => update('defect_type_other', v)} />}
+              {form.defect_type === 'Other' && (
+                <Input
+                  label="Other Problem Type"
+                  value={form.defect_type_other}
+                  onChange={(v) => update('defect_type_other', v)}
+                  required
+                />
+              )}
               {qtyExceedsBatch && <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">Qty affected cannot exceed quantity produced.</div>}
             </div>
           )}
 
           {workerReport && step === 2 && (
             <div className="space-y-5">
-              <TextArea label="What happened? (Description)" value={form.description} onChange={(v) => update('description', v)} />
+              <TextArea label="What happened? (Description)" value={form.description} onChange={(v) => update('description', v)} required />
               {renderReviewDueFields({ includePriority: true })}
               <label className="block">
                 <span className="field-label">Photo Evidence</span>
@@ -559,14 +569,14 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
             <div className="space-y-5">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <label className="block">
-                  <span className="field-label">Product</span>
+                  <FieldLabel label="Product" required />
                   <select value={form.product_id} onChange={(e) => { update('product_id', e.target.value); update('batch_id', '') }} className="field-control">
                     <option value="">Select product</option>
                     {products.map((product) => <option key={product.id} value={product.id}>{product.name} ({product.code})</option>)}
                   </select>
                 </label>
                 <label className="block">
-                  <span className="field-label">Batch</span>
+                  <FieldLabel label="Batch" required />
                   <select value={form.batch_id} onChange={(e) => update('batch_id', e.target.value)} className="field-control">
                     <option value="">Select batch</option>
                     {availableBatches.map((batch) => <option key={batch.id} value={batch.id}>{batch.batchNumber}</option>)}
@@ -592,27 +602,34 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
           {!workerReport && step === 2 && (
             <div className="space-y-5">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <Select label="Detected Stage" value={form.detected_at_stage} onChange={(v) => { update('detected_at_stage', v); update('defect_type', '') }} options={stages} />
-                <Select label="Defect Type" value={form.defect_type} onChange={(v) => update('defect_type', v)} options={defectTypes} />
-                <Input label="Qty Affected" type="number" value={form.qty_affected} onChange={(v) => update('qty_affected', v)} />
+                <Select label="Detected Stage" value={form.detected_at_stage} onChange={(v) => { update('detected_at_stage', v); update('defect_type', '') }} options={stages} required />
+                <Select label="Defect Type" value={form.defect_type} onChange={(v) => update('defect_type', v)} options={defectTypes} required />
+                <Input label="Qty Affected" type="number" value={form.qty_affected} onChange={(v) => update('qty_affected', v)} required />
               </div>
-              {form.defect_type === 'Other' && <Input label="Other Defect Type" value={form.defect_type_other} onChange={(v) => update('defect_type_other', v)} />}
+              {form.defect_type === 'Other' && (
+                <Input
+                  label="Other Defect Type"
+                  value={form.defect_type_other}
+                  onChange={(v) => update('defect_type_other', v)}
+                  required
+                />
+              )}
               {qtyExceedsBatch && <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">Qty affected cannot exceed quantity produced.</div>}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <Select label="Containment Status" value={form.containment_status} onChange={(v) => update('containment_status', v)} options={['Segregated / On Hold', 'Not Yet Segregated', 'No Hold Needed']} />
-                <Select label="Problem Level" value={form.problem_level} onChange={(v) => update('problem_level', v)} options={['Can Be Corrected', 'Hold for Review', 'Cannot Be Sold', 'Food Safety Risk']} />
-                <Select label="Defect Priority" value={form.priority} onChange={(v) => update('priority', v)} options={DEFECT_PRIORITY_OPTIONS.map((option) => option.value)} />
+                <Select label="Containment Status" value={form.containment_status} onChange={(v) => update('containment_status', v)} options={['Segregated / On Hold', 'Not Yet Segregated', 'No Hold Needed']} required />
+                <Select label="Problem Level" value={form.problem_level} onChange={(v) => update('problem_level', v)} options={['Can Be Corrected', 'Hold for Review', 'Cannot Be Sold', 'Food Safety Risk']} required />
+                <Select label="Defect Priority" value={form.priority} onChange={(v) => update('priority', v)} options={DEFECT_PRIORITY_OPTIONS.map((option) => option.value)} required />
               </div>
-              <TextArea label="Description" value={form.description} onChange={(v) => update('description', v)} />
+              <TextArea label="Description" value={form.description} onChange={(v) => update('description', v)} required />
             </div>
           )}
 
           {!workerReport && step === 3 && (
             <div className="space-y-5">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <Select label="Suggested Product Handling" value={form.suggested_product_handling} onChange={(v) => update('suggested_product_handling', v)} options={rule?.product_handling_options || []} />
-                <Select label="Suggested Machine / Process Check" value={form.suggested_machine_handling} onChange={(v) => update('suggested_machine_handling', v)} options={rule?.machine_check_options || []} />
-                <Select label="Related Tool / Machine / Area" value={form.related_tool_machine} onChange={(v) => update('related_tool_machine', v)} options={rule?.related_tool_options || []} />
+                <Select label="Suggested Product Handling" value={form.suggested_product_handling} onChange={(v) => update('suggested_product_handling', v)} options={rule?.product_handling_options || []} required />
+                <Select label="Suggested Machine / Process Check" value={form.suggested_machine_handling} onChange={(v) => update('suggested_machine_handling', v)} options={rule?.machine_check_options || []} required />
+                <Select label="Related Tool / Machine / Area" value={form.related_tool_machine} onChange={(v) => update('related_tool_machine', v)} options={rule?.related_tool_options || []} required />
               </div>
               <label className="block">
                 <span className="field-label">Evidence Picture</span>
@@ -636,19 +653,32 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
 function Info({ label, value }) {
   return <div><p className="text-xs font-semibold uppercase text-brand-muted">{label}</p><p className="mt-1 font-semibold text-brand-ink">{value || '-'}</p></div>
 }
-function Input({ label, value, onChange, type = 'text', min }) {
+function Input({ label, value, onChange, type = 'text', min, required = false }) {
   return (
     <label className="block">
-      <span className="field-label">{label}</span>
+      <FieldLabel label={label} required={required} />
       <input type={type} value={value} min={min} onChange={(e) => onChange(e.target.value)} className="field-control" />
     </label>
   )
 }
-function Select({ label, value, onChange, options }) {
-  return <label className="block"><span className="field-label">{label}</span><select value={value} onChange={(e) => onChange(e.target.value)} className="field-control"><option value="">Select</option>{options.map((option, i) => <option key={`${option}-${i}`} value={option}>{titleCase(option)}</option>)}</select></label>
+function Select({ label, value, onChange, options, required = false }) {
+  return (
+    <label className="block">
+      <FieldLabel label={label} required={required} />
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="field-control">
+        <option value="">Select</option>
+        {options.map((option, i) => <option key={`${option}-${i}`} value={option}>{titleCase(option)}</option>)}
+      </select>
+    </label>
+  )
 }
-function TextArea({ label, value, onChange }) {
-  return <label className="block"><span className="field-label">{label}</span><textarea value={value} onChange={(e) => onChange(e.target.value)} rows={4} className="field-control" /></label>
+function TextArea({ label, value, onChange, rows = 4, required = false }) {
+  return (
+    <label className="block">
+      <FieldLabel label={label} required={required} />
+      <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} className="field-control" />
+    </label>
+  )
 }
 
 export default function Defects({ user }) {
