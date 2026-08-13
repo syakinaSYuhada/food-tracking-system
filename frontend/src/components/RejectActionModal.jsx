@@ -2,6 +2,7 @@ import { useState } from 'react'
 import api from '../api/client'
 import BaseModal from './BaseModal'
 import Button from './Button'
+import FieldLabel from './FieldLabel'
 
 function RejectActionModal({ actionId, managerId, onClose, onRejected }) {
   const [reason, setReason] = useState('')
@@ -44,9 +45,7 @@ function RejectActionModal({ actionId, managerId, onClose, onRejected }) {
       }
     >
       <label className="block">
-        <span className="text-sm font-semibold text-slate-700">
-          Rejection Reason <span className="text-red-500">*</span>
-        </span>
+        <FieldLabel label="Rejection Reason" required />
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}

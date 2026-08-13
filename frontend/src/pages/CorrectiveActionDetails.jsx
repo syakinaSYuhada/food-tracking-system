@@ -7,6 +7,7 @@ import Button from '../components/Button'
 import LoadingState from '../components/LoadingState'
 import SectionCard from '../components/SectionCard'
 import RejectActionModal from '../components/RejectActionModal'
+import FieldLabel from '../components/FieldLabel'
 import { isAssignedToUser, isManager } from '../utils/roleAccess'
 import { validateHandledQuantities } from '../utils/lossService'
 import { formatCaStatusLabel } from '../utils/caStatusLabel'
@@ -708,7 +709,7 @@ export default function CorrectiveActionDetails({ user }) {
                       evidenceError ? 'border-red-300 bg-red-50/60' : 'border-brand-border/70 bg-white'
                     ].join(' ')}
                   >
-                    <span className="field-label">Evidence Required</span>
+                    <FieldLabel label="Evidence Required" required={action.evidenceRequired} />
                     <p className="mt-1 text-sm text-brand-muted">JPG, PNG, PDF. Max 5MB.</p>
                     <input
                       type="file"
