@@ -70,7 +70,7 @@ export function getDefectWorkflow(defect, actions = [], managerView = true) {
     if (!stats.hasActions) {
       nextStep = 'Your report has been submitted. This is not a task yet — wait for your manager to assign corrective actions.'
     } else if (stats.assigned > 0 || stats.rejected > 0) {
-      nextStep = 'Start your assigned action(s) on the My Actions tab.'
+      nextStep = 'Start your assigned action(s) on the My Work tab.'
       nextTab = 'actions'
     } else if (stats.inProgress > 0) {
       nextStep = 'Open your in-progress action and submit completion findings.'
@@ -79,7 +79,7 @@ export function getDefectWorkflow(defect, actions = [], managerView = true) {
       nextStep = 'Waiting for manager verification.'
       nextTab = 'actions'
     } else if (stats.allVerified && !rootConfirmed) {
-      nextStep = 'Record suspected root cause on the Root Cause tab.'
+      nextStep = 'Record suspected root cause on the What Caused It tab.'
       nextTab = 'root'
     } else {
       nextStep = 'No action required from you right now.'

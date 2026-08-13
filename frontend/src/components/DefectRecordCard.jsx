@@ -153,7 +153,7 @@ export default function DefectRecordCard({
             <span className="text-brand-muted/80">Qty:</span>{' '}
             <span className="font-medium text-brand-700">{defect.qtyAffected}</span>
             <span className="text-brand-border"> · </span>
-            <span className="text-brand-muted/80" title="Corrective actions assigned by manager">Corrective Actions:</span>{' '}
+            <span className="text-brand-muted/80" title={managerView ? 'Corrective actions assigned by manager' : 'Your assigned work progress'}>{managerView ? 'Corrective Actions:' : 'My Work:'}</span>{' '}
             <span className="font-medium text-brand-700">{defect.actionProgress}</span>
           </p>
         </div>

@@ -1108,7 +1108,7 @@ export default function Defects({ user }) {
                       <Info label="Suggested Product Handling" value={defect.suggestedProductHandling} />
                       <Info label="Suggested Machine / Process Check" value={defect.suggestedMachineHandling} />
                       <Info label="Related Tool / Area" value={defect.relatedToolMachine} />
-                      <Info label="Corrective Action Progress" value={defect.actionProgress} />
+                      <Info label={managerView ? 'Corrective Action Progress' : 'My Work Progress'} value={defect.actionProgress} />
                     </DefectRecordCard.InfoCard>
 
                     <DefectRecordCard.InfoCard title="Description">

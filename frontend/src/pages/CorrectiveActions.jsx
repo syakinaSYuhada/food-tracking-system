@@ -64,7 +64,7 @@ function formatDate(value) {
   return String(value).split('T')[0]
 }
 
-const CA_EXPORT_COLUMNS = [
+const getCaExportColumns = (audience = 'manager') => [
   { key: 'code', label: 'Action Code' },
   { key: 'defectCode', label: 'Related Defect' },
   { key: 'productName', label: 'Product' },
@@ -74,17 +74,17 @@ const CA_EXPORT_COLUMNS = [
   { key: 'assignedToName', label: 'Assigned To' },
   { key: 'priority', label: 'CA Priority', exportValue: (row) => titleCase(row.priority) },
   { key: 'dueDate', label: 'CA Due Date' },
-  { key: 'status', label: 'Status', exportValue: (row) => formatCaStatusLabel(row.status) },
+  { key: 'status', label: 'Status', exportValue: (row) => formatCaStatusLabel(row.status, audience) },
   { key: 'evidenceRequired', label: 'Evidence Required', exportValue: (row) => (row.evidenceRequired ? 'Yes' : 'No') },
   { key: 'startedDate', label: 'Started Date' },
   { key: 'completedDate', label: 'Completed Date' },
   { key: 'verifiedDate', label: 'Verified Date' }
 ]
 
-const STATUS_FILTER_OPTIONS = [
+const STATUS_FILTER_OPTIONS = (audience = 'manager') => [
   { value: 'all', label: 'All Status' },
   { value: 'overdue', label: 'Overdue' },
-  { value: 'pending_review', label: formatCaStatusLabel('completed') },
+  { value: 'pending_review', label: formatCaStatusLabel('completed', audience) },
   { value: 'assigned', label: 'Assigned' },
   { value: 'in_progress', label: 'In Progress' },
   { value: 'verified', label: 'Verified' },
@@ -174,6 +174,7 @@ export default function CorrectiveActions({ user }) {
 
   const currentUser = user
   const managerView = isManager(user)
+  const statusAudience = managerView ? 'manager' : 'worker'
   const managerId = isManager(user) ? user.id : null
 
   async function load() {
@@ -346,10 +347,10 @@ export default function CorrectiveActions({ user }) {
     const parts = []
     if (periodLabel) parts.push(periodLabel)
     if (caDueFilter !== 'all') parts.push(getDateFilterLabel(caDueFilter))
-    if (statusFilter === 'pending_review') parts.push(formatCaStatusLabel('completed'))
-    else if (statusFilter !== 'all') parts.push(formatCaStatusLabel(statusFilter))
+    if (statusFilter === 'pending_review') parts.push(formatCaStatusLabel('completed', statusAudience))
+    else if (statusFilter !== 'all') parts.push(formatCaStatusLabel(statusFilter, statusAudience))
     return parts.join(' · ') || 'All Time'
-  }, [periodLabel, caDueFilter, statusFilter])
+  }, [periodLabel, caDueFilter, statusFilter, statusAudience])
 
   const sortedFiltered = useMemo(() => (
     [...filtered].sort((a, b) => {
@@ -393,7 +394,7 @@ export default function CorrectiveActions({ user }) {
   return (
     <div className="list-page">
       <PageHeader
-        title={managerView ? 'Corrective Actions' : 'My Actions'}
+        title={managerView ? 'Corrective Actions' : 'My Work'}
         subtitle={managerView
           ? 'Overdue and pending review items are surfaced first. Verify or reject completed work directly from the list.'
           : 'Your assigned corrective work — overdue items appear at the top.'}
@@ -442,7 +443,7 @@ export default function CorrectiveActions({ user }) {
       <div className={`grid grid-cols-2 gap-2 ${managerView ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
         <KPICard
           variant="secondary"
-          title={managerView ? 'Total Actions' : 'My Actions'}
+          title={managerView ? 'Total Actions' : 'My Work'}
           value={kpis.total}
           subtitle={periodLabel ? `In ${periodLabel}` : 'All records'}
           active={totalKpiActive}
@@ -516,7 +517,7 @@ export default function CorrectiveActions({ user }) {
           <CompactFilterSelect
             label="Status"
             value={statusFilter}
-            options={STATUS_FILTER_OPTIONS}
+            options={STATUS_FILTER_OPTIONS(statusAudience)}
             onChange={setStatusFilter}
           />
           <CompactFilterSelect
@@ -548,10 +549,10 @@ export default function CorrectiveActions({ user }) {
             wide
           />
           <ListCsvExport
-            title="Corrective Actions"
-            filename={`qdts-corrective-actions-${exportPeriodLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.csv`}
+            title={managerView ? 'Corrective Actions' : 'My Work'}
+            filename={`qdts-${managerView ? 'corrective-actions' : 'my-work'}-${exportPeriodLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.csv`}
             periodLabel={exportPeriodLabel}
-            columns={CA_EXPORT_COLUMNS}
+            columns={getCaExportColumns(statusAudience)}
             rows={sortedFiltered}
           />
           {hasActiveFilters && (

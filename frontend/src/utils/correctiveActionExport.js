@@ -27,7 +27,7 @@ function fieldRow(label, value) {
   `
 }
 
-function buildCorrectiveActionPrintHtml(action) {
+function buildCorrectiveActionPrintHtml(action, audience = 'manager') {
   const expiryMismatch =
     action.correctExpiryDate
     && action.printedExpiryDate
@@ -59,7 +59,7 @@ function buildCorrectiveActionPrintHtml(action) {
         <h1>${escapeHtml(action.code)} — Corrective Action</h1>
         <p class="meta">
           Defect: ${escapeHtml(action.defectCode)} · ${escapeHtml(action.defectType)} ·
-          Status: ${escapeHtml(formatCaStatusLabel(action.status))} ·
+          Status: ${escapeHtml(formatCaStatusLabel(action.status, audience))} ·
           Assigned to: ${escapeHtml(action.assignedToName || '-')}
         </p>
 
@@ -121,9 +121,9 @@ function buildCorrectiveActionPrintHtml(action) {
   `
 }
 
-export function printCorrectiveActionSummary(action) {
+export function printCorrectiveActionSummary(action, audience = 'manager') {
   try {
-    openPrintDocument(buildCorrectiveActionPrintHtml(action), {
+    openPrintDocument(buildCorrectiveActionPrintHtml(action, audience), {
       blockedMessage: 'Please allow pop-ups to print the action summary.',
       failureMessage: 'Print failed. Please try again.',
       logLabel: 'Corrective action summary print'

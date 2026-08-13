@@ -11,7 +11,7 @@ export function defectStatusHint(status, hasAssignedAction) {
     return 'Actions assigned to other workers. You can track progress here.'
   }
   if (normalized === 'action_assigned' && hasAssignedAction) {
-    return 'You have been assigned corrective action(s). Open My Actions below.'
+    return 'You have been assigned corrective action(s). Open My Work below.'
   }
   if (normalized === 'in_progress') {
     return hasAssignedAction ? 'Your action is in progress.' : 'Corrective work is in progress.'
@@ -34,7 +34,7 @@ export function defectStatusBadgeTitle(status, hasAssignedAction) {
 
   if (hasAssignedAction === undefined) {
     if (normalized === 'action_assigned') {
-      return 'Corrective actions have been assigned. Check My Actions if one is yours.'
+      return 'Corrective actions have been assigned. Check My Work if one is yours.'
     }
     if (normalized === 'in_progress') {
       return 'Corrective work is in progress.'

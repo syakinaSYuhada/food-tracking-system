@@ -36,7 +36,7 @@ const managerLinks = [
 const workerLinks = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard },
   { label: 'My Reports', path: '/defects', icon: FileText },
-  { label: 'My Actions', path: '/corrective-actions', icon: CheckSquare }
+  { label: 'My Work', path: '/corrective-actions', icon: CheckSquare }
 ]
 
 function AppShell({ children, user, onLogout }) {

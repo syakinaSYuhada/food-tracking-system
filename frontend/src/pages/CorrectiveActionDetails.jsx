@@ -417,7 +417,7 @@ export default function CorrectiveActionDetails({ user }) {
           className="inline-flex items-center gap-1 hover:text-brand-ink hover:underline"
         >
           <ArrowLeft size={14} />
-          Back to Corrective Actions
+          Back to {managerView ? 'Corrective Actions' : 'My Work'}
         </button>
       </div>
 
@@ -432,10 +432,10 @@ export default function CorrectiveActionDetails({ user }) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button color="slate" variant="subtle" size="sm" onClick={() => printCorrectiveActionSummary(action)}>
+            <Button color="slate" variant="subtle" size="sm" onClick={() => printCorrectiveActionSummary(action, managerView ? 'manager' : 'worker')}>
               <Printer size={14} /> Print Summary
             </Button>
-            <StatusBadge kind="ca" value={action.status} />
+            <StatusBadge kind="ca" value={action.status} audience={managerView ? undefined : 'worker'} />
             {isActionOverdue(action.dueDate, action.status) && (
               <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
                 Overdue
@@ -752,7 +752,7 @@ export default function CorrectiveActionDetails({ user }) {
                 <div className="space-y-3">
                   <Info label="Action ID" value={action.code} />
                   <Info label="Action Type" value={action.type === 'product_handling' ? 'Product Handling' : 'Corrective Action'} />
-                  <Info label="Status" value={formatCaStatusLabel(action.status)} />
+                  <Info label="Status" value={formatCaStatusLabel(action.status, managerView ? 'manager' : 'worker')} />
                 </div>
               </SectionCard>
 

@@ -89,7 +89,7 @@ function StatusBadge({ value, kind, audience, prefix, title }) {
     action_assigned: 'Work Assigned'
   }
   const statusLabel = kind === 'ca'
-    ? formatCaStatusLabel(normalized)
+    ? formatCaStatusLabel(normalized, audience === 'worker' ? 'worker' : 'manager')
     : (audience === 'worker' && workerDefectLabels[normalized]
       ? workerDefectLabels[normalized]
       : (labels[normalized] || String(value || 'Unknown')

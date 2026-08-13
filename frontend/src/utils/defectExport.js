@@ -147,13 +147,13 @@ function buildEvidenceSection(photos) {
   `
 }
 
-function buildDefectPrintHtml(defect, actions = [], photos = []) {
+function buildDefectPrintHtml(defect, actions = [], photos = [], audience = 'manager') {
   const actionRows = actions.map((action) => `
     <tr>
       <td>${escapeHtml(action.code || action.action_code)}</td>
       <td>${escapeHtml(action.task)}</td>
       <td>${escapeHtml(action.assignedToName || action.assigned_to_name || '-')}</td>
-      <td>${escapeHtml(formatCaStatusLabel(action.status || action.ca_status))}</td>
+      <td>${escapeHtml(formatCaStatusLabel(action.status || action.ca_status, audience))}</td>
       <td>${escapeHtml(formatDate(action.dueDate || action.due_date))}</td>
     </tr>
   `).join('')
@@ -343,13 +343,13 @@ function openDefectPrintHtml(html, {
   return true
 }
 
-export async function printDefectSummary(defect, actions = [], callbacks = {}) {
+export async function printDefectSummary(defect, actions = [], callbacks = {}, audience = 'manager') {
   if (defectPrintInProgress) return false
 
   defectPrintInProgress = true
   try {
     const photos = await preloadEvidencePhotos(getDefectPhotos(defect))
-    const html = buildDefectPrintHtml(defect, actions, photos)
+    const html = buildDefectPrintHtml(defect, actions, photos, audience)
     const opened = openDefectPrintHtml(html, {
       failureMessage: 'Print failed. Please try again.',
       logLabel: 'Defect summary print',

@@ -379,19 +379,25 @@ function BlockerBanner({ title, items, strongBorder = false, className = '' }) {
   )
 }
 
-function NextStepBanner({ workflow, activeTab, onGoToTab }) {
+function NextStepBanner({ workflow, activeTab, onGoToTab, managerView }) {
   if (!workflow.nextStep) return null
 
   const onTargetTab = workflow.nextTab !== 'overview' && activeTab === workflow.nextTab
+  const actionsTabLabel = managerView ? 'Corrective Actions' : 'My Work'
+  const rootTabLabel = managerView ? 'Root Cause' : 'What Caused It'
   const message =
     workflow.phase === 'confirm_root_cause'
       ? activeTab === 'root'
         ? 'All actions verified. Confirm the root cause below.'
-        : 'All actions verified. Confirm root cause on the Root Cause tab.'
+        : managerView
+          ? 'All actions verified. Confirm root cause on the Root Cause tab.'
+          : 'All actions verified. Record what caused it on the What Caused It tab.'
       : workflow.phase === 'close'
         ? activeTab === 'root'
           ? 'Root cause confirmed. Close this defect below.'
-          : 'Root cause confirmed. Close this defect on the Root Cause tab.'
+          : managerView
+            ? 'Root cause confirmed. Close this defect on the Root Cause tab.'
+            : 'Root cause confirmed. This defect will be closed by your manager.'
         : workflow.nextStep
 
   const containerClass = workflow.isClosed
@@ -408,7 +414,7 @@ function NextStepBanner({ workflow, activeTab, onGoToTab }) {
           onClick={() => onGoToTab(workflow.nextTab)}
           className="mt-2 font-semibold text-brand-700 underline"
         >
-          Go to {workflow.nextTab === 'actions' ? 'Corrective Actions' : 'Root Cause'} tab
+          Go to {workflow.nextTab === 'actions' ? actionsTabLabel : rootTabLabel} tab
         </button>
       )}
     </div>
@@ -502,7 +508,7 @@ function buildWorkflowSteps({
         ? {
             label: visibleActions.some((action) => !['completed', 'verified'].includes(action.status))
               ? 'Complete Action'
-              : 'View My Actions',
+              : 'View My Work',
             onClick: handlers.completeAction,
             color: 'brand',
             variant: 'subtle'
@@ -719,8 +725,8 @@ export default function DefectDetails({ user }) {
     ? [['overview', 'Overview'], ['actions', 'Corrective Actions'], ['root', 'Investigation'], ['activity', 'Activity']]
     : [
         ['overview', 'Overview'],
-        ...(workerHasAssignedAction ? [['actions', 'My Actions']] : []),
-        ...(workerHasAssignedAction || workerReportedDefect ? [['root', 'Investigation']] : []),
+        ...(workerHasAssignedAction ? [['actions', 'My Work']] : []),
+        ...(workerHasAssignedAction || workerReportedDefect ? [['root', 'What Caused It']] : []),
         ['activity', 'Activity']
       ]
 
@@ -749,7 +755,7 @@ export default function DefectDetails({ user }) {
       const opened = await printDefectSummary(defect, visibleActions, {
         onPrintTriggered: () => setPrintingSummary(false),
         onFailure: () => setPrintingSummary(false)
-      })
+      }, managerView ? 'manager' : 'worker')
 
       if (!opened) {
         setPrintingSummary(false)
@@ -980,7 +986,7 @@ export default function DefectDetails({ user }) {
           />
         </div>
 
-        <NextStepBanner workflow={workflow} activeTab={tab} onGoToTab={setTab} />
+        <NextStepBanner workflow={workflow} activeTab={tab} onGoToTab={setTab} managerView={managerView} />
 
         {hasExpiryMismatch(defect) && (
           <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-900">
@@ -1102,7 +1108,7 @@ export default function DefectDetails({ user }) {
                 <Info label="Problem Level" value={defect.problem_level} />
                 <Info label="Qty Affected" value={defect.qty_affected} />
                 <Info label="Containment" value={defect.containment_status} />
-                <Info label="Corrective Action Progress" value={defect.action_progress} />
+                <Info label={managerView ? 'Corrective Action Progress' : 'My Work Progress'} value={defect.action_progress} />
                 <Info label="Expected Expiry" value={formatDate(defect.correct_expiry_date)} />
                 <Info label="Printed Expiry" value={formatDate(defect.printed_expiry_date)} />
               </div>
@@ -1208,7 +1214,7 @@ export default function DefectDetails({ user }) {
             )}
 
             <div className="surface-card p-5">
-              <h3 className="text-sm font-bold text-brand-ink">{managerView ? 'Assigned Actions' : 'My Assigned Actions'}</h3>
+              <h3 className="text-sm font-bold text-brand-ink">{managerView ? 'Assigned Actions' : 'My Work'}</h3>
 
               {visibleActions.length === 0 ? (
                 <div className="mt-3 text-sm text-brand-muted">No actions assigned yet.</div>
@@ -1225,7 +1231,7 @@ export default function DefectDetails({ user }) {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
-                        <StatusBadge kind="ca" value={action.status} />
+                        <StatusBadge kind="ca" value={action.status} audience={managerView ? undefined : 'worker'} />
                         {isActionOverdue(action.dueDate, action.status) && (
                           <span className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700">
                             Overdue

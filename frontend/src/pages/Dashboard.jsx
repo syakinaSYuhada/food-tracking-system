@@ -299,7 +299,7 @@ export default function Dashboard({ user }) {
           )}
         </SectionCard>
 
-        <SectionCard title="My Action Queue">
+        <SectionCard title="My Work">
           {workerActions.length === 0 ? (
             <EmptyState
               title="No assigned actions"
@@ -322,7 +322,7 @@ export default function Dashboard({ user }) {
                         {overdue && (
                           <span className="badge border-red-200/80 bg-red-50 text-red-700">Action Required</span>
                         )}
-                        <StatusBadge kind="ca" value={action.ca_status} />
+                        <StatusBadge kind="ca" value={action.ca_status} audience="worker" />
                       </>
                     )}
                     action={(

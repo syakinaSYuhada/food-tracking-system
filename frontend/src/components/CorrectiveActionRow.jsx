@@ -16,8 +16,8 @@ function titleCase(value) {
   return String(value).replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
-function statusLabel(status) {
-  return formatCaStatusLabel(status)
+function statusLabel(status, managerView) {
+  return formatCaStatusLabel(status, managerView ? 'manager' : 'worker')
 }
 
 function actionTypeLabel(type) {
@@ -31,7 +31,7 @@ function getWorkerProgressHint(status) {
     case 'in_progress':
       return 'In progress'
     case 'completed':
-      return 'Submitted — waiting for manager verification'
+      return 'Submitted — Awaiting Verification'
     case 'rejected':
       return 'Rejected — revise and resubmit'
     case 'verified':
@@ -93,7 +93,7 @@ export default function CorrectiveActionRow({
   const workerProgressHint = !managerView ? getWorkerProgressHint(action.status) : null
 
   const footerParts = managerView
-    ? [actionTypeLabel(action.type), statusLabel(action.status), action.batchNumber ? `Batch ${action.batchNumber}` : null].filter(Boolean)
+    ? [actionTypeLabel(action.type), statusLabel(action.status, managerView), action.batchNumber ? `Batch ${action.batchNumber}` : null].filter(Boolean)
     : [
       action.productName || '-',
       action.batchNumber ? `Batch ${action.batchNumber}` : null,
@@ -123,7 +123,7 @@ export default function CorrectiveActionRow({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1">
             <span className="list-row-code">{action.code}</span>
-            {!managerView && <StatusBadge kind="ca" value={action.status} />}
+            {!managerView && <StatusBadge kind="ca" value={action.status} audience="worker" />}
             {!managerView && highPriority && (
               <Badge tone={priority === 'critical' ? 'red' : 'orange'}>
                 CA {titleCase(action.priority)}
