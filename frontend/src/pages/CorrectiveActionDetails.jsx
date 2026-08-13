@@ -149,6 +149,7 @@ export default function CorrectiveActionDetails({ user }) {
   const [dueDateDraft, setDueDateDraft] = useState('')
   const [editingDueDate, setEditingDueDate] = useState(false)
   const [showRejectModal, setShowRejectModal] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
   const [evidenceError, setEvidenceError] = useState(false)
   const evidenceSectionRef = useRef(null)
   const [form, setForm] = useState({
@@ -324,11 +325,17 @@ export default function CorrectiveActionDetails({ user }) {
       return alert('Evidence is required before verification.')
     }
 
-    await api.patch(`/corrective-actions/${id}/verify`, {
-      verified_by: user?.id || null
-    })
-
-    await load()
+    setIsVerifying(true)
+    try {
+      await api.patch(`/corrective-actions/${id}/verify`, {
+        verified_by: user?.id || null
+      })
+      await load()
+    } catch (error) {
+      alert(error.response?.data?.message || 'Could not verify action.')
+    } finally {
+      setIsVerifying(false)
+    }
   }
 
   async function cancelAction() {
@@ -785,7 +792,9 @@ export default function CorrectiveActionDetails({ user }) {
               <Button color="red" onClick={() => setShowRejectModal(true)}>
                 <XCircle size={16} /> Reject
               </Button>
-              <Button color="green" onClick={verifyAction}>Verify</Button>
+              <Button color="green" onClick={verifyAction} disabled={isVerifying}>
+                {isVerifying ? 'Verifying...' : 'Verify'}
+              </Button>
             </>
           )}
 
