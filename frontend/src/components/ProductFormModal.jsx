@@ -2,12 +2,13 @@ import { useState } from 'react'
 import api from '../api/client'
 import Button from './Button'
 import BaseModal from './BaseModal'
+import FieldLabel from './FieldLabel'
 
-function Field({ label, children }) {
+function Field({ label, required = false, children }) {
   return (
     <div className="mb-2">
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className="text-sm text-slate-700">{children}</div>
+      <FieldLabel label={label} required={required} />
+      <div className="mt-1.5">{children}</div>
     </div>
   )
 }
@@ -91,12 +92,12 @@ function ProductFormModal({ mode, product, onClose, onSaved }) {
           </div>
         )}
 
-        <Field label="Product Name">
+        <Field label="Product Name" required>
           <TextInput value={form.product_name} onChange={(e) => update('product_name', e.target.value)} />
         </Field>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Field label="Category">
+          <Field label="Category" required>
             <SelectInput value={form.category} onChange={(e) => update('category', e.target.value)}>
               <option>Meat Product</option>
               <option>Paste</option>
@@ -106,7 +107,7 @@ function ProductFormModal({ mode, product, onClose, onSaved }) {
             </SelectInput>
           </Field>
 
-          <Field label="Packaging">
+          <Field label="Packaging" required>
             <SelectInput value={form.packaging_type} onChange={(e) => update('packaging_type', e.target.value)}>
               <option>Retort Pouch</option>
               <option>Bottle</option>
@@ -116,7 +117,7 @@ function ProductFormModal({ mode, product, onClose, onSaved }) {
             </SelectInput>
           </Field>
 
-          <Field label="Size/Weight">
+          <Field label="Size/Weight" required>
             <SelectInput value={form.size_weight} onChange={(e) => update('size_weight', e.target.value)}>
               <option>100g</option>
               <option>200g</option>
@@ -128,11 +129,11 @@ function ProductFormModal({ mode, product, onClose, onSaved }) {
             </SelectInput>
           </Field>
 
-          <Field label="Shelf Life (months)">
+          <Field label="Shelf Life (months)" required>
             <TextInput value={form.shelf_life_months} onChange={(e) => update('shelf_life_months', e.target.value)} />
           </Field>
 
-          <Field label="Loss Rate per Unit">
+          <Field label="Loss Rate per Unit" required>
             <TextInput value={form.loss_rate_per_unit} onChange={(e) => update('loss_rate_per_unit', e.target.value)} />
           </Field>
 
