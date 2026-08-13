@@ -85,7 +85,9 @@ export function getDefectWorkflow(defect, actions = [], managerView = true) {
       nextStep = 'No action required from you right now.'
     }
   } else if (phase === 'assign') {
-    nextStep = 'Assign corrective actions on the Corrective Actions tab.'
+    nextStep = defect?.defect_status === 'new'
+      ? 'Start review, then assign corrective actions on the Corrective Actions tab.'
+      : 'Assign corrective actions on the Corrective Actions tab.'
     nextTab = 'actions'
   } else if (phase === 'worker_complete') {
     nextStep = `Waiting for workers to complete actions (${stats.submitted}/${stats.total} submitted).`

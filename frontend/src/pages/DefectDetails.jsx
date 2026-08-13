@@ -351,11 +351,15 @@ function NextStepBanner({ workflow, activeTab, onGoToTab }) {
           : 'Root cause confirmed. Close this defect on the Root Cause tab.'
         : workflow.nextStep
 
+  const containerClass = workflow.isClosed
+    ? 'mb-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800'
+    : 'mb-5 rounded-2xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-ink'
+
   return (
-    <div className="mb-5 rounded-2xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-ink">
-      <p className="font-semibold">Next step</p>
+    <div className={containerClass}>
+      <p className={`font-semibold ${workflow.isClosed ? 'text-slate-900' : ''}`}>Next step</p>
       <p className="mt-1">{message}</p>
-      {workflow.nextTab !== 'overview' && !onTargetTab && (
+      {!workflow.isClosed && workflow.nextTab !== 'overview' && !onTargetTab && (
         <button
           type="button"
           onClick={() => onGoToTab(workflow.nextTab)}
@@ -933,16 +937,7 @@ export default function DefectDetails({ user }) {
           />
         </div>
 
-        {!workflow.isClosed && (
-          <NextStepBanner workflow={workflow} activeTab={tab} onGoToTab={setTab} />
-        )}
-
-        {workflow.isClosed && (
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-800">
-            <p className="font-semibold text-slate-900">This defect has been successfully closed.</p>
-            <p className="mt-1">No further actions or modifications are allowed.</p>
-          </div>
-        )}
+        <NextStepBanner workflow={workflow} activeTab={tab} onGoToTab={setTab} />
 
         {hasExpiryMismatch(defect) && (
           <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-900">
@@ -967,11 +962,11 @@ export default function DefectDetails({ user }) {
             <p className="mt-1">
               {defect.reported_by_role === 'worker' ? (
                 <>
-                  Reported by <b>{defect.reported_by_name || 'worker'}</b>. Review the details below, then assign corrective actions on the Corrective Actions tab.
+                  Reported by <b>{defect.reported_by_name || 'worker'}</b>. Review the report details below and use the quick-assign options when you are ready.
                 </>
               ) : (
                 <>
-                  Created by <b>{defect.reported_by_name || 'manager'}</b>. Review the details below, then assign corrective actions on the Corrective Actions tab.
+                  Created by <b>{defect.reported_by_name || 'manager'}</b>. Review the defect details below before assigning from the Corrective Actions tab.
                 </>
               )}
             </p>
