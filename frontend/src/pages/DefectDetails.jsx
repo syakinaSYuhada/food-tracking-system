@@ -9,6 +9,7 @@ import LoadingState from '../components/LoadingState'
 import TabPills from '../components/TabPills'
 import DefectActivityTimeline from '../components/DefectActivityTimeline'
 import RejectActionModal from '../components/RejectActionModal'
+import FieldLabel from '../components/FieldLabel'
 import { isAssignedToUser, isManager } from '../utils/roleAccess'
 import { getDefectWorkflow } from '../utils/defectWorkflow'
 import { isActionOverdue } from '../utils/dueDate'
@@ -31,16 +32,34 @@ function Info({ label, value }) {
   return <div><p className="text-xs font-semibold uppercase text-brand-muted">{label}</p><p className="mt-1 font-semibold text-brand-ink">{value || '-'}</p></div>
 }
 
-function Select({ label, value, onChange, options }) {
-  return <label className="block"><span className="field-label">{label}</span><select value={value} onChange={(e) => onChange(e.target.value)} className="field-control"><option value="">Select</option>{options.map((option, i) => <option key={`${option.value ?? option}-${i}`} value={option.value ?? option}>{option.label ?? titleCase(option)}</option>)}</select></label>
+function Select({ label, value, onChange, options, required = false }) {
+  return (
+    <label className="block">
+      <FieldLabel label={label} required={required} />
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="field-control">
+        <option value="">Select</option>
+        {options.map((option, i) => <option key={`${option.value ?? option}-${i}`} value={option.value ?? option}>{option.label ?? titleCase(option)}</option>)}
+      </select>
+    </label>
+  )
 }
 
-function Input({ label, value, onChange, type = 'text' }) {
-  return <label className="block"><span className="field-label">{label}</span><input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="field-control" /></label>
+function Input({ label, value, onChange, type = 'text', required = false }) {
+  return (
+    <label className="block">
+      <FieldLabel label={label} required={required} />
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="field-control" />
+    </label>
+  )
 }
 
-function TextArea({ label, value, onChange, rows = 3 }) {
-  return <label className="block"><span className="field-label">{label}</span><textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} className="field-control" /></label>
+function TextArea({ label, value, onChange, rows = 3, required = false }) {
+  return (
+    <label className="block">
+      <FieldLabel label={label} required={required} />
+      <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} className="field-control" />
+    </label>
+  )
 }
 
 function normalizeAction(action) {
@@ -161,10 +180,11 @@ function EditDefectDetailsModal({ defect, onClose, onSaved }) {
           <p className="text-xs font-medium text-amber-700">Needs review today</p>
         )}
         <TextArea
-          label={form.priority === 'urgent' ? 'Urgency Reason (required)' : 'Urgency Reason (optional)'}
+          label="Urgency Reason"
           value={form.urgency_reason}
           onChange={(v) => update('urgency_reason', v)}
           rows={2}
+          required={form.priority === 'urgent'}
         />
       </div>
     </BaseModal>
@@ -271,6 +291,7 @@ function AssignActionModal({ defect, rule, workers, users, assignedBy, defaultTy
             }
           }}
           options={uniqueTasks}
+          required
         />
 
         {form.task === 'Custom Task' && (
@@ -278,6 +299,7 @@ function AssignActionModal({ defect, rule, workers, users, assignedBy, defaultTy
             label="Custom Task Description"
             value={form.custom_task || ''}
             onChange={(v) => update('custom_task', v)}
+            required
           />
         )}
 
@@ -287,6 +309,7 @@ function AssignActionModal({ defect, rule, workers, users, assignedBy, defaultTy
             value={form.assigned_to}
             onChange={(v) => update('assigned_to', v)}
             options={workers.map((w) => ({ value: w.id, label: w.full_name }))}
+            required
           />
 
           <Input
@@ -1314,9 +1337,9 @@ export default function DefectDetails({ user }) {
                     <h3 className="font-bold text-brand-ink">Record Suspected Root Cause</h3>
                     <p className="mt-2 text-sm text-brand-muted">Based on your investigation, record what you think caused this defect. The manager will review and confirm.</p>
                     <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <Select label="Suspected Root Cause" value={suspectedCause} onChange={setSuspectedCause} options={rootCauseOptions} />
+                      <Select label="Suspected Root Cause" value={suspectedCause} onChange={setSuspectedCause} options={rootCauseOptions} required />
                       {suspectedCause === 'Other' && (
-                        <Input label="Please specify suspected root cause" value={otherSuspectedCause} onChange={setOtherSuspectedCause} />
+                        <Input label="Please specify suspected root cause" value={otherSuspectedCause} onChange={setOtherSuspectedCause} required />
                       )}
                     </div>
                     <TextArea
@@ -1351,8 +1374,10 @@ export default function DefectDetails({ user }) {
                         : 'No suspected root cause recorded yet. You can still confirm based on investigation findings.'}
                     </p>
                     <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <Select label="Confirmed Root Cause" value={rootCause} onChange={setRootCause} options={rootCauseOptions} />
-                      {rootCause === 'Other' && <Input label="Please specify confirmed root cause" value={otherRootCause} onChange={setOtherRootCause} />}
+                      <Select label="Confirmed Root Cause" value={rootCause} onChange={setRootCause} options={rootCauseOptions} required />
+                      {rootCause === 'Other' && (
+                        <Input label="Please specify confirmed root cause" value={otherRootCause} onChange={setOtherRootCause} required />
+                      )}
                     </div>
                     {confirmBlockers.length > 0 && (
                       <BlockerBanner
