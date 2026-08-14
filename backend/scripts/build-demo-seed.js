@@ -8,7 +8,8 @@ const fs = require('fs')
 const path = require('path')
 const {
   calculateQtyOnHold,
-  calculateStillSellable
+  calculateStillSellable,
+  determineLossStatus
 } = require('../src/services/lossService')
 
 const COUNTED_CA_STATUSES = ['completed', 'verified']
@@ -273,6 +274,83 @@ function hasCountedProductHandling(defectId, actionList) {
   )
 }
 
+function hasStoredHandlingTotals(defect) {
+  return defect.relabel + defect.discard + defect.rework + Number(defect.loss || 0) > 0
+}
+
+function storedHandlingTotals(defect) {
+  return {
+    qty_relabelled: defect.relabel,
+    qty_repacked: 0,
+    qty_discarded: defect.discard,
+    qty_reworked: defect.rework,
+    qty_released: 0,
+    estimated_loss: Number(defect.loss.toFixed(2))
+  }
+}
+
+function defectRowQuantities(defect) {
+  const quantities = defect.seedQuantities || {
+    ...storedHandlingTotals(defect),
+    qty_on_hold: defect.hold,
+    still_sellable: defect.relabel + defect.hold
+  }
+
+  return {
+    ...quantities,
+    loss_rate_per_unit: PRODUCTS[defect.productId].price
+  }
+}
+
+function computeDerivedFromCaTotals(defect, actionTotals) {
+  const handlingBase = {
+    qty_affected: defect.qty,
+    qty_relabelled: actionTotals.qty_relabelled,
+    qty_repacked: actionTotals.qty_repacked,
+    qty_reworked: actionTotals.qty_reworked,
+    qty_released: actionTotals.qty_released,
+    qty_discarded: actionTotals.qty_discarded
+  }
+  const containmentStatus = defect.containmentStatus ?? 'Segregated / On Hold'
+  const qtyOnHold = containmentStatus === 'No Hold Needed'
+    ? 0
+    : calculateQtyOnHold(handlingBase)
+
+  return {
+    qty_relabelled: handlingBase.qty_relabelled,
+    qty_repacked: handlingBase.qty_repacked,
+    qty_discarded: handlingBase.qty_discarded,
+    qty_reworked: handlingBase.qty_reworked,
+    qty_released: handlingBase.qty_released,
+    estimated_loss: Number(actionTotals.calculated_loss.toFixed(2)),
+    qty_on_hold: qtyOnHold,
+    still_sellable: calculateStillSellable(handlingBase)
+  }
+}
+
+function isDefectVerifiedOrClosedForLoss(defect) {
+  return (
+    defect.status === 'closed' ||
+    defect.status === 'ready_verification' ||
+    defect.lossStatus === 'loss_confirmed'
+  )
+}
+
+function syncDefectDerivedQuantities(defectList, actionList, quantitiesByCode) {
+  defectList.forEach((defect) => {
+    const actionTotals = sumCaTotalsForDefect(defect.id, actionList, quantitiesByCode)
+    defect.seedQuantities = computeDerivedFromCaTotals(defect, actionTotals)
+
+    const expectedLossStatus = determineLossStatus({
+      qty_discarded: actionTotals.qty_discarded,
+      isVerifiedOrClosed: isDefectVerifiedOrClosedForLoss(defect)
+    })
+    if (defect.lossStatus !== expectedLossStatus) {
+      defect.lossStatus = expectedLossStatus
+    }
+  })
+}
+
 function pickPrimaryProductHandlingCa(defectId, actionList) {
   const productHandlingActions = actionList.filter((action) =>
     action.defectId === defectId &&
@@ -306,17 +384,16 @@ function buildCaQuantitiesMap(defectList, actionList) {
   defectList.forEach((defect) => {
     const primary = pickPrimaryProductHandlingCa(defect.id, actionList)
     if (!primary) return
+    if (!hasStoredHandlingTotals(defect)) return
 
-    const hasHandling = defect.relabel + defect.discard + defect.rework > 0
-    if (!hasHandling) return
-
+    const stored = storedHandlingTotals(defect)
     quantitiesByCode[primary.code] = {
-      qty_relabelled: defect.relabel,
-      qty_repacked: 0,
-      qty_discarded: defect.discard,
-      qty_reworked: defect.rework,
-      qty_released: 0,
-      calculated_loss: Number(defect.loss.toFixed(2))
+      qty_relabelled: stored.qty_relabelled,
+      qty_repacked: stored.qty_repacked,
+      qty_discarded: stored.qty_discarded,
+      qty_reworked: stored.qty_reworked,
+      qty_released: stored.qty_released,
+      calculated_loss: stored.estimated_loss
     }
   })
 
@@ -342,27 +419,38 @@ function sumCaTotalsForDefect(defectId, actionList, quantitiesByCode) {
     }, emptyCaQuantities())
 }
 
-function computeDefectQuantitiesForInsert(defect, actionTotals) {
-  const handlingBase = {
-    qty_affected: defect.qty,
-    qty_relabelled: actionTotals.qty_relabelled,
-    qty_repacked: actionTotals.qty_repacked,
-    qty_reworked: actionTotals.qty_reworked,
-    qty_released: actionTotals.qty_released,
-    qty_discarded: actionTotals.qty_discarded
-  }
+function appendBackingProductHandlingCas(defectList, actionList, nextCode) {
+  defectList.forEach((defect) => {
+    if (!hasStoredHandlingTotals(defect)) return
+    if (hasCountedProductHandling(defect.id, actionList)) return
 
-  return {
-    qty_relabelled: handlingBase.qty_relabelled,
-    qty_repacked: handlingBase.qty_repacked,
-    qty_discarded: handlingBase.qty_discarded,
-    qty_reworked: handlingBase.qty_reworked,
-    qty_released: handlingBase.qty_released,
-    qty_on_hold: calculateQtyOnHold(handlingBase),
-    still_sellable: calculateStillSellable(handlingBase),
-    estimated_loss: Number(actionTotals.calculated_loss.toFixed(2)),
-    loss_rate_per_unit: PRODUCTS[defect.productId].price
-  }
+    const due = (defect.closed || defect.updated || defect.created).split(' ')[0]
+    const caStatus = defect.closed ? 'verified' : 'completed'
+    const completedAt = defect.updated || defect.created
+
+    actionList.push(ca(`CA${String(nextCode).padStart(3, '0')}`, defect.id, defect.worker, due, defect.priority === 'urgent' ? 'high' : (defect.priority || 'medium'), caStatus, defect.created, {
+      task: productHandlingTask(defect),
+      started: defect.created,
+      completed: completedAt,
+      verified: caStatus === 'verified' ? (defect.closed || completedAt) : null
+    }))
+    nextCode += 1
+  })
+
+  return nextCode
+}
+
+function quantitiesMatchStored(defect, actionTotals) {
+  const stored = storedHandlingTotals(defect)
+
+  return (
+    stored.qty_relabelled === actionTotals.qty_relabelled &&
+    stored.qty_repacked === actionTotals.qty_repacked &&
+    stored.qty_discarded === actionTotals.qty_discarded &&
+    stored.qty_reworked === actionTotals.qty_reworked &&
+    stored.qty_released === actionTotals.qty_released &&
+    Math.abs(stored.estimated_loss - actionTotals.calculated_loss) < 0.005
+  )
 }
 
 const actions = [
@@ -440,50 +528,14 @@ const monthlyActionSupplements = [
 ]
 actions.push(...monthlyActionSupplements)
 
-let nextResolvedCaCode = 62
-const resolvedProductHandlingCas = [
-  { defectId: 2, task: 'Separate affected batch; Discard defective product' },
-  { defectId: 4, task: 'Separate affected batch; Discard defective product' },
-  { defectId: 5, task: 'Reset / adjust weighing tool; Recheck weighing procedure' },
-  { defectId: 8, task: 'Separate affected batch; Discard defective product' },
-  { defectId: 9, task: 'Separate affected batch; Discard defective product' },
-  { defectId: 17, task: 'Separate affected batch; Discard defective product' },
-  { defectId: 20, task: 'Separate affected batch; Discard defective product' },
-  { defectId: 29, task: 'Reset / adjust weighing tool; Recheck weighing procedure' },
-  { defectId: 44, task: 'Relabel affected products; Check all products in same batch' }
-]
-resolvedProductHandlingCas.forEach((spec) => {
-  const defect = defects[spec.defectId - 1]
-  const due = (defect.closed || defect.updated).split(' ')[0]
-  actions.push(ca(`CA${String(nextResolvedCaCode).padStart(3, '0')}`, spec.defectId, defect.worker, due, defect.priority === 'urgent' ? 'high' : 'medium', 'verified', defect.created, {
-    task: spec.task,
-    started: defect.created,
-    completed: defect.updated,
-    verified: defect.closed || defect.updated
-  }))
-  nextResolvedCaCode += 1
-})
-
-defects.forEach((defect) => {
-  if (defect.status !== 'closed') return
-  const hasHandling = defect.relabel + defect.discard + defect.rework > 0
-  if (!hasHandling) return
-  if (hasCountedProductHandling(defect.id, actions)) return
-
-  const due = (defect.closed || defect.updated).split(' ')[0]
-  actions.push(ca(`CA${String(nextResolvedCaCode).padStart(3, '0')}`, defect.id, defect.worker, due, 'medium', 'verified', defect.created, {
-    task: productHandlingTask(defect),
-    started: defect.created,
-    completed: defect.updated,
-    verified: defect.closed || defect.updated
-  }))
-  nextResolvedCaCode += 1
-})
+let nextResolvedCaCode = appendBackingProductHandlingCas(defects, actions, 62)
 
 const caQuantitiesByCode = buildCaQuantitiesMap(defects, actions)
 actions.forEach((action) => {
   action.quantities = caQuantitiesByCode[action.code]
 })
+
+syncDefectDerivedQuantities(defects, actions, caQuantitiesByCode)
 
 const rootCauses = buildRootCauses()
 
@@ -565,8 +617,7 @@ lines.push('')
 
 lines.push('INSERT INTO defects (defect_code, product_id, batch_id, detected_at_stage, defect_type, defect_type_other, mapping_status, problem_level, priority, review_due_date, urgency_reason, description, qty_affected, qty_relabelled, qty_repacked, qty_discarded, qty_on_hold, qty_reworked, still_sellable, loss_rate_per_unit, estimated_loss, loss_status, defect_status, created_by, closed_by, created_at, updated_at, closed_at) VALUES')
 lines.push(defects.map((defect, index) => {
-  const actionTotals = sumCaTotalsForDefect(defect.id, actions, caQuantitiesByCode)
-  const quantities = computeDefectQuantitiesForInsert(defect, actionTotals)
+  const quantities = defectRowQuantities(defect)
   return `  (${sqlString(defect.code)}, ${defect.productId}, ${defect.batchId}, ${sqlString(defect.stage)}, ${sqlString(defect.type)}, ${sqlString(defect.defectOther)}, ${sqlString(defect.mapping)}, ${sqlString(defect.level)}, ${sqlString(defect.priority)}, ${sqlDate(defect.reviewDue)}, ${sqlString(defect.urgency)}, ${sqlString(defect.desc)}, ${defect.qty}, ${quantities.qty_relabelled}, ${quantities.qty_repacked}, ${quantities.qty_discarded}, ${quantities.qty_on_hold}, ${quantities.qty_reworked}, ${quantities.still_sellable}, ${quantities.loss_rate_per_unit.toFixed(2)}, ${quantities.estimated_loss.toFixed(2)}, ${sqlString(defect.lossStatus)}, ${sqlString(defect.status)}, ${defect.worker}, ${defect.closed ? 1 : 'NULL'}, ${sqlTs(defect.created)}, ${sqlTs(defect.updated)}, ${sqlTs(defect.closed)})${index === defects.length - 1 ? ';' : ','}`
 }).join('\n'))
 lines.push('')
@@ -599,6 +650,24 @@ lines.push('INSERT INTO activity_logs (user_id, action_type, entity_type, entity
 lines.push(activityRows.map((row, index) => `  (${row[0]}, ${sqlString(row[1])}, ${sqlString(row[2])}, ${row[3]}, ${sqlString(row[4])}, ${sqlString(row[5])}, ${sqlString(row[6])}, ${sqlTs(row[7])})${index === activityRows.length - 1 ? ';' : ','}`).join('\n'))
 lines.push('')
 
+const reconciliationDrift = defects
+  .filter((defect) => hasStoredHandlingTotals(defect))
+  .filter((defect) => {
+    const actionTotals = sumCaTotalsForDefect(defect.id, actions, caQuantitiesByCode)
+    return !quantitiesMatchStored(defect, actionTotals)
+  })
+  .map((defect) => ({
+    code: defect.code,
+    stored: storedHandlingTotals(defect),
+    caTotals: sumCaTotalsForDefect(defect.id, actions, caQuantitiesByCode)
+  }))
+
+if (reconciliationDrift.length > 0) {
+  console.warn(`WARNING: ${reconciliationDrift.length} defects still have CA quantity drift after generation:`)
+  reconciliationDrift.forEach((row) => console.warn(`  ${row.code}`, row))
+  process.exitCode = 1
+}
+
 const outputPath = path.join(__dirname, '..', 'database', 'seed_demo_timeline.sql')
 fs.writeFileSync(outputPath, `${lines.join('\n')}\n`, 'utf8')
 
@@ -611,6 +680,10 @@ actions.forEach((a) => { caCounts[a.status] = (caCounts[a.status] || 0) + 1 })
 
 console.log(`Wrote ${outputPath}`)
 console.log(`Batches: ${batches.length}, Defects: ${defects.length}, CAs: ${actions.length}, Evidence: ${evidenceSpecs.length}, Activity logs: ${activityRows.length}`)
+const handlingDefectCount = defects.filter(hasStoredHandlingTotals).length
+const alignedHandlingDefectCount = handlingDefectCount - reconciliationDrift.length
+
+console.log(`Reconciliation backing: ${alignedHandlingDefectCount}/${handlingDefectCount} handling defects aligned to counted CAs`)
 console.log('Product distribution:', productCounts)
 console.log('Root cause distribution:', rcCounts)
 console.log('CA status distribution:', caCounts)
