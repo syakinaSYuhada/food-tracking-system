@@ -616,6 +616,262 @@ function WorkflowStep({ number, title, subtitle, status, visual = 'neutral', hin
   )
 }
 
+function ReviewUrgencyBanner({ defect, managerView, onEdit }) {
+  const shouldShow = (managerView && defect.defect_status !== 'closed')
+    || defect.review_due_date
+    || defect.urgency_reason
+    || isUrgentDefectPriority(defect)
+
+  if (!shouldShow) return null
+
+  return (
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-4 text-sm text-amber-950">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">Manager Review Urgency</p>
+          <p className="mt-1 text-xs text-amber-900/80">
+            {managerView
+              ? 'Set or adjust how quickly this defect needs manager review — not a corrective action due date.'
+              : 'Set by the worker when reporting. This tells you how quickly to review the defect — not a corrective action due date.'}
+          </p>
+        </div>
+        {managerView && defect.defect_status !== 'closed' && (
+          <Button color="amber" variant="subtle" size="sm" onClick={onEdit}>
+            <Edit size={14} />
+            Edit Details
+          </Button>
+        )}
+      </div>
+      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+        <Info label="Defect Priority" value={formatDefectPriorityLabel(defect.priority)} />
+        <Info label="Manager Review Due Date / Review Needed By" value={formatDate(defect.review_due_date) || '-'} />
+        {getReviewDueBadge(defect.review_due_date, defect.defect_status) && (
+          <Info
+            label="Review Status"
+            value={getReviewDueBadge(defect.review_due_date, defect.defect_status).label}
+          />
+        )}
+      </div>
+      {defect.urgency_reason ? (
+        <div className="mt-3">
+          <Info label="Urgency Reason" value={defect.urgency_reason} />
+        </div>
+      ) : managerView && defect.defect_status !== 'closed' ? (
+        <div className="mt-3">
+          <Info label="Urgency Reason" value="-" />
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function DescriptionEvidenceCard({ defect }) {
+  return (
+    <div className="relative mt-2 surface-card p-6">
+      <h3 className="absolute -top-3 left-6 bg-white px-3 text-sm font-bold text-brand-ink">Defect Description + Evidence</h3>
+      <div className="mt-2"><Info label="Description" value={defect.description || 'No description provided.'} /></div>
+      {defect.investigation_notes && (
+        <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50/60 p-4">
+          <Info label="Worker's Possible Cause" value={defect.investigation_notes} />
+        </div>
+      )}
+      <div className="mt-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-brand-muted">Evidence / Photos</p>
+        </div>
+        <div className="mt-3">
+          {(defect.photos || []).length === 0 ? (
+            <div className="text-sm text-brand-muted">No photos uploaded.</div>
+          ) : (
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {(defect.photos || []).map((p, i) => (
+                <div key={p.id ?? p.url ?? i} className="aspect-square overflow-hidden rounded-md border border-brand-border/70 bg-brand-50">
+                  <img src={p.url || p} alt={`evidence-${i}`} className="h-full w-full object-cover" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ManagerOverview({
+  defect,
+  managerView,
+  showEditDetails,
+  setShowEditDetails,
+  onSavedDetails,
+  workflowSteps,
+  verifiedActionCount,
+  totalActionCount,
+  actions
+}) {
+  return (
+    <div className="mt-6 space-y-5">
+      {showEditDetails && (
+        <EditDefectDetailsModal
+          defect={defect}
+          onClose={() => setShowEditDetails(false)}
+          onSaved={onSavedDetails}
+        />
+      )}
+
+      <ReviewUrgencyBanner defect={defect} managerView={managerView} onEdit={() => setShowEditDetails(true)} />
+
+      <div className="surface-card p-5">
+        <h3 className="text-sm font-bold text-brand-ink">Defect Summary</h3>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4">
+          <Info label="Product Batch" value={`${defect.product_name} / ${defect.batch_number}`} />
+          <Info label="Detected Stage" value={defect.detected_at_stage} />
+          <Info label="Defect Type" value={defect.defect_type} />
+          <Info label="Problem Level" value={defect.problem_level} />
+          <Info label="Qty Affected" value={defect.qty_affected} />
+          <Info label="Containment" value={defect.containment_status} />
+          <Info label="Corrective Action Progress" value={defect.action_progress} />
+          <Info label="Expected Expiry" value={formatDate(defect.correct_expiry_date)} />
+          <Info label="Printed Expiry" value={formatDate(defect.printed_expiry_date)} />
+        </div>
+      </div>
+
+      <DescriptionEvidenceCard defect={defect} />
+
+      <div className="surface-card p-5">
+        <h3 className="text-sm font-bold text-brand-ink">Current Workflow</h3>
+        <div className="mt-4 space-y-3">
+          {workflowSteps.map((step, index) => (
+            <WorkflowStep
+              key={step.title}
+              number={index + 1}
+              title={step.title}
+              subtitle={step.subtitle}
+              status={step.status}
+              visual={step.visual}
+              hint={step.hint}
+              action={step.action}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="surface-card p-5">
+        <h3 className="text-sm font-bold text-brand-ink">Suggested Handling & Related Information</h3>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Suggestion title="Suggested Product Handling" value={defect.suggested_product_handling} />
+          <Suggestion title="Suggested Machine / Process Check" value={defect.suggested_machine_handling} />
+          <Suggestion title="Related Tool / Machine / Area" value={defect.related_tool_machine} />
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="rounded-2xl border border-brand-border/70 bg-brand-50/60 p-4">
+            <p className="text-sm font-semibold text-brand-muted">Actions Verified</p>
+            <p className="mt-2 text-2xl font-bold text-brand-ink">{verifiedActionCount}/{totalActionCount || 0}</p>
+          </div>
+          <div className="rounded-2xl border border-brand-border/70 bg-brand-50/60 p-4">
+            <p className="text-sm font-semibold text-brand-muted">Actions Pending Verification</p>
+            <p className="mt-2 text-2xl font-bold text-brand-ink">{actions.filter((a) => a.status !== 'verified').length}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const WORKER_PHASE_STATUS = {
+  assign: 'Waiting for Assignment',
+  worker_complete: 'Action In Progress',
+  manager_verify: 'Waiting for Manager Verification',
+  confirm_root_cause: 'Ready for Root Cause',
+  close: 'Ready to Close',
+  closed: 'Closed'
+}
+
+function WorkerOverview({ defect, visibleActions, workflow, onStartAction, navigate }) {
+  const statusLabel = WORKER_PHASE_STATUS[workflow.phase] || 'In Progress'
+
+  return (
+    <div className="mt-6 space-y-5">
+      <ReviewUrgencyBanner defect={defect} managerView={false} />
+
+      <div className="surface-card p-5">
+        <h3 className="text-sm font-bold text-brand-ink">My Action(s)</h3>
+        {visibleActions.length === 0 ? (
+          <div className="mt-3 text-sm text-brand-muted">No corrective action assigned to you yet.</div>
+        ) : (
+          <div className="mt-3 space-y-3">
+            {visibleActions.map((action) => {
+              const suggestedText = action.type === 'machine_process_check'
+                ? defect.suggested_machine_handling
+                : defect.suggested_product_handling
+              const needsStart = action.status === 'assigned' || action.status === 'rejected'
+              const inProgress = action.status === 'in_progress'
+
+              return (
+                <div key={action.id} className="rounded-2xl border border-brand-border/70 bg-white p-4 shadow-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-bold text-brand-ink">{action.code}</div>
+                      <div className="text-sm text-brand-muted">{action.task}</div>
+                      <div className="mt-2 text-xs text-brand-muted">Due {action.dueDate || '-'}</div>
+                      {action.type === 'machine_process_check' && defect.related_tool_machine && (
+                        <div className="mt-1 text-xs text-brand-muted">Machine / Area: {defect.related_tool_machine}</div>
+                      )}
+                      {suggestedText && (
+                        <div className="mt-1 text-xs text-brand-muted">Suggested: {suggestedText}</div>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                      <StatusBadge kind="ca" value={action.status} audience="worker" />
+                      {isActionOverdue(action.dueDate, action.status) && (
+                        <span className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700">
+                          Overdue
+                        </span>
+                      )}
+                      {needsStart && (
+                        <Button size="sm" onClick={() => onStartAction(action.id)}>
+                          <Play size={14} /> {action.status === 'rejected' ? 'Restart Action' : 'Start Action'}
+                        </Button>
+                      )}
+                      {inProgress && (
+                        <Button size="sm" onClick={() => navigate(`/corrective-actions/${action.id}`)}>
+                          <Save size={14} /> Complete Action
+                        </Button>
+                      )}
+                      <Button color="slate" variant="subtle" size="sm" onClick={() => navigate(`/corrective-actions/${action.id}`)}>
+                        <Eye size={14} /> Open Action
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-2xl border border-brand-border/70 bg-brand-50/60 px-4 py-3 text-sm">
+        <p className="font-semibold text-brand-ink">{statusLabel}</p>
+        {workflow.nextStep && <p className="mt-1 text-brand-muted">{workflow.nextStep}</p>}
+      </div>
+
+      <div className="surface-card p-5">
+        <h3 className="text-sm font-bold text-brand-ink">Defect Summary</h3>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Info label="Product Batch" value={`${defect.product_name} / ${defect.batch_number}`} />
+          <Info label="Defect Type" value={defect.defect_type} />
+          <Info label="Qty Affected" value={defect.qty_affected} />
+          <Info label="Problem Level" value={defect.problem_level} />
+          <Info label="Containment" value={defect.containment_status} />
+          <Info label="My Work Progress" value={defect.action_progress} />
+        </div>
+      </div>
+
+      <DescriptionEvidenceCard defect={defect} />
+    </div>
+  )
+}
+
 export default function DefectDetails({ user }) {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -1050,136 +1306,27 @@ export default function DefectDetails({ user }) {
         )}
 
         {tab === 'overview' && (
-          <div className="mt-6 space-y-5">
-            {showEditDetails && (
-              <EditDefectDetailsModal
-                defect={defect}
-                onClose={() => setShowEditDetails(false)}
-                onSaved={load}
-              />
-            )}
-
-            {((managerView && defect.defect_status !== 'closed') || defect.review_due_date || defect.urgency_reason || isUrgentDefectPriority(defect)) && (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-4 text-sm text-amber-950">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">Manager Review Urgency</p>
-                    <p className="mt-1 text-xs text-amber-900/80">
-                      {managerView
-                        ? 'Set or adjust how quickly this defect needs manager review — not a corrective action due date.'
-                        : 'Set by the worker when reporting. This tells you how quickly to review the defect — not a corrective action due date.'}
-                    </p>
-                  </div>
-                  {managerView && defect.defect_status !== 'closed' && (
-                    <Button color="amber" variant="subtle" size="sm" onClick={() => setShowEditDetails(true)}>
-                      <Edit size={14} />
-                      Edit Details
-                    </Button>
-                  )}
-                </div>
-                <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-                  <Info label="Defect Priority" value={formatDefectPriorityLabel(defect.priority)} />
-                  <Info label="Manager Review Due Date / Review Needed By" value={formatDate(defect.review_due_date) || '-'} />
-                  {getReviewDueBadge(defect.review_due_date, defect.defect_status) && (
-                    <Info
-                      label="Review Status"
-                      value={getReviewDueBadge(defect.review_due_date, defect.defect_status).label}
-                    />
-                  )}
-                </div>
-                {defect.urgency_reason ? (
-                  <div className="mt-3">
-                    <Info label="Urgency Reason" value={defect.urgency_reason} />
-                  </div>
-                ) : managerView && defect.defect_status !== 'closed' ? (
-                  <div className="mt-3">
-                    <Info label="Urgency Reason" value="-" />
-                  </div>
-                ) : null}
-              </div>
-            )}
-
-            <div className="surface-card p-5">
-              <h3 className="text-sm font-bold text-brand-ink">Defect Summary</h3>
-              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4">
-                <Info label="Product Batch" value={`${defect.product_name} / ${defect.batch_number}`} />
-                <Info label="Detected Stage" value={defect.detected_at_stage} />
-                <Info label="Defect Type" value={defect.defect_type} />
-                <Info label="Problem Level" value={defect.problem_level} />
-                <Info label="Qty Affected" value={defect.qty_affected} />
-                <Info label="Containment" value={defect.containment_status} />
-                <Info label={managerView ? 'Corrective Action Progress' : 'My Work Progress'} value={defect.action_progress} />
-                <Info label="Expected Expiry" value={formatDate(defect.correct_expiry_date)} />
-                <Info label="Printed Expiry" value={formatDate(defect.printed_expiry_date)} />
-              </div>
-            </div>
-
-            <div className="relative mt-2 surface-card p-6">
-              <h3 className="absolute -top-3 left-6 bg-white px-3 text-sm font-bold text-brand-ink">Defect Description + Evidence</h3>
-              <div className="mt-2"><Info label="Description" value={defect.description || 'No description provided.'} /></div>
-              {defect.investigation_notes && (
-                <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50/60 p-4">
-                  <Info label="Worker's Possible Cause" value={defect.investigation_notes} />
-                </div>
-              )}
-              <div className="mt-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-brand-muted">Evidence / Photos</p>
-                </div>
-                <div className="mt-3">
-                  {(defect.photos || []).length === 0 ? (
-                    <div className="text-sm text-brand-muted">No photos uploaded.</div>
-                  ) : (
-                    <div className="mt-2 grid grid-cols-3 gap-2">
-                        {(defect.photos || []).map((p, i) => (
-                          <div key={p.id ?? p.url ?? i} className="aspect-square overflow-hidden rounded-md border border-brand-border/70 bg-brand-50">
-                            <img src={p.url || p} alt={`evidence-${i}`} className="h-full w-full object-cover" />
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="surface-card p-5">
-              <h3 className="text-sm font-bold text-brand-ink">Current Workflow</h3>
-              <div className="mt-4 space-y-3">
-                {workflowSteps.map((step, index) => (
-                  <WorkflowStep
-                    key={step.title}
-                    number={index + 1}
-                    title={step.title}
-                    subtitle={step.subtitle}
-                    status={step.status}
-                    visual={step.visual}
-                    hint={step.hint}
-                    action={step.action}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="surface-card p-5">
-              <h3 className="text-sm font-bold text-brand-ink">Suggested Handling & Related Information</h3>
-              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-                <Suggestion title="Suggested Product Handling" value={defect.suggested_product_handling} />
-                <Suggestion title="Suggested Machine / Process Check" value={defect.suggested_machine_handling} />
-                <Suggestion title="Related Tool / Machine / Area" value={defect.related_tool_machine} />
-              </div>
-
-              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                <div className="rounded-2xl border border-brand-border/70 bg-brand-50/60 p-4">
-                  <p className="text-sm font-semibold text-brand-muted">Actions Verified</p>
-                  <p className="mt-2 text-2xl font-bold text-brand-ink">{verifiedActionCount}/{totalActionCount || 0}</p>
-                </div>
-                <div className="rounded-2xl border border-brand-border/70 bg-brand-50/60 p-4">
-                  <p className="text-sm font-semibold text-brand-muted">Actions Pending Verification</p>
-                  <p className="mt-2 text-2xl font-bold text-brand-ink">{actions.filter((a) => a.status !== 'verified').length}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          managerView ? (
+            <ManagerOverview
+              defect={defect}
+              managerView={managerView}
+              showEditDetails={showEditDetails}
+              setShowEditDetails={setShowEditDetails}
+              onSavedDetails={load}
+              workflowSteps={workflowSteps}
+              verifiedActionCount={verifiedActionCount}
+              totalActionCount={totalActionCount}
+              actions={actions}
+            />
+          ) : (
+            <WorkerOverview
+              defect={defect}
+              visibleActions={visibleActions}
+              workflow={workflow}
+              onStartAction={startAction}
+              navigate={navigate}
+            />
+          )
         )}
 
         {tab === 'actions' && (
