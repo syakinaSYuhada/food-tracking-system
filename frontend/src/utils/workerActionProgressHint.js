@@ -2,10 +2,8 @@ export function getWorkerActionProgressHint(status) {
   switch (String(status || '').toLowerCase()) {
     case 'assigned':
       return 'Not started'
-    case 'in_progress':
-      return 'In progress'
-    case 'completed':
-      return 'Submitted — Awaiting Verification'
+    // 'in_progress' and 'completed' are intentionally omitted here: their status
+    // badge label already says exactly this, so a hint would just repeat it.
     case 'rejected':
       return 'Rejected — revise and resubmit'
     case 'verified':

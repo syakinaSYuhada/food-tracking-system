@@ -58,7 +58,7 @@ export default function ActivityTimelineRow({ log }) {
           <p className="text-sm leading-snug text-brand-ink">{log.description || titleCase(log.action_type)}</p>
           {(detail || log.entity_type) && (
             <p className="list-row-meta !mt-0">
-              {log.entity_type ? `${titleCase(log.entity_type)}${log.entity_id ? ` #${log.entity_id}` : ''}` : ''}
+              {log.entity_type ? titleCase(log.entity_type) : ''}
               {detail ? `${log.entity_type ? ' · ' : ''}${detail}` : ''}
             </p>
           )}

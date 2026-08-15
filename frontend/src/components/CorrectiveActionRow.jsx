@@ -17,10 +17,6 @@ function titleCase(value) {
   return String(value).replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
-function statusLabel(status, managerView) {
-  return formatCaStatusLabel(status, managerView ? 'manager' : 'worker')
-}
-
 function actionTypeLabel(type) {
   return type === 'product_handling' ? 'Product Handling' : 'Machine Check'
 }
@@ -75,7 +71,7 @@ export default function CorrectiveActionRow({
   const workerProgressHint = !managerView ? getWorkerActionProgressHint(action.status) : null
 
   const footerParts = managerView
-    ? [actionTypeLabel(action.type), statusLabel(action.status, managerView), action.batchNumber ? `Batch ${action.batchNumber}` : null].filter(Boolean)
+    ? [actionTypeLabel(action.type), action.batchNumber ? `Batch ${action.batchNumber}` : null].filter(Boolean)
     : [
       action.productName || '-',
       action.batchNumber ? `Batch ${action.batchNumber}` : null,
@@ -105,7 +101,7 @@ export default function CorrectiveActionRow({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1">
             <span className="list-row-code">{action.code}</span>
-            {!managerView && <StatusBadge kind="ca" value={action.status} audience="worker" />}
+            <StatusBadge kind="ca" value={action.status} audience={managerView ? undefined : 'worker'} />
             {!managerView && highPriority && (
               <Badge tone={priority === 'critical' ? 'red' : 'orange'}>
                 CA {titleCase(action.priority)}
@@ -141,11 +137,15 @@ export default function CorrectiveActionRow({
             </p>
           )}
           <p className="list-row-meta">{footerParts.join(' · ')}</p>
-          {!managerView && workerProgressHint && (
+          {!managerView && (workerProgressHint || action.evidenceRequired) && (
             <p className="list-row-meta">
-              <span className="font-medium text-brand-700">{workerProgressHint}</span>
+              {workerProgressHint && (
+                <span className="font-medium text-brand-700">{workerProgressHint}</span>
+              )}
               {action.evidenceRequired && (
-                <span className="text-brand-muted"> · Evidence required before completion</span>
+                <span className="text-brand-muted">
+                  {workerProgressHint ? ' · ' : ''}Evidence required before completion
+                </span>
               )}
             </p>
           )}

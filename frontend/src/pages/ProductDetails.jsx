@@ -9,6 +9,7 @@ import ProductFormModal from '../components/ProductFormModal'
 import SectionCard from '../components/SectionCard'
 import StatusBadge from '../components/StatusBadge'
 import { normalizeProduct, productIcon } from '../utils/product'
+import { useToast } from '../components/Toast'
 
 function formatDate(value) {
   if (!value) return '-'
@@ -51,6 +52,7 @@ function Info({ label, value }) {
 export default function ProductDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const toast = useToast()
   const [product, setProduct] = useState(null)
   const [batches, setBatches] = useState([])
   const [defects, setDefects] = useState([])
@@ -71,7 +73,7 @@ export default function ProductDetails() {
       setDefects((defectsRes.data.data || []).map(normalizeDefect))
     } catch (error) {
       console.error(error)
-      alert('Could not load product details.')
+      toast.error('Could not load product details.')
       navigate('/products')
     } finally {
       setLoading(false)
@@ -190,7 +192,7 @@ export default function ProductDetails() {
           <p className="text-sm text-brand-muted">No batches recorded for this product yet.</p>
         ) : (
           <div className="space-y-3">
-            {batches.map((batch) => (
+            {batches.slice(0, 5).map((batch) => (
               <div
                 key={batch.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-border/70 bg-white p-4"
@@ -222,6 +224,11 @@ export default function ProductDetails() {
             ))}
           </div>
         )}
+        {batches.length > 5 && (
+          <Button size="sm" color="slate" variant="subtle" className="mt-3" onClick={() => navigate(`/batches?product_id=${product.id}`)}>
+            View All Batches for This Product ({batches.length})
+          </Button>
+        )}
       </SectionCard>
 
       <SectionCard
@@ -232,7 +239,7 @@ export default function ProductDetails() {
           <p className="text-sm text-brand-muted">No defect records for this product.</p>
         ) : (
           <div className="space-y-3">
-            {defects.map((defect) => (
+            {defects.slice(0, 5).map((defect) => (
               <div
                 key={defect.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-border/70 bg-white p-4"
@@ -254,6 +261,11 @@ export default function ProductDetails() {
               </div>
             ))}
           </div>
+        )}
+        {defects.length > 5 && (
+          <Button size="sm" color="slate" variant="subtle" className="mt-3" onClick={() => navigate(`/defects?search=${encodeURIComponent(product.name)}`)}>
+            View All Defects for This Product ({defects.length})
+          </Button>
         )}
       </SectionCard>
     </div>

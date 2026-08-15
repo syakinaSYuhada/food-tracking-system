@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { AlertTriangle, FileWarning, FolderOpen, Layers, Plus, Search, SearchCheck } from 'lucide-react'
+import { AlertTriangle, ChevronDown, ChevronUp, FileWarning, FolderOpen, Layers, Plus, Search, SearchCheck, SlidersHorizontal } from 'lucide-react'
 import api from '../api/client'
 import DefectRecordCard from '../components/DefectRecordCard'
 import ListPagination from '../components/ListPagination'
@@ -14,6 +14,7 @@ import NotificationCard from '../components/NotificationCard'
 import FieldLabel from '../components/FieldLabel'
 import { isManager } from '../utils/roleAccess'
 import useObjectUrl from '../utils/useObjectUrl'
+import { useToast } from '../components/Toast'
 import { paginateItems } from '../utils/pagination'
 import {
   compareDefectsForReviewUrgency,
@@ -205,6 +206,7 @@ function FilterChipGroup({ label, value, options, onChange }) {
 }
 
 function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false }) {
+  const toast = useToast()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -248,7 +250,7 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
         setStages(stagesRes.data.data || [])
       } catch (error) {
         console.error(error)
-        alert('Could not load add defect options from database.')
+        toast.error('Could not load add defect options from database.')
       } finally {
         setLoading(false)
       }
@@ -428,7 +430,7 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
   }
 
   async function submit() {
-    if (!validateStep()) return alert(getValidationMessage(form, step, workerReport, qtyExceedsBatch))
+    if (!validateStep()) return toast.warning(getValidationMessage(form, step, workerReport, qtyExceedsBatch))
     setSubmitting(true)
     try {
       const res = await api.post('/defects', buildSubmitPayload())
@@ -439,7 +441,7 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
       onClose()
     } catch (error) {
       console.error(error)
-      alert(error.response?.data?.message || 'Could not create defect.')
+      toast.error(error.response?.data?.message || 'Could not create defect.')
     } finally {
       setSubmitting(false)
     }
@@ -469,7 +471,7 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
         <>
           <Button color="slate" variant="subtle" onClick={() => setStep((current) => Math.max(current - 1, 1))} disabled={step === 1}>Back</Button>
           {step < totalSteps ? (
-            <Button onClick={() => validateStep() ? setStep((current) => current + 1) : alert(getValidationMessage(form, step, workerReport, qtyExceedsBatch))}>Next</Button>
+            <Button onClick={() => validateStep() ? setStep((current) => current + 1) : toast.warning(getValidationMessage(form, step, workerReport, qtyExceedsBatch))}>Next</Button>
           ) : (
             <Button onClick={submit} disabled={submitting}>
               {submitting ? 'Saving...' : workerReport ? 'Submit Report' : 'Save Defect'}
@@ -606,8 +608,22 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
               )}
               {qtyExceedsBatch && <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">Qty affected cannot exceed quantity produced.</div>}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <Select label="Containment Status" value={form.containment_status} onChange={(v) => update('containment_status', v)} options={['Segregated / On Hold', 'Not Yet Segregated', 'No Hold Needed']} required />
-                <Select label="Problem Level" value={form.problem_level} onChange={(v) => update('problem_level', v)} options={['Can Be Corrected', 'Hold for Review', 'Cannot Be Sold', 'Food Safety Risk']} required />
+                <Select
+                  label="Containment Status"
+                  value={form.containment_status}
+                  onChange={(v) => update('containment_status', v)}
+                  options={['Segregated / On Hold', 'Not Yet Segregated', 'No Hold Needed']}
+                  required
+                  hint="Is the affected stock already physically separated from good product?"
+                />
+                <Select
+                  label="Problem Level"
+                  value={form.problem_level}
+                  onChange={(v) => update('problem_level', v)}
+                  options={['Can Be Corrected', 'Hold for Review', 'Cannot Be Sold', 'Food Safety Risk']}
+                  required
+                  hint="How severe is this? Pick Food Safety Risk if it could harm a customer."
+                />
                 <Select label="Defect Priority" value={form.priority} onChange={(v) => update('priority', v)} options={DEFECT_PRIORITY_OPTIONS.map((option) => option.value)} required />
               </div>
               <TextArea label="Description" value={form.description} onChange={(v) => update('description', v)} required />
@@ -651,7 +667,7 @@ function Input({ label, value, onChange, type = 'text', min, required = false })
     </label>
   )
 }
-function Select({ label, value, onChange, options, required = false }) {
+function Select({ label, value, onChange, options, required = false, hint }) {
   return (
     <label className="block">
       <FieldLabel label={label} required={required} />
@@ -659,6 +675,7 @@ function Select({ label, value, onChange, options, required = false }) {
         <option value="">Select</option>
         {options.map((option, i) => <option key={`${option}-${i}`} value={option}>{titleCase(option)}</option>)}
       </select>
+      {hint && <p className="mt-1 text-xs text-brand-muted">{hint}</p>}
     </label>
   )
 }
@@ -673,6 +690,7 @@ function TextArea({ label, value, onChange, rows = 4, required = false }) {
 
 export default function Defects({ user }) {
   const navigate = useNavigate()
+  const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
   const [defects, setDefects] = useState([])
   const [users, setUsers] = useState([])
@@ -693,6 +711,21 @@ export default function Defects({ user }) {
   const [workerMineOnly, setWorkerMineOnly] = useState(false)
   const [expiryMismatchFilter, setExpiryMismatchFilter] = useState(false)
   const [message, setMessage] = useState(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  const activeFilterCount = [
+    statusFilter !== 'all',
+    severityFilter !== 'all',
+    stageFilter !== 'all',
+    urgencyFilter !== 'all',
+    reportedDateFilter !== 'all'
+  ].filter(Boolean).length
+
+  // A filter can also be set programmatically (e.g. a dashboard deep link) --
+  // make sure the panel is open whenever that happens so the filter is never hidden.
+  useEffect(() => {
+    if (activeFilterCount > 0) setFiltersOpen(true)
+  }, [activeFilterCount])
 
   const currentUser = user
   const managerView = isManager(user)
@@ -704,7 +737,7 @@ export default function Defects({ user }) {
       setDefects((res.data.data || []).map(normalizeDefect))
     } catch (error) {
       console.error(error)
-      alert('Could not load defects.')
+      toast.error('Could not load defects.')
     } finally {
       setLoading(false)
     }
@@ -779,6 +812,14 @@ export default function Defects({ user }) {
         setWorkerMineOnly(true)
         setExpiryMismatchFilter(true)
       }
+    }
+
+    const searchParam = searchParams.get('search')
+    if (searchParam) {
+      setSearch(searchParam)
+      const next = new URLSearchParams(searchParams)
+      next.delete('search')
+      setSearchParams(next, { replace: true })
     }
   }, [searchParams, setSearchParams, managerView])
 
@@ -867,7 +908,11 @@ export default function Defects({ user }) {
           : 'Defects you reported and defects with actions assigned to you.'}
         eyebrow={managerView ? 'Quality Control' : 'Worker Portal'}
       >
-        <Button onClick={() => setShowAdd(true)}>
+        <Button
+          color={managerView ? 'slate' : 'blue'}
+          variant={managerView ? 'subtle' : 'solid'}
+          onClick={() => setShowAdd(true)}
+        >
           <Plus size={18} /> {managerView ? 'Add Defect' : 'Report Defect'}
         </Button>
       </PageHeader>
@@ -1002,6 +1047,16 @@ export default function Defects({ user }) {
               className="list-toolbar-search-input"
             />
           </div>
+          <Button
+            color={activeFilterCount > 0 ? 'brand' : 'slate'}
+            variant="subtle"
+            size="sm"
+            onClick={() => setFiltersOpen((current) => !current)}
+          >
+            <SlidersHorizontal size={14} />
+            Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+            {filtersOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </Button>
           <ListCsvExport
             title="Defect Records"
             filename={`qdts-defect-records-${reportedDateLabel.toLowerCase().replace(/\s+/g, '-')}.csv`}
@@ -1011,6 +1066,7 @@ export default function Defects({ user }) {
           />
         </div>
 
+        {filtersOpen && (
         <div className="compact-filter-panel">
             <FilterChipGroup
               label="Status"
@@ -1051,6 +1107,7 @@ export default function Defects({ user }) {
               onCustomToChange={setReportedTo}
             />
         </div>
+        )}
 
         {loading ? (
           <div className="list-panel-body">

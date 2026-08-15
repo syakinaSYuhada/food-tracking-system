@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   CheckCircle,
   Edit,
-  Eye,
   Package,
   Plus,
   Search
@@ -31,6 +30,7 @@ import { createdInReportPeriod } from '../components/ReportPeriodFilter'
 import { parseAttentionPeriod } from '../utils/attentionNavigation'
 import { addMonthsToDateOnly } from '../utils/dateOnly'
 import { isManager } from '../utils/roleAccess'
+import { useToast } from '../components/Toast'
 
 function formatDate(date) {
   if (!date) return '-'
@@ -118,6 +118,7 @@ function normalizeProduct(product) {
 }
 
 function BatchFormModal({ mode, batch, onClose, onSaved }) {
+  const toast = useToast()
   const isEdit = mode === 'edit'
   const [products, setProducts] = useState([])
   const [form, setForm] = useState({
@@ -136,7 +137,7 @@ function BatchFormModal({ mode, batch, onClose, onSaved }) {
         setProducts((res.data.data || []).map(normalizeProduct))
       } catch (error) {
         console.error(error)
-        alert('Product list could not be loaded. Please refresh and try again.')
+        toast.error('Product list could not be loaded. Please refresh and try again.')
       }
     }
 
@@ -162,32 +163,32 @@ function BatchFormModal({ mode, batch, onClose, onSaved }) {
 
   async function handleSubmit() {
     if (!form.product_id) {
-      alert('Please select a product.')
+      toast.warning('Please select a product.')
       return
     }
 
     if (!form.production_date) {
-      alert('Please select the production date.')
+      toast.warning('Please select the production date.')
       return
     }
 
     if (!form.retort_date) {
-      alert('Please select the retort date.')
+      toast.warning('Please select the retort date.')
       return
     }
 
     if (dateInvalid) {
-      alert('Retort date cannot be earlier than production date.')
+      toast.warning('Retort date cannot be earlier than production date.')
       return
     }
 
     if (!form.printed_expiry_date) {
-      alert('Please select the printed expiry date.')
+      toast.warning('Please select the printed expiry date.')
       return
     }
 
     if (!form.quantity_produced || Number(form.quantity_produced) <= 0) {
-      alert('Please enter a valid quantity produced.')
+      toast.warning('Please enter a valid quantity produced.')
       return
     }
 
@@ -215,7 +216,7 @@ function BatchFormModal({ mode, batch, onClose, onSaved }) {
     } catch (error) {
       console.error(error)
 
-      alert(
+      toast.error(
         error.response?.data?.message ||
           error.response?.data?.error ||
           (isEdit
@@ -462,9 +463,7 @@ function BatchRow({ batch, onEdit, managerView }) {
       ]}
       actions={[
         {
-          icon: Eye,
-          label: 'Open Batch',
-          tone: 'blue',
+          intent: 'view',
           onClick: () => navigate(`/batches/${batch.id}`)
         },
         ...(managerView ? [{
@@ -553,6 +552,7 @@ function BatchRow({ batch, onEdit, managerView }) {
 }
 
 function Batches({ user }) {
+  const toast = useToast()
   const managerView = isManager(user)
   const [searchParams, setSearchParams] = useSearchParams()
   const [batches, setBatches] = useState([])
@@ -579,7 +579,7 @@ function Batches({ user }) {
       setBatches((res.data.data || []).map(normalizeBatch))
     } catch (error) {
       console.error(error)
-      alert('Batches could not be loaded. Please refresh and try again.')
+      toast.error('Batches could not be loaded. Please refresh and try again.')
     } finally {
       setLoading(false)
     }

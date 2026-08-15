@@ -159,6 +159,18 @@ export default function Dashboard({ user }) {
     [periodActions]
   )
 
+  const readyForRootCause = useMemo(
+    () => periodDefects.filter((defect) => {
+      const status = String(defect.defect_status || '').toLowerCase()
+      if (status === 'new' || status === 'closed') return false
+      if (defect.root_cause_status === 'confirmed') return false
+      const total = Number(defect.total_actions || 0)
+      const verified = Number(defect.verified_actions || 0)
+      return total === 0 || verified === total
+    }),
+    [periodDefects]
+  )
+
   const reviewAttentionSummary = useMemo(
     () => summarizeUrgentReviewAttention(periodDefects),
     [periodDefects]
@@ -296,31 +308,36 @@ export default function Dashboard({ user }) {
               icon={Plus}
             />
           ) : (
-            <div className="compact-list-stack">
-              {reportedDefects.map((defect) => {
-                const hasAssignedAction = assignedDefectIds.has(Number(defect.id))
-                return (
-                  <AnalyticRow
-                    key={defect.id}
-                    accentClass={hasExpiryMismatch(defect) ? 'bg-red-500' : 'bg-brand-500'}
-                    title={`${defect.defect_code} — ${defect.defect_type}`}
-                    subtitle={`${defect.product_name} · Batch ${defect.batch_number}`}
-                    meta={`Reported ${formatDate(defect.created_at)} · ${defectStatusHint(defect.defect_status, hasAssignedAction)}`}
-                    badge={(
-                      <>
-                        <StatusBadge value={defect.defect_status} />
-                        {hasExpiryMismatch(defect) && (
-                          <span className="badge border-red-200/80 bg-red-50 text-red-700">Expiry mismatch</span>
-                        )}
-                      </>
-                    )}
-                    action={(
-                      <ListActionButton intent="view" onClick={() => navigate(`/defects/${defect.id}`)} />
-                    )}
-                  />
-                )
-              })}
-            </div>
+            <>
+              <div className="compact-list-stack">
+                {reportedDefects.slice(0, 5).map((defect) => {
+                  const hasAssignedAction = assignedDefectIds.has(Number(defect.id))
+                  return (
+                    <AnalyticRow
+                      key={defect.id}
+                      accentClass={hasExpiryMismatch(defect) ? 'bg-red-500' : 'bg-brand-500'}
+                      title={`${defect.defect_code} — ${defect.defect_type}`}
+                      subtitle={`${defect.product_name} · Batch ${defect.batch_number}`}
+                      meta={`Reported ${formatDate(defect.created_at)} · ${defectStatusHint(defect.defect_status, hasAssignedAction)}`}
+                      badge={(
+                        <>
+                          <StatusBadge value={defect.defect_status} />
+                          {hasExpiryMismatch(defect) && (
+                            <span className="badge border-red-200/80 bg-red-50 text-red-700">Expiry mismatch</span>
+                          )}
+                        </>
+                      )}
+                      action={(
+                        <ListActionButton intent="view" onClick={() => navigate(`/defects/${defect.id}`)} />
+                      )}
+                    />
+                  )
+                })}
+              </div>
+              {reportedDefects.length > 5 && (
+                <ListActionButton intent="open" label={`View All My Reports (${reportedDefects.length})`} className="mt-2 list-action-btn" onClick={() => navigate('/defects')} />
+              )}
+            </>
           )}
         </SectionCard>
 
@@ -332,31 +349,36 @@ export default function Dashboard({ user }) {
               icon={CheckSquare}
             />
           ) : (
-            <div className="compact-list-stack">
-              {workerActions.map((action) => {
-                const overdue = isActionOverdue(action.due_date, action.ca_status)
-                return (
-                  <AnalyticRow
-                    key={action.id}
-                    accentClass={overdue ? 'bg-red-500' : 'bg-indigo-500'}
-                    title={action.action_code}
-                    subtitle={action.task}
-                    meta={`${action.defect_code} · ${action.product_name}${action.due_date ? ` · CA Due Date ${formatDate(action.due_date)}` : ''}`}
-                    badge={(
-                      <>
-                        {overdue && (
-                          <span className="badge border-red-200/80 bg-red-50 text-red-700">Action Required</span>
-                        )}
-                        <StatusBadge kind="ca" value={action.ca_status} audience="worker" />
-                      </>
-                    )}
-                    action={(
-                      <ListActionButton intent="open" label="Open" onClick={() => navigate(`/corrective-actions/${action.id}`)} />
-                    )}
-                  />
-                )
-              })}
-            </div>
+            <>
+              <div className="compact-list-stack">
+                {workerActions.slice(0, 5).map((action) => {
+                  const overdue = isActionOverdue(action.due_date, action.ca_status)
+                  return (
+                    <AnalyticRow
+                      key={action.id}
+                      accentClass={overdue ? 'bg-red-500' : 'bg-indigo-500'}
+                      title={action.action_code}
+                      subtitle={action.task}
+                      meta={`${action.defect_code} · ${action.product_name}${action.due_date ? ` · CA Due Date ${formatDate(action.due_date)}` : ''}`}
+                      badge={(
+                        <>
+                          {overdue && (
+                            <span className="badge border-red-200/80 bg-red-50 text-red-700">Action Required</span>
+                          )}
+                          <StatusBadge kind="ca" value={action.ca_status} audience="worker" />
+                        </>
+                      )}
+                      action={(
+                        <ListActionButton intent="open" label="Open" onClick={() => navigate(`/corrective-actions/${action.id}`)} />
+                      )}
+                    />
+                  )
+                })}
+              </div>
+              {workerActions.length > 5 && (
+                <ListActionButton intent="open" label={`View All My Work (${workerActions.length})`} className="mt-2 list-action-btn" onClick={() => navigate('/corrective-actions')} />
+              )}
+            </>
           )}
         </SectionCard>
       </div>
@@ -423,7 +445,7 @@ export default function Dashboard({ user }) {
               Updating…
             </span>
           )}
-          <Button onClick={() => navigate('/reports')}>Open Reports</Button>
+          <Button color="slate" variant="subtle" onClick={() => navigate('/reports')}>Open Reports</Button>
         </div>
       </PageHeader>
 
@@ -435,6 +457,21 @@ export default function Dashboard({ user }) {
           </button>
         </div>
       )}
+
+      <AttentionCenter
+        items={attentionItems}
+        action={visibleAttentionItems.length > 0 ? (
+          <Button
+            color="amber"
+            variant="subtle"
+            size="sm"
+            className="list-action-btn"
+            onClick={() => navigate(buildAttentionPrimaryPath(period, selectedMonth, visibleAttentionItems))}
+          >
+            {getAttentionActionLabel(visibleAttentionItems)}
+          </Button>
+        ) : null}
+      />
 
       <div className="list-kpi-grid lg:grid-cols-4">
         <KPICard density="command" title="Total Defects" value={kpis.total_defects ?? '-'} subtitle="This period" icon={<Layers size={18} />} tone="blue" />
@@ -481,21 +518,6 @@ export default function Dashboard({ user }) {
         />
       </div>
 
-      <AttentionCenter
-        items={attentionItems}
-        action={visibleAttentionItems.length > 0 ? (
-          <Button
-            color="amber"
-            variant="subtle"
-            size="sm"
-            className="list-action-btn"
-            onClick={() => navigate(buildAttentionPrimaryPath(period, selectedMonth, visibleAttentionItems))}
-          >
-            {getAttentionActionLabel(visibleAttentionItems)}
-          </Button>
-        ) : null}
-      />
-
       {pendingReviewCount > 0 && (
         <SectionCard
           title="Pending Review — Corrective Actions"
@@ -517,6 +539,29 @@ export default function Dashboard({ user }) {
             ))}
           </div>
           <ListActionButton intent="open" label="Open All Corrective Actions" className="mt-2 list-action-btn" onClick={() => navigate('/corrective-actions')} />
+        </SectionCard>
+      )}
+
+      {readyForRootCause.length > 0 && (
+        <SectionCard
+          title="Ready for Root Cause Confirmation"
+          subtitle={`Actions verified, awaiting your root cause sign-off. (${readyForRootCause.length} ready)`}
+        >
+          <div className="space-y-3">
+            {readyForRootCause.slice(0, 5).map((defect) => (
+              <AnalyticRow
+                key={defect.id}
+                accentClass="bg-slate-500"
+                title={`${defect.defect_code} — ${defect.defect_type}`}
+                subtitle={`${defect.product_name} · Batch ${defect.batch_number}`}
+                meta={`${defect.action_progress} · Reported ${formatDate(defect.created_at)}`}
+                badge={<StatusBadge kind="root_cause" value={defect.root_cause_status} />}
+                action={(
+                  <ListActionButton intent="review" onClick={() => navigate(`/defects/${defect.id}?tab=root-cause`)} />
+                )}
+              />
+            ))}
+          </div>
         </SectionCard>
       )}
 

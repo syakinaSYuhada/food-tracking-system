@@ -65,7 +65,7 @@ On mobile or narrow screens, use the **hamburger menu** (top-left) to open navig
 
 1. Dashboard → **Expiry Mismatches** KPI or red banner → **View Expiry Issues Report**
 2. Reports → **Expiry Issues** tab → show **Defect Cases** + **Batch Expiry Audit** (click **Trace** → batch detail page)
-3. Batches → **Open Batch** on any row → full expiry traceability, linked defects & actions
+3. Batches → **View** on any row → full expiry traceability, linked defects & actions
 4. **Export Excel** (CSV) or **Export PDF**
 5. Open any defect → **Print Summary** · open any CA → **Print Summary**
 6. Manager: open overdue CA → **Edit** due date if extension needed
@@ -77,7 +77,7 @@ On mobile or narrow screens, use the **hamburger menu** (top-left) to open navig
 | Feature | Where to show | What to say |
 |---------|---------------|-------------|
 | **Expiry mismatch** | Defect detail, CA detail, Batch detail, Dashboard KPI, Reports, bell | Printed pouch expiry ≠ correct retort expiry — core Kak Norie pain point |
-| **Batch traceability** | Batches → Open Batch, Reports → Batch Expiry Audit → Trace | Full chain: retort date → expected expiry → printed expiry → defects → actions |
+| **Batch traceability** | Batches → View, Reports → Batch Expiry Audit → Trace | Full chain: retort date → expected expiry → printed expiry → defects → actions |
 | **Manager due date** | Corrective Action detail → Edit due date | Manager can extend deadlines on overdue work; logged in Activity Log |
 | **Overdue actions** | Dashboard banner, Corrective Actions filter, bell | System flags past-due work so nothing is forgotten |
 | **Worker dashboard** | Log in as siti_aminah | Workers see only their reports + assigned actions, with overdue count |
