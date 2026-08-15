@@ -818,23 +818,6 @@ function Batches({ user }) {
         </div>
       )}
 
-      {productFilter && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-700">
-          <span>
-            Showing batches for{' '}
-            <strong>{filteredProductLabel || `product #${productFilter}`}</strong>
-            {' '}({filtered.length} batch{filtered.length === 1 ? '' : 'es'})
-          </span>
-          <button
-            type="button"
-            onClick={clearProductFilter}
-            className="font-semibold text-brand-600 hover:text-brand-700 hover:underline"
-          >
-            Show all products
-          </button>
-        </div>
-      )}
-
       {mismatchBatches > 0 && (
         <button
           type="button"
@@ -854,6 +837,23 @@ function Batches({ user }) {
             mismatch. Review highlighted batches and create a defect record if needed.
           </span>
         </button>
+      )}
+
+      {productFilter && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-700">
+          <span>
+            Showing batches for{' '}
+            <strong>{filteredProductLabel || `product #${productFilter}`}</strong>
+            {' '}({filtered.length} batch{filtered.length === 1 ? '' : 'es'})
+          </span>
+          <button
+            type="button"
+            onClick={clearProductFilter}
+            className="font-semibold text-brand-600 hover:text-brand-700 hover:underline"
+          >
+            Show all products
+          </button>
+        </div>
       )}
 
       <div className="list-kpi-grid">
