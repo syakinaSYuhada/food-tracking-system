@@ -965,6 +965,105 @@ async function main() {
     )
   })
 
+  await check('Second product_handling action respects remaining capacity after sibling action completes (CA-02)', async () => {
+    const usersBody = await request('/users', { headers: manager.headers })
+    const assignee = (usersBody.data || []).find((row) => row.role === 'worker')
+    if (!assignee) throw new Error('No worker user found')
+    const assigneeSession = await login(assignee.username)
+
+    const createBody = await request('/defects', {
+      method: 'POST',
+      headers: manager.headers,
+      body: JSON.stringify({
+        product_id: 1,
+        batch_id: 6,
+        detected_at_stage: 'Sealing',
+        defect_type: 'Loose Sealing',
+        problem_level: 'Hold for Review',
+        description: 'Multi-action remaining-capacity regression test.',
+        qty_affected: 10
+      })
+    })
+
+    const defectId = createBody.data.id
+    await request(`/defects/${defectId}/start-review`, { method: 'PATCH', headers: manager.headers })
+
+    async function assign(task) {
+      const body = await request(`/corrective-actions/defects/${defectId}/assign`, {
+        method: 'POST',
+        headers: manager.headers,
+        body: JSON.stringify({
+          action_type: 'product_handling',
+          task,
+          assigned_to: assignee.id,
+          assigned_by: manager.user.id,
+          due_date: '2026-12-31',
+          priority: 'medium'
+        })
+      })
+      return body.data.id
+    }
+
+    const action1Id = await assign('Relabel affected units')
+    const action2Id = await assign('Repack remaining units')
+
+    await request(`/corrective-actions/${action1Id}/start`, { method: 'PATCH', headers: assigneeSession.headers })
+    await request(`/corrective-actions/${action1Id}/complete`, {
+      method: 'PATCH',
+      headers: assigneeSession.headers,
+      body: JSON.stringify({
+        investigation_finding: 'First batch relabelled and released.',
+        action_taken: 'Relabelled 4 units, released 2 units of the 10 affected.',
+        qty_relabelled: 4,
+        qty_released: 2
+      })
+    })
+
+    // The still-open sibling action must now see action 1's contribution reflected
+    // on the defect (this is the data getCorrectiveActionById exposes so the
+    // frontend can compute remaining capacity instead of validating against the
+    // full defect qty_affected in isolation). qty_released is checked specifically
+    // since it was missing from that query's SELECT.
+    const action2Before = await request(`/corrective-actions/${action2Id}`, { headers: assigneeSession.headers })
+    if (Number(action2Before.data.defect_qty_relabelled) !== 4) {
+      throw new Error(`Expected defect_qty_relabelled 4 on sibling action, got ${action2Before.data.defect_qty_relabelled}`)
+    }
+    if (Number(action2Before.data.defect_qty_released) !== 2) {
+      throw new Error(`Expected defect_qty_released 2 on sibling action, got ${action2Before.data.defect_qty_released}`)
+    }
+    if (Number(action2Before.data.qty_affected) !== 10) {
+      throw new Error(`Expected qty_affected 10, got ${action2Before.data.qty_affected}`)
+    }
+
+    await request(`/corrective-actions/${action2Id}/start`, { method: 'PATCH', headers: assigneeSession.headers })
+
+    // 6 already relabelled + 5 more repacked = 11 > 10 affected: must be rejected.
+    await requestStatus(
+      `/corrective-actions/${action2Id}/complete`,
+      {
+        method: 'PATCH',
+        headers: assigneeSession.headers,
+        body: JSON.stringify({
+          investigation_finding: 'Attempting to repack more than remains.',
+          action_taken: 'Repacked 5 units.',
+          qty_repacked: 5
+        })
+      },
+      400
+    )
+
+    // 6 already relabelled + 4 more repacked = 10 == 10 affected: exactly the remaining capacity, must succeed.
+    await request(`/corrective-actions/${action2Id}/complete`, {
+      method: 'PATCH',
+      headers: assigneeSession.headers,
+      body: JSON.stringify({
+        investigation_finding: 'Repacking exactly what remains.',
+        action_taken: 'Repacked 4 units.',
+        qty_repacked: 4
+      })
+    })
+  })
+
   console.log(`\nResult: ${passed} passed, ${failed} failed`)
 
   if (failed > 0) {
