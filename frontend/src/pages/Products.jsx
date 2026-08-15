@@ -12,6 +12,7 @@ import ProductFormModal from '../components/ProductFormModal'
 import ListPagination from '../components/ListPagination'
 import { normalizeProduct, productIcon } from '../utils/product'
 import { isManager } from '../utils/roleAccess'
+import { useToast } from '../components/Toast'
 
 function titleCase(value) {
   if (!value) return '-'
@@ -63,6 +64,7 @@ function DeleteModal({ onClose, onArchive }) {
 
 function ProductRow({ product, onReload, managerView }) {
   const navigate = useNavigate()
+  const toast = useToast()
   const [expanded, setExpanded] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
@@ -73,7 +75,7 @@ function ProductRow({ product, onReload, managerView }) {
       onReload()
     } catch (error) {
       console.error(error)
-      alert('Failed to archive product.')
+      toast.error('Failed to archive product.')
     }
   }
 
@@ -178,6 +180,7 @@ function ProductRow({ product, onReload, managerView }) {
 }
 
 function Products({ user }) {
+  const toast = useToast()
   const managerView = isManager(user)
   const [products, setProducts] = useState([])
   const [search, setSearch] = useState('')
@@ -194,7 +197,7 @@ function Products({ user }) {
       setProducts((res.data.data || []).map(normalizeProduct))
     } catch (error) {
       console.error(error)
-      alert('Products could not be loaded. Please refresh and try again.')
+      toast.error('Products could not be loaded. Please refresh and try again.')
     } finally {
       setLoading(false)
     }

@@ -3,8 +3,10 @@ import api from '../api/client'
 import Button from './Button'
 import BaseModal from './BaseModal'
 import FieldLabel from './FieldLabel'
+import { useToast } from './Toast'
 
 export default function UserFormModal({ onClose, onSaved }) {
+  const toast = useToast()
   const [form, setForm] = useState({
     username: '',
     email: '',
@@ -20,10 +22,10 @@ export default function UserFormModal({ onClose, onSaved }) {
   }
 
   async function handleSubmit() {
-    if (!form.username.trim()) return alert('Please enter a username.')
-    if (!form.email.trim()) return alert('Please enter an email address.')
-    if (!form.full_name.trim()) return alert('Please enter the full name.')
-    if (!form.password.trim()) return alert('Please enter a password.')
+    if (!form.username.trim()) return toast.warning('Please enter a username.')
+    if (!form.email.trim()) return toast.warning('Please enter an email address.')
+    if (!form.full_name.trim()) return toast.warning('Please enter the full name.')
+    if (!form.password.trim()) return toast.warning('Please enter a password.')
 
     setSaving(true)
     try {
@@ -39,7 +41,7 @@ export default function UserFormModal({ onClose, onSaved }) {
       onClose?.()
     } catch (error) {
       console.error(error)
-      alert(error.response?.data?.message || 'Failed to create user.')
+      toast.error(error.response?.data?.message || 'Failed to create user.')
     } finally {
       setSaving(false)
     }

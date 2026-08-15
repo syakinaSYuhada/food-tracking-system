@@ -9,6 +9,7 @@ import SectionCard from '../components/SectionCard'
 import StatusBadge from '../components/StatusBadge'
 import { hasExpiryMismatch } from '../utils/expiry'
 import { isActionOverdue } from '../utils/dueDate'
+import { useToast } from '../components/Toast'
 
 function formatDate(value) {
   if (!value) return '-'
@@ -56,6 +57,7 @@ function normalizeBatch(batch) {
 export default function BatchDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const toast = useToast()
   const [batch, setBatch] = useState(null)
   const [defects, setDefects] = useState([])
   const [actions, setActions] = useState([])
@@ -75,7 +77,7 @@ export default function BatchDetails() {
       setActions(actionsRes.data.data || [])
     } catch (error) {
       console.error(error)
-      alert('Could not load batch details.')
+      toast.error('Could not load batch details.')
       navigate('/batches')
     } finally {
       setLoading(false)

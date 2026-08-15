@@ -1,5 +1,6 @@
 import { formatCaStatusLabel } from './caStatusLabel'
 import { openPrintDocument } from './printDocument'
+import { toast } from '../components/Toast'
 
 function escapeHtml(value) {
   return String(value ?? '-')
@@ -126,6 +127,6 @@ export function printCorrectiveActionSummary(action, audience = 'manager') {
     })
   } catch (error) {
     console.error('Corrective action summary print failed:', error)
-    alert('Print failed. Please try again.')
+    toast.error('Print failed. Please try again.')
   }
 }

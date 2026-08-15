@@ -3,14 +3,16 @@ import api from '../api/client'
 import BaseModal from './BaseModal'
 import Button from './Button'
 import FieldLabel from './FieldLabel'
+import { useToast } from './Toast'
 
 function RejectActionModal({ actionId, managerId, onClose, onRejected }) {
+  const toast = useToast()
   const [reason, setReason] = useState('')
   const [saving, setSaving] = useState(false)
 
   async function handleReject() {
     if (!reason.trim()) {
-      alert('Please enter a rejection reason.')
+      toast.warning('Please enter a rejection reason.')
       return
     }
 
@@ -23,7 +25,7 @@ function RejectActionModal({ actionId, managerId, onClose, onRejected }) {
       onRejected?.()
       onClose()
     } catch (error) {
-      alert(error.response?.data?.message || 'Could not reject action.')
+      toast.error(error.response?.data?.message || 'Could not reject action.')
     } finally {
       setSaving(false)
     }

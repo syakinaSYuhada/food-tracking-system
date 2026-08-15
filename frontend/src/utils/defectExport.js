@@ -1,6 +1,7 @@
 import { fetchEvidenceBlob, getAuthToken, resolveEvidenceFileUrl } from './assetUrl'
 import { formatCaStatusLabel } from './caStatusLabel'
 import { formatRootCauseStatusLabel } from './rootCauseStatusLabel'
+import { toast } from '../components/Toast'
 
 function escapeHtml(value) {
   return String(value ?? '-')
@@ -295,7 +296,7 @@ function openDefectPrintHtml(html, {
       onPrintTriggered?.()
     } catch (error) {
       console.error(`${logLabel} failed to open print dialog:`, error)
-      alert(failureMessage)
+      toast.error(failureMessage)
       onFailure?.()
     }
   }
@@ -336,7 +337,7 @@ function openDefectPrintHtml(html, {
     })
   } catch (error) {
     console.error(`${logLabel} failed while writing HTML:`, error)
-    alert(failureMessage)
+    toast.error(failureMessage)
     onFailure?.()
     return false
   }
@@ -372,7 +373,7 @@ export async function printDefectSummary(defect, actions = [], callbacks = {}, a
   } catch (error) {
     defectPrintInProgress = false
     console.error('Defect summary print failed:', error)
-    alert('Print failed. Please try again.')
+    toast.error('Print failed. Please try again.')
     callbacks.onFailure?.()
     return false
   }

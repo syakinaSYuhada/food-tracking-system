@@ -11,6 +11,8 @@ import Button from '../components/Button'
 import UserFormModal from '../components/UserFormModal'
 import { paginateItems } from '../utils/pagination'
 import { isManager } from '../utils/roleAccess'
+import { useToast } from '../components/Toast'
+import { useConfirm } from '../components/ConfirmDialog'
 
 function UserRow({ user, managerView, currentUserId, onToggleStatus, togglingUserId }) {
   const initials = String(user.full_name || user.username || '?')
@@ -61,6 +63,8 @@ function UserRow({ user, managerView, currentUserId, onToggleStatus, togglingUse
 }
 
 export default function Users() {
+  const toast = useToast()
+  const confirm = useConfirm()
   const [users, setUsers] = useState([])
   const [currentUser, setCurrentUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -104,9 +108,12 @@ export default function Users() {
       : 'active'
 
     if (nextStatus === 'inactive') {
-      const confirmed = window.confirm(
-        `Deactivate ${user.full_name}? They will not be able to log in until reactivated.`
-      )
+      const confirmed = await confirm({
+        title: 'Deactivate this user?',
+        message: `Deactivate ${user.full_name}? They will not be able to log in until reactivated.`,
+        confirmLabel: 'Deactivate',
+        danger: true
+      })
       if (!confirmed) return
     }
 
@@ -116,7 +123,7 @@ export default function Users() {
       await loadUsers()
     } catch (error) {
       console.error(error)
-      alert(error.response?.data?.message || 'Could not update account status.')
+      toast.error(error.response?.data?.message || 'Could not update account status.')
     } finally {
       setTogglingUserId(null)
     }

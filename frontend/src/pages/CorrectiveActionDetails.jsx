@@ -16,6 +16,8 @@ import { printCorrectiveActionSummary } from '../utils/correctiveActionExport'
 import { isActionOverdue } from '../utils/dueDate'
 import { formatExpiryDate, hasExpiryMismatch } from '../utils/expiry'
 import useObjectUrl from '../utils/useObjectUrl'
+import { useToast } from '../components/Toast'
+import { usePrompt } from '../components/PromptDialog'
 
 function titleCase(value) {
   if (!value) return '-'
@@ -152,6 +154,8 @@ function WorkerActionStatusGuide({ status, rejectionReason, rejectedByName, reje
 export default function CorrectiveActionDetails({ user }) {
   const { id } = useParams()
   const navigate = useNavigate()
+  const toast = useToast()
+  const prompt = usePrompt()
   const [action, setAction] = useState(null)
   const [rule, setRule] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -197,13 +201,13 @@ export default function CorrectiveActionDetails({ user }) {
 
       if (!isManager(user)) {
         if (!isAssignedToUser(loadedAction, user?.id)) {
-          alert('You do not have access to this corrective action.')
+          toast.error('You do not have access to this corrective action.')
           navigate('/corrective-actions')
         }
       }
     } catch (error) {
       console.error(error)
-      alert('Could not load corrective action.')
+      toast.error('Could not load corrective action.')
       navigate('/corrective-actions')
     }
   }
@@ -247,8 +251,8 @@ export default function CorrectiveActionDetails({ user }) {
   }
 
   async function completeAction() {
-    if (!form.investigation_finding.trim()) return alert('Investigation result is required.')
-    if (!form.action_taken.trim()) return alert('Action taken is required.')
+    if (!form.investigation_finding.trim()) return toast.warning('Investigation result is required.')
+    if (!form.action_taken.trim()) return toast.warning('Action taken is required.')
     if (!hasCompletionEvidence()) {
       showEvidenceRequiredError()
       return
@@ -283,7 +287,7 @@ export default function CorrectiveActionDetails({ user }) {
       })
 
       if (!validation.valid) {
-        return alert(validation.message)
+        return toast.warning(validation.message)
       }
     }
 
@@ -306,14 +310,14 @@ export default function CorrectiveActionDetails({ user }) {
       })
 
       await load()
-      alert(form.evidence_file ? 'Action completed successfully. Evidence uploaded.' : 'Action completed successfully.')
+      toast.success(form.evidence_file ? 'Action completed successfully. Evidence uploaded.' : 'Action completed successfully.')
       navigate(`/defects/${action.defectId}`)
     } catch (error) {
       const message = error.response?.data?.message || 'Could not complete action.'
       if (action.evidenceRequired && /evidence/i.test(message)) {
         showEvidenceRequiredError()
       } else {
-        alert(message)
+        toast.error(message)
       }
     } finally {
       setSaving(false)
@@ -327,7 +331,7 @@ export default function CorrectiveActionDetails({ user }) {
 
   async function verifyAction() {
     if (action.evidenceRequired && (!action.evidence || action.evidence.length === 0)) {
-      return alert('Evidence is required before verification.')
+      return toast.warning('Evidence is required before verification.')
     }
 
     setIsVerifying(true)
@@ -337,14 +341,19 @@ export default function CorrectiveActionDetails({ user }) {
       })
       await load()
     } catch (error) {
-      alert(error.response?.data?.message || 'Could not verify action.')
+      toast.error(error.response?.data?.message || 'Could not verify action.')
     } finally {
       setIsVerifying(false)
     }
   }
 
   async function cancelAction() {
-    const reason = window.prompt('Cancel this rejected action? Optional reason:')
+    const reason = await prompt({
+      title: 'Cancel this action?',
+      message: 'Cancel this rejected action? Optional reason:',
+      placeholder: 'Optional reason...',
+      confirmLabel: 'Cancel Action'
+    })
     if (reason === null) return
 
     try {
@@ -353,19 +362,19 @@ export default function CorrectiveActionDetails({ user }) {
       })
       await load()
     } catch (error) {
-      alert(error.response?.data?.message || 'Could not cancel action.')
+      toast.error(error.response?.data?.message || 'Could not cancel action.')
     }
   }
 
   async function saveDueDate() {
-    if (!dueDateDraft) return alert('Due date is required.')
+    if (!dueDateDraft) return toast.warning('Due date is required.')
 
     setSavingDueDate(true)
     try {
       await api.patch(`/corrective-actions/${id}/due-date`, { due_date: dueDateDraft })
       await load()
     } catch (error) {
-      alert(error.response?.data?.message || 'Could not update due date.')
+      toast.error(error.response?.data?.message || 'Could not update due date.')
     } finally {
       setSavingDueDate(false)
     }
@@ -498,7 +507,7 @@ export default function CorrectiveActionDetails({ user }) {
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           {['Pending', 'In Progress', 'Submitted', 'Verified'].map((label, idx) => {
             const statusOrder = ['assigned', 'in_progress', 'completed', 'verified']
             const mappedStatus = action.status === 'rejected' ? 'assigned' : action.status
@@ -513,7 +522,7 @@ export default function CorrectiveActionDetails({ user }) {
                     {done ? '✓' : stepIndex + 1}
                   </div>
                   {idx < 3 && (
-                    <div className={`ml-2 mr-2 h-1 w-16 md:w-20 ${stepIndex < currentIndex ? 'bg-emerald-300' : 'bg-brand-border'}`} />
+                    <div className={`ml-2 mr-2 hidden h-1 w-16 sm:block md:w-20 ${stepIndex < currentIndex ? 'bg-emerald-300' : 'bg-brand-border'}`} />
                   )}
                 </div>
                 <div className="text-sm font-semibold text-brand-muted">{label}</div>

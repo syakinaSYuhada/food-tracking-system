@@ -10,6 +10,8 @@ import TabPills from '../components/TabPills'
 import DefectActivityTimeline from '../components/DefectActivityTimeline'
 import RejectActionModal from '../components/RejectActionModal'
 import FieldLabel from '../components/FieldLabel'
+import { useToast } from '../components/Toast'
+import { useConfirm } from '../components/ConfirmDialog'
 import { isAssignedToUser, isManager } from '../utils/roleAccess'
 import { getDefectWorkflow } from '../utils/defectWorkflow'
 import { isActionOverdue } from '../utils/dueDate'
@@ -113,6 +115,7 @@ function validateDefectDetailsForm(form) {
 }
 
 function EditDefectDetailsModal({ defect, onClose, onSaved }) {
+  const toast = useToast()
   const [form, setForm] = useState({
     priority: defect.priority || 'medium',
     review_due_date: formatReviewDueDate(defect.review_due_date) || '',
@@ -127,7 +130,7 @@ function EditDefectDetailsModal({ defect, onClose, onSaved }) {
   async function submit() {
     const validationError = validateDefectDetailsForm(form)
     if (validationError) {
-      alert(validationError)
+      toast.warning(validationError)
       return
     }
 
@@ -142,7 +145,7 @@ function EditDefectDetailsModal({ defect, onClose, onSaved }) {
       onClose()
     } catch (error) {
       console.error(error)
-      alert(error.response?.data?.message || 'Could not update defect details.')
+      toast.error(error.response?.data?.message || 'Could not update defect details.')
     } finally {
       setSaving(false)
     }
@@ -200,6 +203,7 @@ function EditDefectDetailsModal({ defect, onClose, onSaved }) {
 }
 
 function AssignActionModal({ defect, rule, workers, users, assignedBy, defaultType, defaultAssigneeId, defaultTask, onClose, onAssigned }) {
+  const toast = useToast()
   const initialTask = defaultTask
     || (defaultType === 'machine_process_check'
       ? defect.suggested_machine_handling
@@ -237,11 +241,11 @@ function AssignActionModal({ defect, rule, workers, users, assignedBy, defaultTy
       : String(form.task || '').trim()
 
     if (!taskToSend || !form.assigned_to) {
-      return alert('Task and assigned worker are required.')
+      return toast.warning('Task and assigned worker are required.')
     }
 
     if (form.task === 'Custom Task' && !taskToSend) {
-      return alert('Please enter a custom task description.')
+      return toast.warning('Please enter a custom task description.')
     }
 
     setSaving(true)
@@ -259,7 +263,7 @@ function AssignActionModal({ defect, rule, workers, users, assignedBy, defaultTy
       onClose()
     } catch (error) {
       console.error(error)
-      alert(error.response?.data?.message || 'Could not assign action.')
+      toast.error(error.response?.data?.message || 'Could not assign action.')
     } finally {
       setSaving(false)
     }
@@ -910,6 +914,8 @@ export default function DefectDetails({ user }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
+  const toast = useToast()
+  const confirm = useConfirm()
   const initialTab = new URLSearchParams(location.search).get('tab') === 'root-cause' ? 'root' : 'overview'
   const [tab, setTab] = useState(initialTab)
   const [defect, setDefect] = useState(null)
@@ -976,7 +982,7 @@ export default function DefectDetails({ user }) {
       }
     } catch (error) {
       console.error(error)
-      alert('Could not load defect details.')
+      toast.error('Could not load defect details.')
     } finally {
       setLoading(false)
     }
@@ -1024,10 +1030,10 @@ export default function DefectDetails({ user }) {
     if (!defect || managerView) return
 
     if (!workerHasAccess) {
-      alert('You do not have access to this defect.')
+      toast.error('You do not have access to this defect.')
       navigate('/defects')
     }
-  }, [defect, managerView, workerHasAccess, navigate])
+  }, [defect, managerView, workerHasAccess, navigate, toast])
 
   const workers = users.filter((u) => u.role === 'worker')
   const managerId = isManager(user) ? user.id : null
@@ -1062,7 +1068,7 @@ export default function DefectDetails({ user }) {
       await api.patch(`/defects/${id}/start-review`)
       await load()
     } catch (error) {
-      alert(error.response?.data?.message || 'Could not start review.')
+      toast.error(error.response?.data?.message || 'Could not start review.')
     }
   }
 
@@ -1086,10 +1092,11 @@ export default function DefectDetails({ user }) {
     const reporterName = defect?.reported_by_name || 'the reporter'
     const task = getDefaultTask(actionType)
 
-    if (!reporterId) return alert('No reporter found for this defect.')
-    if (!task) return alert('No suggested task available. Use Assign Action to choose manually.')
+    if (!reporterId) return toast.warning('No reporter found for this defect.')
+    if (!task) return toast.warning('No suggested task available. Use Assign Action to choose manually.')
 
-    if (!window.confirm(`Assign "${task}" to ${reporterName}?`)) return
+    const confirmed = await confirm({ message: `Assign "${task}" to ${reporterName}?`, confirmLabel: 'Assign' })
+    if (!confirmed) return
 
     try {
       await api.post(`/corrective-actions/defects/${defect.id}/assign`, {
@@ -1104,7 +1111,7 @@ export default function DefectDetails({ user }) {
       await load()
       setTab('actions')
     } catch (error) {
-      alert(error.response?.data?.message || 'Could not assign action to reporter.')
+      toast.error(error.response?.data?.message || 'Could not assign action to reporter.')
     }
   }
 
@@ -1120,7 +1127,7 @@ export default function DefectDetails({ user }) {
       await api.patch(`/corrective-actions/${actionId}/start`, { started_by: startedBy })
       load()
     } catch (error) {
-      alert(error.response?.data?.message || 'Could not start action.')
+      toast.error(error.response?.data?.message || 'Could not start action.')
     }
   }
 
@@ -1129,13 +1136,13 @@ export default function DefectDetails({ user }) {
       await api.patch(`/corrective-actions/${actionId}/verify`, { verified_by: managerId })
       load()
     } catch (error) {
-      alert(error.response?.data?.message || 'Could not verify action.')
+      toast.error(error.response?.data?.message || 'Could not verify action.')
     }
   }
 
   async function saveSuspectedRootCause() {
     const finalCause = suspectedCause === 'Other' ? otherSuspectedCause.trim() : suspectedCause
-    if (!finalCause) return alert('Please choose or type a suspected root cause.')
+    if (!finalCause) return toast.warning('Please choose or type a suspected root cause.')
 
     setSavingSuspected(true)
     try {
@@ -1147,9 +1154,9 @@ export default function DefectDetails({ user }) {
         updated_by: currentUser?.id || null
       })
       await load()
-      alert('Suspected root cause saved. Manager will review and confirm.')
+      toast.success('Suspected root cause saved. Manager will review and confirm.')
     } catch (error) {
-      alert(error.response?.data?.message || 'Could not save suspected root cause.')
+      toast.error(error.response?.data?.message || 'Could not save suspected root cause.')
     } finally {
       setSavingSuspected(false)
     }
@@ -1157,7 +1164,7 @@ export default function DefectDetails({ user }) {
 
   async function confirmRootCause() {
     const finalCause = rootCause === 'Other' ? otherRootCause : rootCause
-    if (!finalCause) return alert('Please choose or type confirmed root cause.')
+    if (!finalCause) return toast.warning('Please choose or type confirmed root cause.')
     try {
       await api.patch(`/defects/${id}/root-cause`, {
         confirmed_root_cause: finalCause,
@@ -1166,24 +1173,24 @@ export default function DefectDetails({ user }) {
       })
       load()
     } catch (error) {
-      alert(error.response?.data?.message || 'Could not confirm root cause.')
+      toast.error(error.response?.data?.message || 'Could not confirm root cause.')
     }
   }
 
   async function closeDefect() {
-    if (
-      !window.confirm(
-        `Close defect ${defect.defect_code}? This will mark the defect as closed and cannot be undone.`
-      )
-    ) {
-      return
-    }
+    const confirmed = await confirm({
+      title: 'Close this defect?',
+      message: `Close defect ${defect.defect_code}? This will mark the defect as closed and cannot be undone.`,
+      confirmLabel: 'Close Defect',
+      danger: true
+    })
+    if (!confirmed) return
 
     try {
       await api.patch(`/defects/${id}/close`, { closed_by: managerId })
       load()
     } catch (error) {
-      alert(error.response?.data?.message || 'Could not close defect.')
+      toast.error(error.response?.data?.message || 'Could not close defect.')
     }
   }
 

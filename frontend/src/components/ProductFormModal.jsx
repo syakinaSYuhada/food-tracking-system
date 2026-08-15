@@ -3,6 +3,7 @@ import api from '../api/client'
 import Button from './Button'
 import BaseModal from './BaseModal'
 import FieldLabel from './FieldLabel'
+import { useToast } from './Toast'
 
 function Field({ label, required = false, children }) {
   return (
@@ -30,6 +31,7 @@ function TextArea(props) {
 }
 
 function ProductFormModal({ mode, product, onClose, onSaved }) {
+  const toast = useToast()
   const isEdit = mode === 'edit'
 
   const [form, setForm] = useState({
@@ -49,7 +51,7 @@ function ProductFormModal({ mode, product, onClose, onSaved }) {
   }
 
   async function handleSubmit() {
-    if (!form.product_name.trim()) return alert('Please enter the product name.')
+    if (!form.product_name.trim()) return toast.warning('Please enter the product name.')
 
     try {
       if (isEdit) {
@@ -61,7 +63,7 @@ function ProductFormModal({ mode, product, onClose, onSaved }) {
       onClose && onClose()
     } catch (err) {
       console.error(err)
-      alert('Failed to save product')
+      toast.error('Failed to save product')
     }
   }
 

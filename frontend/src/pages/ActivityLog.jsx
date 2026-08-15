@@ -15,6 +15,7 @@ import {
   fetchAllActivityLogs,
   getDateFilterLabel
 } from '../utils/dateFilters'
+import { useToast } from '../components/Toast'
 
 function titleCase(value) {
   if (!value) return '-'
@@ -81,6 +82,7 @@ const ACTIVITY_EXPORT_COLUMNS = [
 ]
 
 export default function ActivityLog() {
+  const toast = useToast()
   const [logs, setLogs] = useState([])
   const [pagination, setPagination] = useState({ page: 1, limit: 15, total: 0, totalPages: 1 })
   const [loading, setLoading] = useState(true)
@@ -163,7 +165,7 @@ export default function ActivityLog() {
   async function exportCsv() {
     const rows = await handleExportRows()
     if (!rows.length) {
-      alert('No data to export.')
+      toast.warning('No data to export.')
       return
     }
 
@@ -193,7 +195,7 @@ export default function ActivityLog() {
       })
     } catch (error) {
       console.error('Activity log PDF export failed:', error)
-      alert('PDF export failed. Please try again or use Export CSV instead.')
+      toast.error('PDF export failed. Please try again or use Export CSV instead.')
     }
   }
 

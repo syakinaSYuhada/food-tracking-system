@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import AppShell from './layouts/AppShell'
 import RequireRole from './components/RequireRole'
+import { ToastProvider } from './components/Toast'
+import { ConfirmProvider } from './components/ConfirmDialog'
+import { PromptProvider } from './components/PromptDialog'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Products from './pages/Products'
@@ -58,36 +61,40 @@ function App() {
     setUser(null)
   }
 
-  if (authLoading) {
-    return <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Loading session...</div>
-  }
-
-  if (!user) {
-    return <Login onLogin={setUser} />
-  }
-
   return (
-    <BrowserRouter>
-      <AppShell user={user} onLogout={handleLogout}>
-        <RequireRole user={user}>
-          <Routes>
-            <Route path="/" element={<Dashboard user={user} />} />
-            <Route path="/products" element={<Products user={user} />} />
-            <Route path="/products/:id" element={<ProductDetails />} />
-            <Route path="/batches" element={<Batches user={user} />} />
-            <Route path="/batches/:id" element={<BatchDetails />} />
-            <Route path="/defects" element={<Defects user={user} />} />
-            <Route path="/defects/:id" element={<DefectDetails user={user} />} />
-            <Route path="/corrective-actions" element={<CorrectiveActions user={user} />} />
-            <Route path="/corrective-actions/:id" element={<CorrectiveActionDetails user={user} />} />
-            <Route path="/reports" element={<Reports user={user} />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/activity-log" element={<ActivityLog />} />
-            <Route path="/profile" element={<Profile user={user} />} />
-          </Routes>
-        </RequireRole>
-      </AppShell>
-    </BrowserRouter>
+    <ToastProvider>
+      <ConfirmProvider>
+        <PromptProvider>
+          {authLoading ? (
+            <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Loading session...</div>
+          ) : !user ? (
+            <Login onLogin={setUser} />
+          ) : (
+            <BrowserRouter>
+              <AppShell user={user} onLogout={handleLogout}>
+                <RequireRole user={user}>
+                  <Routes>
+                    <Route path="/" element={<Dashboard user={user} />} />
+                    <Route path="/products" element={<Products user={user} />} />
+                    <Route path="/products/:id" element={<ProductDetails />} />
+                    <Route path="/batches" element={<Batches user={user} />} />
+                    <Route path="/batches/:id" element={<BatchDetails />} />
+                    <Route path="/defects" element={<Defects user={user} />} />
+                    <Route path="/defects/:id" element={<DefectDetails user={user} />} />
+                    <Route path="/corrective-actions" element={<CorrectiveActions user={user} />} />
+                    <Route path="/corrective-actions/:id" element={<CorrectiveActionDetails user={user} />} />
+                    <Route path="/reports" element={<Reports user={user} />} />
+                    <Route path="/users" element={<Users />} />
+                    <Route path="/activity-log" element={<ActivityLog />} />
+                    <Route path="/profile" element={<Profile user={user} />} />
+                  </Routes>
+                </RequireRole>
+              </AppShell>
+            </BrowserRouter>
+          )}
+        </PromptProvider>
+      </ConfirmProvider>
+    </ToastProvider>
   )
 }
 

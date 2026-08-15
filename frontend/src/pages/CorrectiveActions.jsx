@@ -14,6 +14,7 @@ import { isManager } from '../utils/roleAccess'
 import { paginateItems } from '../utils/pagination'
 import { isActionOverdue } from '../utils/dueDate'
 import ListCsvExport from '../components/ListCsvExport'
+import { useToast } from '../components/Toast'
 import { formatCaStatusLabel } from '../utils/caStatusLabel'
 import {
   CA_DUE_DATE_OPTIONS,
@@ -157,6 +158,7 @@ function normalizeAction(row) {
 
 export default function CorrectiveActions({ user }) {
   const navigate = useNavigate()
+  const toast = useToast()
   const [params, setParams] = useSearchParams()
   const [actions, setActions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -193,7 +195,7 @@ export default function CorrectiveActions({ user }) {
       setActions((res.data.data || []).map(normalizeAction))
     } catch (error) {
       console.error(error)
-      alert('Could not load corrective actions.')
+      toast.error('Could not load corrective actions.')
     } finally {
       setLoading(false)
     }
@@ -390,7 +392,7 @@ export default function CorrectiveActions({ user }) {
       await api.patch(`/corrective-actions/${actionId}/verify`, { verified_by: managerId })
       await load()
     } catch (error) {
-      alert(error.response?.data?.message || 'Could not verify action.')
+      toast.error(error.response?.data?.message || 'Could not verify action.')
     }
   }
 

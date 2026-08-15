@@ -2,6 +2,7 @@ import { Download } from 'lucide-react'
 import Button from './Button'
 import { downloadReportExcel } from '../utils/reportExport'
 import { buildExportColumns } from './TableExportActions'
+import { useToast } from './Toast'
 
 export default function ListCsvExport({
   title,
@@ -13,11 +14,12 @@ export default function ListCsvExport({
   size = 'sm',
   disabled = false
 }) {
+  const toast = useToast()
   const exportColumns = buildExportColumns(columns)
 
   function handleCsv() {
     if (!rows?.length) {
-      alert('No data to export.')
+      toast.warning('No data to export.')
       return
     }
 

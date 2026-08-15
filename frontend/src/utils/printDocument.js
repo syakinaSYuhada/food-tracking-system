@@ -1,3 +1,5 @@
+import { toast } from '../components/Toast'
+
 export function openPrintDocument(html, {
   blockedMessage = 'Please allow pop-ups to print this summary.',
   failureMessage = 'Print failed. Please try again.',
@@ -14,14 +16,14 @@ export function openPrintDocument(html, {
     printWindow = window.open('about:blank', '_blank', 'width=1024,height=768')
   } catch (error) {
     console.error(`${logLabel} failed to open print window:`, error)
-    alert(blockedMessage)
+    toast.error(blockedMessage)
     onBlocked?.()
     onFailure?.()
     return false
   }
 
   if (!printWindow) {
-    alert(blockedMessage)
+    toast.error(blockedMessage)
     onBlocked?.()
     return false
   }
@@ -37,7 +39,7 @@ export function openPrintDocument(html, {
       onPrintTriggered?.()
     } catch (error) {
       console.error(`${logLabel} failed to open print dialog:`, error)
-      alert(failureMessage)
+      toast.error(failureMessage)
       onFailure?.()
     }
   }
@@ -81,7 +83,7 @@ export function openPrintDocument(html, {
     })
   } catch (error) {
     console.error(`${logLabel} failed while writing HTML:`, error)
-    alert(failureMessage)
+    toast.error(failureMessage)
     onFailure?.()
     return false
   }

@@ -1,4 +1,5 @@
 import { openPrintDocument } from './printDocument'
+import { toast } from '../components/Toast'
 
 function escapeCsvValue(value) {
   const text = String(value ?? '')
@@ -119,6 +120,6 @@ export function downloadReportPdf({ title, periodLabel, sections }) {
     })
   } catch (error) {
     console.error('PDF export failed:', error)
-    alert('PDF export failed. Please try again or use Export CSV instead.')
+    toast.error('PDF export failed. Please try again or use Export CSV instead.')
   }
 }

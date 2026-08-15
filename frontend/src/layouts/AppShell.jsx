@@ -22,6 +22,7 @@ import NotificationsPanel from '../components/NotificationsPanel'
 import { getDefaultPathForRole, getUserInitials, isManager, isManagerOnlyPath } from '../utils/roleAccess'
 import { buildNotifications } from '../utils/notifications'
 import { fetchNotificationData } from '../utils/notificationData'
+import { useConfirm } from '../components/ConfirmDialog'
 
 const managerLinks = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -49,12 +50,14 @@ function AppShell({ children, user, onLogout }) {
   const notificationsRef = useRef(null)
   const navigate = useNavigate()
   const location = useLocation()
+  const confirm = useConfirm()
   const links = isManager(user) ? managerLinks : workerLinks
   const sidebarWidth = isMobile ? 240 : (collapsed ? 64 : 240)
   const contentMargin = isMobile ? 0 : sidebarWidth
 
-  function handleLogout() {
-    if (!window.confirm('Log out of this session?')) return
+  async function handleLogout() {
+    const confirmed = await confirm({ title: 'Log out?', message: 'Log out of this session?', confirmLabel: 'Log Out' })
+    if (!confirmed) return
     onLogout()
     setShowNotifications(false)
   }

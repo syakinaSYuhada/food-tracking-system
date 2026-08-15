@@ -1,6 +1,7 @@
 import { Download, FileText } from 'lucide-react'
 import Button from './Button'
 import { downloadReportExcel, downloadReportPdf } from '../utils/reportExport'
+import { useToast } from './Toast'
 
 export function buildExportColumns(columns = []) {
   return columns
@@ -21,6 +22,7 @@ export default function TableExportActions({
   onPdfClick,
   exporting = false
 }) {
+  const toast = useToast()
   const exportColumns = buildExportColumns(columns)
 
   function exportPayload() {
@@ -43,7 +45,7 @@ export default function TableExportActions({
     }
 
     if (!rows?.length) {
-      alert('No data to export.')
+      toast.warning('No data to export.')
       return
     }
     downloadReportExcel(exportPayload())
@@ -59,7 +61,7 @@ export default function TableExportActions({
       downloadReportPdf(exportPayload())
     } catch (error) {
       console.error('PDF export failed:', error)
-      alert('PDF export failed. Please try again or use Export CSV instead.')
+      toast.error('PDF export failed. Please try again or use Export CSV instead.')
     }
   }
 
