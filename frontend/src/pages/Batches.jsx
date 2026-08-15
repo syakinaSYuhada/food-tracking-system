@@ -156,6 +156,7 @@ function BatchFormModal({ mode, batch, onClose, onSaved }) {
   }, [])
 
   const selectedProduct = products.find((product) => String(product.id) === String(form.product_id))
+  const sortedProducts = [...products].sort((a, b) => a.name.localeCompare(b.name))
 
   const correctExpiryPreview = selectedProduct
     ? addMonthsToDateOnly(form.retort_date, selectedProduct.shelfLife)
@@ -288,7 +289,7 @@ function BatchFormModal({ mode, batch, onClose, onSaved }) {
               className="field-control"
             >
               <option value="">Select product</option>
-              {products.map((product) => (
+              {sortedProducts.map((product) => (
                 <option key={product.id} value={product.id}>
                   {product.name} ({product.code})
                 </option>

@@ -139,10 +139,10 @@ function ProductFormModal({ mode, product, onClose, onSaved }) {
 
           <Field label="Storage">
             <SelectInput value={form.storage_condition} onChange={(e) => update('storage_condition', e.target.value)}>
-              <option>Room Temperature</option>
               <option>Chilled</option>
-              <option>Frozen</option>
               <option>Dry Storage</option>
+              <option>Frozen</option>
+              <option>Room Temperature</option>
             </SelectInput>
           </Field>
         </div>

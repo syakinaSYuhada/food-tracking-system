@@ -103,8 +103,8 @@ export default function UserFormModal({ onClose, onSaved }) {
             onChange={(e) => update('role', e.target.value)}
             className="field-control"
           >
-            <option value="worker">Worker</option>
             <option value="manager">Manager</option>
+            <option value="worker">Worker</option>
           </select>
         </label>
 

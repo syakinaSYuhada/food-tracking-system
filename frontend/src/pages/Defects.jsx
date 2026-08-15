@@ -311,6 +311,7 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
   }, [form.defect_type])
 
   const selectedProduct = products.find((product) => String(product.id) === String(form.product_id))
+  const sortedProducts = [...products].sort((a, b) => a.name.localeCompare(b.name))
   const availableBatches = batches.filter((batch) => !form.product_id || String(batch.productId) === String(form.product_id))
   const selectedBatch = batches.find((batch) => String(batch.id) === String(form.batch_id))
   const qtyExceedsBatch = selectedBatch && Number(form.qty_affected || 0) > Number(selectedBatch.quantityProduced || 0)
@@ -507,7 +508,7 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
                   <FieldLabel label="Product" required />
                   <select value={form.product_id} onChange={(e) => { update('product_id', e.target.value); update('batch_id', '') }} className="field-control">
                     <option value="">Select product</option>
-                    {products.map((product) => <option key={product.id} value={product.id}>{product.name} ({product.code})</option>)}
+                    {sortedProducts.map((product) => <option key={product.id} value={product.id}>{product.name} ({product.code})</option>)}
                   </select>
                 </label>
                 <label className="block">
@@ -572,7 +573,7 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
                   <FieldLabel label="Product" required />
                   <select value={form.product_id} onChange={(e) => { update('product_id', e.target.value); update('batch_id', '') }} className="field-control">
                     <option value="">Select product</option>
-                    {products.map((product) => <option key={product.id} value={product.id}>{product.name} ({product.code})</option>)}
+                    {sortedProducts.map((product) => <option key={product.id} value={product.id}>{product.name} ({product.code})</option>)}
                   </select>
                 </label>
                 <label className="block">

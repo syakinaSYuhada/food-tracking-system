@@ -299,7 +299,9 @@ export default function CorrectiveActions({ user }) {
     })
     return [
       { value: 'all', label: 'All Assignees' },
-      ...Array.from(seen.entries()).map(([value, label]) => ({ value, label }))
+      ...Array.from(seen.entries())
+        .map(([value, label]) => ({ value, label }))
+        .sort((a, b) => a.label.localeCompare(b.label))
     ]
   }, [actions])
 
