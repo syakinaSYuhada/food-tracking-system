@@ -16,6 +16,9 @@ import { isActionOverdue } from '../utils/dueDate'
 import { printDefectSummary } from '../utils/defectExport'
 import { hasExpiryMismatch } from '../utils/expiry'
 import { fetchEvidenceBlobUrl } from '../utils/assetUrl'
+import { defectStatusBadgeTitle } from '../utils/defectStatusHint'
+import { getWorkerActionProgressHint } from '../utils/workerActionProgressHint'
+import { getCaStatusExplanation } from '../utils/caStatusExplanation'
 import { formatDefectPriorityLabel, getReviewDueBadge, isUrgentDefectPriority, DEFECT_PRIORITY_OPTIONS, todayDateString, formatReviewDueDate } from '../utils/defectReviewDue'
 
 function formatDate(value) {
@@ -85,6 +88,11 @@ function normalizeAction(action) {
     evidenceRequired: Boolean(action.evidence_required),
     hasEvidence: Boolean(action.has_evidence)
   }
+}
+
+function rejectedActionHint(action) {
+  const base = getWorkerActionProgressHint('rejected')
+  return action.rejection_reason ? `${base} · Reason: ${action.rejection_reason}` : base
 }
 
 function formatAssignActionTypeLabel(actionType) {
@@ -814,6 +822,9 @@ function WorkerOverview({ defect, visibleActions, workflow, onStartAction, navig
                       <div className="font-bold text-brand-ink">{action.code}</div>
                       <div className="text-sm text-brand-muted">{action.task}</div>
                       <div className="mt-2 text-xs text-brand-muted">Due {action.dueDate || '-'}</div>
+                      {action.status === 'rejected' && (
+                        <div className="mt-1 text-xs font-medium text-red-700">{rejectedActionHint(action)}</div>
+                      )}
                       {action.type === 'machine_process_check' && defect.related_tool_machine && (
                         <div className="mt-1 text-xs text-brand-muted">Machine / Area: {defect.related_tool_machine}</div>
                       )}
@@ -1225,7 +1236,11 @@ export default function DefectDetails({ user }) {
                 Start Review
               </Button>
             )}
-            <StatusBadge value={defect.defect_status} prefix="Defect" />
+            <StatusBadge
+              value={defect.defect_status}
+              prefix="Defect"
+              title={managerView ? undefined : defectStatusBadgeTitle(defect.defect_status, workerHasAssignedAction)}
+            />
             <StatusBadge
               value={defect.root_cause_status || 'pending_investigation'}
               prefix="Root Cause"
@@ -1380,10 +1395,18 @@ export default function DefectDetails({ user }) {
                         <div className="font-bold text-brand-ink">{action.code}</div>
                         <div className="text-sm text-brand-muted">{action.task}</div>
                         <div className="mt-2 text-xs text-brand-muted">{action.assignedToName || '-'} • Due {action.dueDate || '-'}</div>
+                        {!managerView && action.status === 'rejected' && (
+                          <div className="mt-1 text-xs font-medium text-red-700">{rejectedActionHint(action)}</div>
+                        )}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
-                        <StatusBadge kind="ca" value={action.status} audience={managerView ? undefined : 'worker'} />
+                        <StatusBadge
+                          kind="ca"
+                          value={action.status}
+                          audience={managerView ? undefined : 'worker'}
+                          title={managerView ? getCaStatusExplanation(action.status) : undefined}
+                        />
                         {isActionOverdue(action.dueDate, action.status) && (
                           <span className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700">
                             Overdue

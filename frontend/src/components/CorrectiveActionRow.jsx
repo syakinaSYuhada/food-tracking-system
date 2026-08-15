@@ -3,6 +3,7 @@ import EntityRow from './EntityRow'
 import StatusBadge from './StatusBadge'
 import { getDaysLate, isActionOverdue } from '../utils/dueDate'
 import { formatCaStatusLabel } from '../utils/caStatusLabel'
+import { getWorkerActionProgressHint } from '../utils/workerActionProgressHint'
 
 function formatDisplayDate(value) {
   if (!value || value === '-') return '-'
@@ -22,25 +23,6 @@ function statusLabel(status, managerView) {
 
 function actionTypeLabel(type) {
   return type === 'product_handling' ? 'Product Handling' : 'Machine Check'
-}
-
-function getWorkerProgressHint(status) {
-  switch (String(status || '').toLowerCase()) {
-    case 'assigned':
-      return 'Not started'
-    case 'in_progress':
-      return 'In progress'
-    case 'completed':
-      return 'Submitted — Awaiting Verification'
-    case 'rejected':
-      return 'Rejected — revise and resubmit'
-    case 'verified':
-      return 'Verified by manager'
-    case 'cancelled':
-      return 'Cancelled by manager'
-    default:
-      return null
-  }
 }
 
 function getAccentClass(action, managerView) {
@@ -90,7 +72,7 @@ export default function CorrectiveActionRow({
   const accentClass = getAccentClass(action, managerView)
   const rowTint = getRowTint(action, managerView)
   const Badge = EntityRow.Badge
-  const workerProgressHint = !managerView ? getWorkerProgressHint(action.status) : null
+  const workerProgressHint = !managerView ? getWorkerActionProgressHint(action.status) : null
 
   const footerParts = managerView
     ? [actionTypeLabel(action.type), statusLabel(action.status, managerView), action.batchNumber ? `Batch ${action.batchNumber}` : null].filter(Boolean)

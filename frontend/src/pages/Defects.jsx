@@ -686,6 +686,7 @@ export default function Defects({ user }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [defects, setDefects] = useState([])
   const [users, setUsers] = useState([])
+  const [workerAssignedDefectIds, setWorkerAssignedDefectIds] = useState(new Set())
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
@@ -732,6 +733,17 @@ export default function Defects({ user }) {
       loadDefects()
     }
   }, [user?.id])
+
+  useEffect(() => {
+    if (!managerView && currentUser?.id) {
+      api.get('/corrective-actions', { params: { assigned_to: currentUser.id } })
+        .then((res) => {
+          const ids = new Set((res.data.data || []).map((action) => Number(action.defect_id)))
+          setWorkerAssignedDefectIds(ids)
+        })
+        .catch((error) => console.error(error))
+    }
+  }, [managerView, currentUser?.id])
 
   useEffect(() => {
     if (searchParams.get('report') === '1') {
@@ -1082,6 +1094,7 @@ export default function Defects({ user }) {
                   managerView={managerView}
                   users={users}
                   currentUserId={currentUser?.id}
+                  workerAssignedDefectIds={workerAssignedDefectIds}
                   expanded={expanded === defect.id}
                   onToggle={() => setExpanded(expanded === defect.id ? null : defect.id)}
                   onView={() => navigate(`/defects/${defect.id}`)}

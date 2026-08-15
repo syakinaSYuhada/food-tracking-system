@@ -82,6 +82,7 @@ export default function DefectRecordCard({
   managerView,
   users = [],
   currentUserId,
+  workerAssignedDefectIds,
   expanded,
   onToggle,
   onView,
@@ -92,6 +93,7 @@ export default function DefectRecordCard({
   const reviewDueBadge = getReviewDueBadge(defect.reviewDueDate, defect.status, { workerView: !managerView })
   const showWorkerReportBadge = shouldShowWorkerReportBadge(defect, managerView, users)
   const showWorkerPriority = !managerView && shouldShowWorkerPriorityBadge(defect.priority)
+  const hasAssignedAction = managerView ? undefined : Boolean(workerAssignedDefectIds?.has(Number(defect.id)))
   const Badge = EntityRow.Badge
 
   const reportedValue = defect.reportedByName
@@ -115,7 +117,7 @@ export default function DefectRecordCard({
             <StatusBadge
               value={defect.status}
               audience={managerView ? undefined : 'worker'}
-              title={managerView ? undefined : defectStatusBadgeTitle(defect.status, undefined)}
+              title={managerView ? undefined : defectStatusBadgeTitle(defect.status, hasAssignedAction)}
             />
             {showWorkerReportBadge && <Badge tone="green">Worker report</Badge>}
             {reviewDueBadge && (

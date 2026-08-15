@@ -11,6 +11,7 @@ import FieldLabel from '../components/FieldLabel'
 import { isAssignedToUser, isManager } from '../utils/roleAccess'
 import { validateHandledQuantities } from '../utils/lossService'
 import { formatCaStatusLabel } from '../utils/caStatusLabel'
+import { getCaStatusExplanation } from '../utils/caStatusExplanation'
 import { printCorrectiveActionSummary } from '../utils/correctiveActionExport'
 import { isActionOverdue } from '../utils/dueDate'
 import { formatExpiryDate, hasExpiryMismatch } from '../utils/expiry'
@@ -435,7 +436,12 @@ export default function CorrectiveActionDetails({ user }) {
             <Button color="slate" variant="subtle" size="sm" onClick={() => printCorrectiveActionSummary(action, managerView ? 'manager' : 'worker')}>
               <Printer size={14} /> Print Summary
             </Button>
-            <StatusBadge kind="ca" value={action.status} audience={managerView ? undefined : 'worker'} />
+            <StatusBadge
+              kind="ca"
+              value={action.status}
+              audience={managerView ? undefined : 'worker'}
+              title={managerView ? getCaStatusExplanation(action.status) : undefined}
+            />
             {isActionOverdue(action.dueDate, action.status) && (
               <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
                 Overdue
