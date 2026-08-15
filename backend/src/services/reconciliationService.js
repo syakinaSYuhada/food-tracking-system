@@ -74,6 +74,7 @@ async function loadDefectQuantities(defectId) {
     SELECT
       id,
       qty_affected,
+      defect_status,
       containment_status,
       qty_relabelled,
       qty_repacked,
@@ -149,6 +150,14 @@ function computeDerivedQuantities(defect, actionTotals) {
   }
 }
 
+function isDefectVerifiedOrClosedForLoss(defect) {
+  return (
+    defect.defect_status === 'closed' ||
+    defect.defect_status === 'ready_verification' ||
+    defect.loss_status === 'loss_confirmed'
+  )
+}
+
 async function reconcileDefectQuantities(defectId) {
   const id = parseDefectId(defectId)
   const defect = await loadDefectQuantities(id)
@@ -185,7 +194,7 @@ async function applyDefectQuantityReconciliation(defectId, userId = null) {
   const computed = computedSnapshot
   const lossStatus = determineLossStatus({
     qty_discarded: computed.qty_discarded,
-    isVerifiedOrClosed: false
+    isVerifiedOrClosed: isDefectVerifiedOrClosedForLoss(defect)
   })
 
   const updateResult = await pool.query(
