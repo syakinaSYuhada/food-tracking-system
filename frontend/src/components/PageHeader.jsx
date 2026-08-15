@@ -1,5 +1,3 @@
-import React from 'react'
-
 function PageHeader({ title, subtitle, eyebrow = 'Kak Norie QDTS', children }) {
   return (
     <div className="compact-header">

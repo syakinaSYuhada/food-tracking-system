@@ -1,5 +1,3 @@
-import React from 'react'
-
 const colorStyles = {
   brand: {
     solid: 'bg-brand-600 text-white border border-brand-600 shadow-xs shadow-brand-600/20 hover:bg-brand-700 hover:shadow-card hover:border-brand-700',

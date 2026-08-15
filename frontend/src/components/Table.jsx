@@ -1,5 +1,3 @@
-import React from 'react'
-
 export function Table({ children, className = '' }) {
   return <div className={`data-table-wrap ${className}`}>{children}</div>
 }

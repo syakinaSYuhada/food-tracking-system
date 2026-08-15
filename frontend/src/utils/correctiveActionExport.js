@@ -9,11 +9,6 @@ function escapeHtml(value) {
     .replaceAll('"', '&quot;')
 }
 
-function formatDate(value) {
-  if (!value) return '-'
-  return String(value).split('T')[0]
-}
-
 function titleCase(value) {
   if (!value) return '-'
   return String(value).replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())

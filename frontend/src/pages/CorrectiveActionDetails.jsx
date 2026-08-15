@@ -154,7 +154,6 @@ export default function CorrectiveActionDetails({ user }) {
   const navigate = useNavigate()
   const [action, setAction] = useState(null)
   const [rule, setRule] = useState(null)
-  const [users, setUsers] = useState([])
   const [saving, setSaving] = useState(false)
   const [savingDueDate, setSavingDueDate] = useState(false)
   const [dueDateDraft, setDueDateDraft] = useState('')
@@ -179,17 +178,9 @@ export default function CorrectiveActionDetails({ user }) {
 
   async function load() {
     try {
-      const requests = [api.get(`/corrective-actions/${id}`)]
-      if (isManager(user)) {
-        requests.push(api.get('/users'))
-      }
-
-      const [actionRes, usersRes] = await Promise.all(requests)
-
-      const loadedUsers = usersRes?.data?.data || []
+      const actionRes = await api.get(`/corrective-actions/${id}`)
       const loadedAction = normalizeAction(actionRes.data.data)
 
-      setUsers(loadedUsers)
       setAction(loadedAction)
       setDueDateDraft(loadedAction.dueDate || '')
       setEditingDueDate(false)

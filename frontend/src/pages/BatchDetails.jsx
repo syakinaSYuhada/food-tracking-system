@@ -7,7 +7,7 @@ import KPICard from '../components/KPICard'
 import LoadingState from '../components/LoadingState'
 import SectionCard from '../components/SectionCard'
 import StatusBadge from '../components/StatusBadge'
-import { formatExpiryDate, hasExpiryMismatch } from '../utils/expiry'
+import { hasExpiryMismatch } from '../utils/expiry'
 import { isActionOverdue } from '../utils/dueDate'
 
 function formatDate(value) {

@@ -1,5 +1,3 @@
-import React from 'react'
-
 function ChartCard({ title, subtitle, children, className = '' }) {
   return (
     <div className={`compact-section surface-card ${className}`}>

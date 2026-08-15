@@ -157,7 +157,6 @@ export function matchesRetortDateFilterValue(dateValue, filter, { customFrom, cu
   const dateStr = toLocalDateString(dateValue)
   if (!dateStr) return false
 
-  const today = todayDateString()
   const now = new Date()
 
   if (filter === 'this_month') return dateStr >= startOfMonth(now) && dateStr < startOfNextMonth(now)

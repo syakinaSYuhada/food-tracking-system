@@ -32,7 +32,7 @@ function App() {
     try {
       const res = await api.get('/auth/me')
       setUser(res.data.data)
-    } catch (error) {
+    } catch {
       localStorage.removeItem('token')
       setUser(null)
     } finally {

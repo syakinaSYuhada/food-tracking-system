@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { AlertTriangle, Eye, FileWarning, FolderOpen, Layers, Plus, Search, SearchCheck } from 'lucide-react'
+import { AlertTriangle, FileWarning, FolderOpen, Layers, Plus, Search, SearchCheck } from 'lucide-react'
 import api from '../api/client'
 import DefectRecordCard from '../components/DefectRecordCard'
 import ListPagination from '../components/ListPagination'
@@ -210,7 +210,6 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
   const [submitting, setSubmitting] = useState(false)
   const [products, setProducts] = useState([])
   const [batches, setBatches] = useState([])
-  const [users, setUsers] = useState([])
   const [stages, setStages] = useState([])
   const [defectTypes, setDefectTypes] = useState([])
   const [rule, setRule] = useState(null)
@@ -238,24 +237,14 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
     async function load() {
       setLoading(true)
       try {
-        const requests = [
+        const [productsRes, batchesRes, stagesRes] = await Promise.all([
           api.get('/products'),
           api.get('/batches'),
           api.get('/defects/rules/stages')
-        ]
-        if (!workerReport) {
-          requests.splice(2, 0, api.get('/users'))
-        }
-
-        const results = await Promise.all(requests)
-        const productsRes = results[0]
-        const batchesRes = results[1]
-        const usersRes = workerReport ? null : results[2]
-        const stagesRes = workerReport ? results[2] : results[3]
+        ])
 
         setProducts((productsRes.data.data || []).map(normalizeProduct))
         setBatches((batchesRes.data.data || []).map(normalizeBatch))
-        setUsers(usersRes?.data?.data || [])
         setStages(stagesRes.data.data || [])
       } catch (error) {
         console.error(error)

@@ -36,11 +36,6 @@ import { defectStatusHint } from '../utils/defectStatusHint'
 
 const PIE_COLORS = ['#1F8F73', '#146356', '#C2410C', '#F59E0B', '#7EC6AE']
 
-function titleCase(value) {
-  if (!value) return '-'
-  return String(value).replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-}
-
 function money(value) {
   return `RM ${Number(value || 0).toFixed(2)}`
 }

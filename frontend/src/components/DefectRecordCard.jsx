@@ -81,7 +81,6 @@ export default function DefectRecordCard({
   defect,
   managerView,
   users = [],
-  currentUserId,
   workerAssignedDefectIds,
   expanded,
   onToggle,

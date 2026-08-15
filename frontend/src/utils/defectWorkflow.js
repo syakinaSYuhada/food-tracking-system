@@ -45,7 +45,7 @@ export function getDefectWorkflow(defect, actions = [], managerView = true) {
   const isClosed = defect?.defect_status === 'closed'
   const rootConfirmed = defect?.root_cause_status === 'confirmed'
 
-  let phase = 'assign'
+  let phase
   if (isClosed) phase = 'closed'
   else if (!stats.hasActions) phase = 'assign'
   else if (!stats.allSubmitted) phase = 'worker_complete'
