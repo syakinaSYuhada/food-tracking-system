@@ -1068,13 +1068,21 @@ function Batches({ user }) {
 
         <div className="list-panel-body">
           {paged.items.length === 0 ? (
-            <EmptyState
-              icon={Package}
-              title="No batches found"
-              description="Try adjusting your search or filters, or add a new production batch."
-              actionLabel={managerView ? 'Add Batch' : undefined}
-              onAction={managerView ? () => setShowAdd(true) : undefined}
-            />
+            !filtersCleared ? (
+              <EmptyState
+                icon={Package}
+                title="No batches match this filter"
+                description="Try clearing the search or filters."
+              />
+            ) : (
+              <EmptyState
+                icon={Package}
+                title="No batches yet"
+                description="Batches will appear here once production batches are added."
+                actionLabel={managerView ? 'Add Batch' : undefined}
+                onAction={managerView ? () => setShowAdd(true) : undefined}
+              />
+            )
           ) : (
             <div className="compact-list-stack">
               {paged.items.map((batch) => (

@@ -198,12 +198,19 @@ export default function Users() {
 
         <div className="list-panel-body">
           {paged.items.length === 0 ? (
-            <EmptyState
-              title="No users found"
-              description={search || roleFilter !== 'all' ? 'Try a different search or role filter.' : 'No users are registered in the system yet.'}
-              actionLabel="Add User"
-              onAction={() => setShowAdd(true)}
-            />
+            search || roleFilter !== 'all' ? (
+              <EmptyState
+                title="No users match this filter"
+                description="Try a different search or role filter."
+              />
+            ) : (
+              <EmptyState
+                title="No users yet"
+                description="No users are registered in the system yet."
+                actionLabel="Add User"
+                onAction={() => setShowAdd(true)}
+              />
+            )
           ) : (
             <div className="compact-list-stack">
               {paged.items.map((user) => (

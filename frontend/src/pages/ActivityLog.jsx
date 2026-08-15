@@ -75,6 +75,10 @@ export default function ActivityLog() {
     [dateFilter, customFrom, customTo]
   )
 
+  const hasActiveFilters = search.trim().length > 0
+    || entityFilter !== 'all'
+    || dateFilter !== 'all'
+
   async function loadLogs(nextPage = page) {
     setLoading(true)
     try {
@@ -231,10 +235,17 @@ export default function ActivityLog() {
           {loading ? (
             <LoadingState label="Loading activity log..." />
           ) : logs.length === 0 ? (
-            <EmptyState
-              title="No activity records"
-              description="Actions such as defect reports, assignments, and verifications will appear here."
-            />
+            hasActiveFilters ? (
+              <EmptyState
+                title="No activity matches this filter"
+                description="Try clearing the search, entity, or date filters."
+              />
+            ) : (
+              <EmptyState
+                title="No activity records"
+                description="Actions such as defect reports, assignments, and verifications will appear here."
+              />
+            )
           ) : (
             <div className="compact-list-stack">
               {logs.map((log) => (

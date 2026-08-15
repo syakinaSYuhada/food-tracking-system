@@ -366,14 +366,20 @@ export default function CorrectiveActions({ user }) {
 
   const paged = useMemo(() => paginateItems(sortedFiltered, page), [sortedFiltered, page])
 
-  const kpis = useMemo(() => ({
-    total: contextActions.length,
-    pendingReview: contextActions.filter((a) => a.status === 'completed').length,
-    assigned: contextActions.filter((a) => a.status === 'assigned').length,
-    inProgress: contextActions.filter((a) => a.status === 'in_progress').length,
-    verified: contextActions.filter((a) => a.status === 'verified').length,
-    overdue: contextActions.filter((a) => isActionOverdue(a.dueDate, a.status)).length
-  }), [contextActions])
+  const kpis = useMemo(() => {
+    if (loading) {
+      return { total: '-', pendingReview: '-', assigned: '-', inProgress: '-', verified: '-', overdue: '-' }
+    }
+
+    return {
+      total: contextActions.length,
+      pendingReview: contextActions.filter((a) => a.status === 'completed').length,
+      assigned: contextActions.filter((a) => a.status === 'assigned').length,
+      inProgress: contextActions.filter((a) => a.status === 'in_progress').length,
+      verified: contextActions.filter((a) => a.status === 'verified').length,
+      overdue: contextActions.filter((a) => isActionOverdue(a.dueDate, a.status)).length
+    }
+  }, [contextActions, loading])
 
   const overdueKpiActive = caDueFilter === 'overdue' && statusFilter === 'all'
   const totalKpiActive = statusFilter === 'all' && caDueFilter === 'all'

@@ -304,6 +304,7 @@ export default function CorrectiveActionDetails({ user }) {
       })
 
       await load()
+      alert(form.evidence_file ? 'Action completed successfully. Evidence uploaded.' : 'Action completed successfully.')
       navigate(`/defects/${action.defectId}`)
     } catch (error) {
       const message = error.response?.data?.message || 'Could not complete action.'

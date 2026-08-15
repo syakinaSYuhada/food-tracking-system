@@ -445,7 +445,7 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
       const created = res.data.data
       const defectId = created?.id || created?.defect_id
       if (defectId) await uploadPhoto(defectId)
-      onCreated()
+      onCreated({ hasEvidence: Boolean(photo) })
       onClose()
     } catch (error) {
       console.error(error)
@@ -854,13 +854,19 @@ export default function Defects({ user }) {
     [defects]
   )
 
-  const kpis = useMemo(() => ({
-    total: defects.length,
-    newReports: defects.filter((d) => d.status === 'new').length,
-    open: defects.filter((d) => OPEN_DEFECT_STATUSES.includes(d.status)).length,
-    affected: defects.reduce((sum, d) => sum + d.qtyAffected, 0),
-    underReview: defects.filter((d) => d.status === 'under_review').length
-  }), [defects])
+  const kpis = useMemo(() => {
+    if (loading) {
+      return { total: '-', newReports: '-', open: '-', affected: '-', underReview: '-' }
+    }
+
+    return {
+      total: defects.length,
+      newReports: defects.filter((d) => d.status === 'new').length,
+      open: defects.filter((d) => OPEN_DEFECT_STATUSES.includes(d.status)).length,
+      affected: defects.reduce((sum, d) => sum + d.qtyAffected, 0),
+      underReview: defects.filter((d) => d.status === 'under_review').length
+    }
+  }, [defects, loading])
 
   return (
     <div className="list-page">
@@ -928,7 +934,7 @@ export default function Defects({ user }) {
         ) : (
           <KpiCard
             label="Awaiting Manager"
-            value={defects.filter((d) => Number(d.createdBy) === Number(currentUser?.id) && ['new', 'under_review'].includes(d.status)).length}
+            value={loading ? '-' : defects.filter((d) => Number(d.createdBy) === Number(currentUser?.id) && ['new', 'under_review'].includes(d.status)).length}
             subtitle="Submitted and pending assignment"
             helperText="Your manager will review and assign corrective work."
             active={statusFilter === 'new'}
@@ -1148,12 +1154,14 @@ export default function Defects({ user }) {
         <AddDefectModal
           workerReport={!managerView}
           onClose={() => setShowAdd(false)}
-          onCreated={() => {
+          onCreated={({ hasEvidence } = {}) => {
             loadDefects()
             if (!managerView) {
               setMessage({
                 type: 'success',
-                text: 'Report submitted successfully. Your manager will review it before assigning corrective work.'
+                text: hasEvidence
+                  ? 'Report submitted successfully with evidence attached. Your manager will review it before assigning corrective work.'
+                  : 'Report submitted successfully. Your manager will review it before assigning corrective work.'
               })
             }
           }}

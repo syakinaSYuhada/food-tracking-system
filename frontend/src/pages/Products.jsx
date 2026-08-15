@@ -389,13 +389,21 @@ function Products({ user }) {
 
         <div className="list-panel-body">
           {paged.items.length === 0 ? (
-            <EmptyState
-              icon={Package}
-              title="No products found"
-              description="Try adjusting your search or filters, or add a new product."
-              actionLabel={managerView ? 'Add Product' : undefined}
-              onAction={managerView ? () => setShowAdd(true) : undefined}
-            />
+            !filtersCleared ? (
+              <EmptyState
+                icon={Package}
+                title="No products match this filter"
+                description="Try clearing the search or filters."
+              />
+            ) : (
+              <EmptyState
+                icon={Package}
+                title="No products yet"
+                description="Products will appear here once you add them."
+                actionLabel={managerView ? 'Add Product' : undefined}
+                onAction={managerView ? () => setShowAdd(true) : undefined}
+              />
+            )
           ) : (
             <div className="compact-list-stack">
               {paged.items.map((product) => (

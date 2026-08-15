@@ -359,7 +359,7 @@ async function createDefect(req, res) {
 
     if (affected > Number(batch.quantity_produced)) {
       await client.query('ROLLBACK')
-      return errorResponse(res, 'Quantity affected cannot exceed batch quantity produced', 400, 'QTY_EXCEEDS_BATCH')
+      return errorResponse(res, `Quantity affected cannot exceed ${batch.quantity_produced} (batch quantity produced).`, 400, 'QTY_EXCEEDS_BATCH')
     }
 
     const mappingValid = await defectRuleService.isValidStageTypeMapping(
