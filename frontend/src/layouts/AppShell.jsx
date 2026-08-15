@@ -17,6 +17,7 @@ import {
   Menu
 } from 'lucide-react'
 import BrandLogo from '../components/BrandLogo'
+import Button from '../components/Button'
 import NotificationsPanel from '../components/NotificationsPanel'
 import { getDefaultPathForRole, getUserInitials, isManager, isManagerOnlyPath } from '../utils/roleAccess'
 import { buildNotifications } from '../utils/notifications'
@@ -223,14 +224,16 @@ function AppShell({ children, user, onLogout }) {
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-brand-border/80 bg-white/80 px-4 shadow-xs backdrop-blur-xl md:px-6">
           <div className="flex items-center gap-3">
             {isMobile && (
-              <button
+              <Button
                 type="button"
                 aria-label="Open navigation menu"
                 onClick={() => setMobileNavOpen(true)}
-                className="icon-btn"
+                size="sm"
+                color="slate"
+                variant="subtle"
               >
-                <Menu size={18} />
-              </button>
+                <Menu size={18} /> Menu
+              </Button>
             )}
             <NavLink
               to="/profile"

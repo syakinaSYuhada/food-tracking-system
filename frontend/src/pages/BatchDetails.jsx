@@ -95,9 +95,13 @@ export default function BatchDetails() {
 
   return (
     <div className="space-y-4">
-      <div className="text-sm text-brand-muted">
+      <div className="flex flex-wrap items-center gap-3 text-sm text-brand-muted">
         <button type="button" onClick={() => navigate('/batches')} className="inline-flex items-center gap-1 hover:text-brand-ink hover:underline">
           <ArrowLeft size={14} /> Back to Batches
+        </button>
+        <span className="text-brand-border">·</span>
+        <button type="button" onClick={() => navigate(`/products/${batch.productId}`)} className="hover:text-brand-ink hover:underline">
+          View Product
         </button>
       </div>
 
@@ -156,9 +160,6 @@ export default function BatchDetails() {
             <Info label="Mismatch" value={batch.expiryMismatch ? 'Yes' : 'No'} />
             <Info label="Difference" value={batch.expiryDifferenceLabel || (batch.expiryMismatch ? 'Dates differ' : 'Dates match')} />
           </div>
-          <Button className="mt-4" color="slate" variant="subtle" size="sm" onClick={() => navigate(`/products/${batch.productId}`)}>
-            View Product
-          </Button>
         </SectionCard>
       </div>
 

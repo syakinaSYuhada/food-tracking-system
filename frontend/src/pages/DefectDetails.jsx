@@ -714,7 +714,8 @@ function ManagerOverview({
   workflowSteps,
   verifiedActionCount,
   totalActionCount,
-  actions
+  actions,
+  navigate
 }) {
   return (
     <div className="mt-6 space-y-5">
@@ -731,7 +732,18 @@ function ManagerOverview({
       <div className="surface-card p-5">
         <h3 className="text-sm font-bold text-brand-ink">Defect Summary</h3>
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4">
-          <Info label="Product Batch" value={`${defect.product_name} / ${defect.batch_number}`} />
+          <Info
+            label="Product Batch"
+            value={(
+              <button
+                type="button"
+                onClick={() => navigate(`/batches/${defect.batch_id}`)}
+                className="hover:text-brand-600 hover:underline"
+              >
+                {defect.product_name} / {defect.batch_number}
+              </button>
+            )}
+          />
           <Info label="Detected Stage" value={defect.detected_at_stage} />
           <Info label="Defect Type" value={defect.defect_type} />
           <Info label="Problem Level" value={defect.problem_level} />
@@ -869,7 +881,18 @@ function WorkerOverview({ defect, visibleActions, workflow, onStartAction, navig
       <div className="surface-card p-5">
         <h3 className="text-sm font-bold text-brand-ink">Defect Summary</h3>
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <Info label="Product Batch" value={`${defect.product_name} / ${defect.batch_number}`} />
+          <Info
+            label="Product Batch"
+            value={(
+              <button
+                type="button"
+                onClick={() => navigate(`/batches/${defect.batch_id}`)}
+                className="hover:text-brand-600 hover:underline"
+              >
+                {defect.product_name} / {defect.batch_number}
+              </button>
+            )}
+          />
           <Info label="Defect Type" value={defect.defect_type} />
           <Info label="Qty Affected" value={defect.qty_affected} />
           <Info label="Problem Level" value={defect.problem_level} />
@@ -989,10 +1012,10 @@ export default function DefectDetails({ user }) {
   const workerReportedDefect = Number(defect?.created_by) === Number(currentUser?.id)
   const workerHasAccess = managerView || workerHasAssignedAction || workerReportedDefect
   const tabs = managerView
-    ? [['overview', 'Overview'], ['actions', 'Corrective Actions'], ['root', 'Investigation'], ['activity', 'Activity']]
+    ? [['overview', 'Overview'], ['actions', `Corrective Actions (${actions.length})`], ['root', 'Investigation'], ['activity', 'Activity']]
     : [
         ['overview', 'Overview'],
-        ...(workerHasAssignedAction ? [['actions', 'My Work']] : []),
+        ...(workerHasAssignedAction ? [['actions', `My Work (${visibleActions.length})`]] : []),
         ...(workerHasAssignedAction || workerReportedDefect ? [['root', 'What Caused It']] : []),
         ['activity', 'Activity']
       ]
@@ -1224,7 +1247,13 @@ export default function DefectDetails({ user }) {
           <div>
             <p className="page-eyebrow">Defect Record</p>
             <h1 className="mt-1 text-2xl font-bold text-brand-ink">{defect.defect_code} — {defect.defect_type}</h1>
-            <p className="text-sm text-brand-muted">{defect.product_name} / {defect.batch_number}</p>
+            <button
+              type="button"
+              onClick={() => navigate(`/batches/${defect.batch_id}`)}
+              className="text-sm text-brand-muted hover:text-brand-ink hover:underline"
+            >
+              {defect.product_name} / {defect.batch_number}
+            </button>
             <p className="text-sm text-brand-muted">Reported {formatDate(defect.created_at)}{defect.reported_by_name ? ` by ${defect.reported_by_name}` : ''}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -1337,6 +1366,7 @@ export default function DefectDetails({ user }) {
               verifiedActionCount={verifiedActionCount}
               totalActionCount={totalActionCount}
               actions={actions}
+              navigate={navigate}
             />
           ) : (
             <WorkerOverview
