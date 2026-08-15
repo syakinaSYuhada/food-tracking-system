@@ -62,6 +62,15 @@ function normalizeAction(row) {
     qtyDiscarded: Number(row.qty_discarded || 0),
     qtyReleased: Number(row.qty_released || 0),
     qtyOnHold: Number(row.qty_on_hold || 0),
+    // Already consumed by OTHER actions on this same defect (this action's own
+    // contribution isn't added to the defect until it completes), so the
+    // completion form can validate against remaining capacity instead of the
+    // defect's full qty_affected -- see completeCorrectiveAction's cumulative check.
+    handledByOtherActions: Number(row.defect_qty_relabelled || 0) +
+      Number(row.defect_qty_repacked || 0) +
+      Number(row.defect_qty_reworked || 0) +
+      Number(row.defect_qty_released || 0) +
+      Number(row.defect_qty_discarded || 0),
     calculatedLoss: row.calculated_loss != null ? Number(row.calculated_loss) : null,
     investigationFinding: row.investigation_finding,
     actionTaken: row.action_taken,
@@ -256,11 +265,13 @@ export default function CorrectiveActionDetails({ user }) {
 
     setEvidenceError(false)
 
+    const remainingCapacity = Math.max(0, Number(action.qtyAffected || 0) - Number(action.handledByOtherActions || 0))
+
     const computedOnHold = action?.containmentStatus === 'No Hold Needed'
       ? 0
       : Math.max(
         0,
-        Number(action.qtyAffected || 0) - (
+        remainingCapacity - (
           Number(form.qty_relabelled || 0) +
           Number(form.qty_repacked || 0) +
           Number(form.qty_reworked || 0) +
@@ -271,7 +282,7 @@ export default function CorrectiveActionDetails({ user }) {
 
     if (action.type === 'product_handling') {
       const validation = validateHandledQuantities({
-        qty_affected: action.qtyAffected,
+        qty_affected: remainingCapacity,
         qty_relabelled: form.qty_relabelled,
         qty_repacked: form.qty_repacked,
         qty_reworked: form.qty_reworked,
@@ -382,12 +393,16 @@ export default function CorrectiveActionDetails({ user }) {
     action.investigationFinding || action.actionTaken || action.completionNotes || action.relatedToolChecked
   )
   const affected = Number(action.qtyAffected || 0)
+  const handledByOtherActions = Number(action.handledByOtherActions || 0)
+  // Other actions on this same defect may have already accounted for part of qty_affected;
+  // validate this action's own form against what's left, matching the backend's cumulative check.
+  const remainingCapacity = Math.max(0, affected - handledByOtherActions)
   // compute on-hold as remainder to match backend semantics
   const computedOnHold = action?.containmentStatus === 'No Hold Needed'
     ? 0
     : Math.max(
       0,
-      affected - (
+      remainingCapacity - (
         Number(form.qty_relabelled || 0) +
         Number(form.qty_repacked || 0) +
         Number(form.qty_reworked || 0) +
@@ -398,7 +413,7 @@ export default function CorrectiveActionDetails({ user }) {
 
   const quantityValidation = action?.type === 'product_handling'
     ? validateHandledQuantities({
-        qty_affected: affected,
+        qty_affected: remainingCapacity,
         qty_relabelled: form.qty_relabelled,
         qty_repacked: form.qty_repacked,
         qty_reworked: form.qty_reworked,
@@ -622,7 +637,7 @@ export default function CorrectiveActionDetails({ user }) {
                         className={
                           !quantityValidation.valid
                             ? 'text-red-600'
-                            : accounted === affected
+                            : accounted === remainingCapacity
                               ? 'text-emerald-700'
                               : 'text-amber-700'
                         }
@@ -633,9 +648,14 @@ export default function CorrectiveActionDetails({ user }) {
                           Number(form.qty_reworked || 0) +
                           Number(form.qty_released || 0) +
                           Number(form.qty_discarded || 0)}{' '}
-                        / {affected} affected
+                        / {remainingCapacity} affected
                       </span>
                     </div>
+                    {handledByOtherActions > 0 && (
+                      <p className="mb-3 text-xs text-brand-muted">
+                        {handledByOtherActions} of {affected} units on this defect are already accounted for by other corrective actions — {remainingCapacity} remain for this action.
+                      </p>
+                    )}
                     {!quantityValidation.valid && (
                       <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
                         {quantityValidation.message}
@@ -671,7 +691,7 @@ export default function CorrectiveActionDetails({ user }) {
                       </p>
                       {action.containmentStatus === 'No Hold Needed' ? (
                         <p className="mb-2 text-xs font-medium text-amber-700">
-                          Remaining unaccounted: {affected - accounted}
+                          Remaining unaccounted: {remainingCapacity - accounted}
                         </p>
                       ) : (
                         <p className="mb-2 text-xs font-medium text-brand-ink">

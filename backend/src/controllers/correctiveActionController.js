@@ -322,6 +322,7 @@ async function getCorrectiveActionById(req, res) {
         d.qty_discarded AS defect_qty_discarded,
         d.qty_on_hold AS defect_qty_on_hold,
         d.qty_reworked AS defect_qty_reworked,
+        d.qty_released AS defect_qty_released,
         d.estimated_loss AS defect_estimated_loss,
         d.loss_status,
         p.product_name,
