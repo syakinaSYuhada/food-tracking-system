@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 import api from '../api/client'
 import PageHeader from '../components/PageHeader'
@@ -19,6 +19,28 @@ import {
 function titleCase(value) {
   if (!value) return '-'
   return String(value).replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function getDayKey(value) {
+  if (!value) return ''
+  return String(value).split('T')[0]
+}
+
+function formatDateGroupLabel(value) {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return getDayKey(value)
+
+  const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const day = startOfDay(date)
+  const today = startOfDay(new Date())
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  if (day.getTime() === today.getTime()) return 'Today'
+  if (day.getTime() === yesterday.getTime()) return 'Yesterday'
+
+  return date.toLocaleDateString('en-MY', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 function formatDateTime(value) {
@@ -248,9 +270,20 @@ export default function ActivityLog() {
             )
           ) : (
             <div className="compact-list-stack">
-              {logs.map((log) => (
-                <ActivityTimelineRow key={log.id} log={log} />
-              ))}
+              {logs.map((log, index) => {
+                const dayKey = getDayKey(log.created_at)
+                const previousDayKey = index > 0 ? getDayKey(logs[index - 1].created_at) : null
+                return (
+                  <Fragment key={log.id}>
+                    {dayKey !== previousDayKey && (
+                      <div className="px-1 pt-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted first:pt-0">
+                        {formatDateGroupLabel(log.created_at)}
+                      </div>
+                    )}
+                    <ActivityTimelineRow log={log} />
+                  </Fragment>
+                )
+              })}
             </div>
           )}
         </div>
