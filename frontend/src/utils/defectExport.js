@@ -1,5 +1,6 @@
 import { fetchEvidenceBlob, getAuthToken, resolveEvidenceFileUrl } from './assetUrl'
 import { formatCaStatusLabel } from './caStatusLabel'
+import { formatRootCauseStatusLabel } from './rootCauseStatusLabel'
 
 function escapeHtml(value) {
   return String(value ?? '-')
@@ -236,7 +237,7 @@ function buildDefectPrintHtml(defect, actions = [], photos = [], audience = 'man
 
         <h2>Root Cause</h2>
         <table>
-          ${fieldRow('Root Cause Status', titleCase(defect.root_cause_status || 'pending_investigation'))}
+          ${fieldRow('Root Cause Status', formatRootCauseStatusLabel(defect.root_cause_status || 'pending_investigation', audience))}
           ${fieldRow('Suspected Root Cause', defect.suspected_root_cause)}
           ${fieldRow('Confirmed Root Cause', defect.confirmed_root_cause)}
           ${fieldRow('Confirmed By', defect.confirmed_by_name)}

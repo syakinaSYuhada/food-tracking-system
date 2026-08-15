@@ -1226,7 +1226,12 @@ export default function DefectDetails({ user }) {
               </Button>
             )}
             <StatusBadge value={defect.defect_status} prefix="Defect" />
-            <StatusBadge value={defect.root_cause_status || 'pending_investigation'} prefix="Root Cause" />
+            <StatusBadge
+              value={defect.root_cause_status || 'pending_investigation'}
+              prefix="Root Cause"
+              kind="root_cause"
+              audience={managerView ? undefined : 'worker'}
+            />
             {defect.suspected_root_cause && defect.root_cause_status !== 'confirmed' && (
               <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-700">
                 Suspected: {defect.suspected_root_cause}

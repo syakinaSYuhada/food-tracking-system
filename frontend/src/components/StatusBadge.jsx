@@ -1,4 +1,5 @@
 import { formatCaStatusLabel } from '../utils/caStatusLabel'
+import { formatRootCauseStatusLabel } from '../utils/rootCauseStatusLabel'
 
 const dotColors = {
   active: 'bg-emerald-500',
@@ -90,11 +91,13 @@ function StatusBadge({ value, kind, audience, prefix, title }) {
   }
   const statusLabel = kind === 'ca'
     ? formatCaStatusLabel(normalized, audience === 'worker' ? 'worker' : 'manager')
-    : (audience === 'worker' && workerDefectLabels[normalized]
-      ? workerDefectLabels[normalized]
-      : (labels[normalized] || String(value || 'Unknown')
-        .replaceAll('_', ' ')
-        .replace(/\b\w/g, (char) => char.toUpperCase())))
+    : kind === 'root_cause'
+      ? formatRootCauseStatusLabel(normalized, audience === 'worker' ? 'worker' : 'manager')
+      : (audience === 'worker' && workerDefectLabels[normalized]
+        ? workerDefectLabels[normalized]
+        : (labels[normalized] || String(value || 'Unknown')
+          .replaceAll('_', ' ')
+          .replace(/\b\w/g, (char) => char.toUpperCase())))
   const label = prefix ? `${prefix}: ${statusLabel}` : statusLabel
   const styleClass = styles[normalized] || 'bg-slate-100 text-slate-700 border-slate-200/80'
   const dotClass = dotColors[normalized] || 'bg-slate-400'
