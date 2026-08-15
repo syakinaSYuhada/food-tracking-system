@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertCircle, CheckSquare, ClipboardList, Clock, Layers, Package, Plus, TrendingDown, AlertTriangle } from 'lucide-react'
 import api from '../api/client'
@@ -82,11 +82,18 @@ export default function Dashboard({ user }) {
   const [managerDefects, setManagerDefects] = useState([])
   const [period, setPeriod] = useState('this_month')
   const [selectedMonth, setSelectedMonth] = useState(currentMonthValue())
-  const [loading, setLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [isRefetching, setIsRefetching] = useState(false)
+  const [loadError, setLoadError] = useState(null)
+  const hasLoadedOnceRef = useRef(false)
 
   useEffect(() => {
+    let cancelled = false
+
     async function loadDashboard() {
-      setLoading(true)
+      if (hasLoadedOnceRef.current) setIsRefetching(true)
+      else setInitialLoading(true)
+      setLoadError(null)
       try {
         if (managerView) {
           const summaryParams = buildReportPeriodParams(period, selectedMonth)
@@ -97,6 +104,8 @@ export default function Dashboard({ user }) {
             api.get('/corrective-actions'),
             api.get('/defects')
           ])
+
+          if (cancelled) return
 
           const s = summaryRes?.data?.data ?? summaryRes?.data ?? {}
           const r = rootRes?.data?.data ?? rootRes?.data ?? {}
@@ -113,6 +122,8 @@ export default function Dashboard({ user }) {
             api.get('/defects')
           ])
 
+          if (cancelled) return
+
           setWorkerActions(actionsRes.data.data || [])
           setWorkerDefects(defectsRes.data.data || [])
           setSummary(null)
@@ -120,12 +131,22 @@ export default function Dashboard({ user }) {
         }
       } catch (error) {
         console.error(error)
+        if (!cancelled) {
+          setLoadError(hasLoadedOnceRef.current
+            ? 'Could not refresh dashboard data. Showing the last loaded data.'
+            : 'Could not load dashboard data.')
+        }
       } finally {
-        setLoading(false)
+        if (!cancelled) {
+          setInitialLoading(false)
+          setIsRefetching(false)
+          hasLoadedOnceRef.current = true
+        }
       }
     }
 
     loadDashboard()
+    return () => { cancelled = true }
   }, [user, managerView, period, selectedMonth])
 
   const periodActions = useMemo(
@@ -190,7 +211,7 @@ export default function Dashboard({ user }) {
     }
   }, [summary, rootReport])
 
-  if (loading) return <LoadingState label="Loading dashboard..." />
+  if (initialLoading) return <LoadingState label="Loading dashboard..." />
 
   if (!managerView) {
     const overdueActions = workerActions.filter((action) =>
@@ -225,6 +246,15 @@ export default function Dashboard({ user }) {
             Report Defect
           </Button>
         </PageHeader>
+
+        {loadError && (
+          <div className="mb-4 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <span>{loadError}</span>
+            <button type="button" onClick={() => setLoadError(null)} className="font-bold">
+              ×
+            </button>
+          </div>
+        )}
 
         <div className="list-kpi-grid lg:grid-cols-5">
           <KPICard density="command" title="My Reports" value={reportedDefects.length} subtitle="Submitted" icon={<ClipboardList size={18} />} tone="blue" />
@@ -392,9 +422,24 @@ export default function Dashboard({ user }) {
             onChange={setPeriod}
             onMonthChange={setSelectedMonth}
           />
+          {isRefetching && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-brand-muted">
+              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
+              Updating…
+            </span>
+          )}
           <Button onClick={() => navigate('/reports')}>Open Reports</Button>
         </div>
       </PageHeader>
+
+      {loadError && (
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <span>{loadError}</span>
+          <button type="button" onClick={() => setLoadError(null)} className="font-bold">
+            ×
+          </button>
+        </div>
+      )}
 
       <div className="list-kpi-grid lg:grid-cols-4">
         <KPICard density="command" title="Total Defects" value={kpis.total_defects ?? '-'} subtitle="This period" icon={<Layers size={18} />} tone="blue" />
