@@ -15,3 +15,7 @@ loss test/screenshots/
 .qdts_patch_check
 temp_evidence.jpg
 backend/uploads/
+.verify-output/
+.verify-*.mjs
+.verify-*.js
+_audit-*.js
