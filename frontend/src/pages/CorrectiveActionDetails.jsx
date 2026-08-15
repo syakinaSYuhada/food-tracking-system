@@ -518,16 +518,7 @@ export default function CorrectiveActionDetails({ user }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl border border-brand-100 bg-brand-50 p-4">
-          <div className="mb-3 text-base font-bold text-brand-ink">Related Defect</div>
-          <div className="space-y-3">
-            <Info label="Defect ID" value={action.defectCode} />
-            <Info label="Product" value={action.productName} />
-            <Info label="Batch" value={action.batchNumber} />
-          </div>
-        </div>
-
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
           <div className="mb-3 text-base font-bold text-brand-ink">Task</div>
           <p className="text-sm font-semibold text-brand-ink">{action.task}</p>

@@ -37,18 +37,6 @@ function formatDate(date) {
   return String(date).split('T')[0]
 }
 
-function getAffectedQty(defect) {
-  return Number(
-    defect.qty_affected ??
-      defect.quantity_affected ??
-      defect.affected_quantity ??
-      defect.total_affected_units ??
-      defect.quantity_defective ??
-      defect.qty_defective ??
-      0
-  )
-}
-
 function normalizeBatch(batch) {
   return {
     id: batch.id ?? batch.batch_id,
@@ -440,30 +428,9 @@ function DetailRow({ label, value, valueClassName = 'text-brand-ink' }) {
 function BatchRow({ batch, onEdit, managerView }) {
   const navigate = useNavigate()
   const [expanded, setExpanded] = useState(false)
-  const [defects, setDefects] = useState([])
-  const [loadingDefects, setLoadingDefects] = useState(false)
-  const [defectLoadError, setDefectLoadError] = useState(false)
 
-  async function loadDefects() {
-    if (defects.length > 0) return
-
-    try {
-      setLoadingDefects(true)
-      const res = await api.get(`/batches/${batch.id}/defects`)
-      setDefects(res.data.data || [])
-    } catch (error) {
-      console.error(error)
-      setDefectLoadError(true)
-      alert('Batch defects could not be loaded. Please try again.')
-    } finally {
-      setLoadingDefects(false)
-    }
-  }
-
-  async function handleToggle() {
-    const nextExpanded = !expanded
-    setExpanded(nextExpanded)
-    if (nextExpanded) await loadDefects()
+  function handleToggle() {
+    setExpanded((current) => !current)
   }
 
   return (
@@ -510,7 +477,7 @@ function BatchRow({ batch, onEdit, managerView }) {
       expanded={expanded}
       onToggle={handleToggle}
     >
-      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         <DetailPanel title="Batch Details">
           {[
             ['Product Code', batch.productCode],
@@ -575,70 +542,6 @@ function BatchRow({ batch, onEdit, managerView }) {
               Create Defect Record
             </Button>
           )}
-        </DetailPanel>
-
-        <DetailPanel title="Batch Defects">
-          {loadingDefects ? (
-            <p className="text-sm text-brand-muted">Loading defect records...</p>
-          ) : defects.length > 0 ? (
-            <>
-              {[
-                ['Total Defect Records', defects.length],
-                [
-                  'Affected Units',
-                  defects.some((defect) => getAffectedQty(defect) > 0)
-                    ? defects.reduce((sum, defect) => sum + getAffectedQty(defect), 0)
-                    : '-'
-                ],
-                [
-                  'Open Defect Records',
-                  defects.filter(
-                    (defect) => String(defect.defect_status || '').toLowerCase() !== 'closed'
-                  ).length
-                ],
-                [
-                  'Closed Defect Records',
-                  defects.filter(
-                    (defect) => String(defect.defect_status || '').toLowerCase() === 'closed'
-                  ).length
-                ]
-              ].map(([label, value]) => (
-                <DetailRow key={label} label={label} value={value} />
-              ))}
-
-              <Button
-                color="brand"
-                variant="subtle"
-                className="mt-4 w-full"
-                onClick={() => navigate('/defects')}
-              >
-                View Batch Defects
-              </Button>
-            </>
-          ) : batch.defectCount > 0 && defectLoadError ? (
-            <p className="text-sm text-brand-muted">
-              This batch has defect records, but details could not be loaded.
-            </p>
-          ) : (
-            <p className="text-sm text-brand-muted">
-              No defect records have been created for this batch yet.
-            </p>
-          )}
-        </DetailPanel>
-
-        <DetailPanel title="Linked Corrective Actions">
-          <p className="text-xs leading-relaxed text-brand-muted">
-            Corrective actions are created from defect records under this batch.
-          </p>
-
-          <Button
-            color="brand"
-            variant="subtle"
-            className="mt-4 w-full"
-            onClick={() => navigate(`/corrective-actions?batchId=${batch.id}&batchCode=${encodeURIComponent(batch.batchNumber)}`)}
-          >
-            View Linked Actions
-          </Button>
         </DetailPanel>
       </div>
 
