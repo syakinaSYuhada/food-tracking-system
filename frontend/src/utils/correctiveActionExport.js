@@ -28,6 +28,7 @@ function fieldRow(label, value) {
 }
 
 function buildCorrectiveActionPrintHtml(action, audience = 'manager') {
+  const headingLabel = audience === 'worker' ? 'My Work' : 'Corrective Action'
   const expiryMismatch =
     action.correctExpiryDate
     && action.printedExpiryDate
@@ -40,7 +41,7 @@ function buildCorrectiveActionPrintHtml(action, audience = 'manager') {
     <html>
       <head>
         <meta charset="utf-8" />
-        <title>${escapeHtml(action.code)} — Corrective Action</title>
+        <title>${escapeHtml(action.code)} — ${escapeHtml(headingLabel)}</title>
         <style>
           body { font-family: Arial, sans-serif; color: #0c1f1a; padding: 28px; max-width: 900px; margin: 0 auto; }
           h1 { font-size: 22px; margin: 0 0 4px; color: #146356; }
@@ -56,7 +57,7 @@ function buildCorrectiveActionPrintHtml(action, audience = 'manager') {
       </head>
       <body>
         <div class="eyebrow">Kak Norie Quality Defect Tracking</div>
-        <h1>${escapeHtml(action.code)} — Corrective Action</h1>
+        <h1>${escapeHtml(action.code)} — ${escapeHtml(headingLabel)}</h1>
         <p class="meta">
           Defect: ${escapeHtml(action.defectCode)} · ${escapeHtml(action.defectType)} ·
           Status: ${escapeHtml(formatCaStatusLabel(action.status, audience))} ·

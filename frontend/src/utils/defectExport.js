@@ -219,7 +219,7 @@ function buildDefectPrintHtml(defect, actions = [], photos = [], audience = 'man
           ${fieldRow('Related Tool / Machine', defect.related_tool_machine)}
         </table>
 
-        <h2>Corrective Actions</h2>
+        <h2>${audience === 'worker' ? 'My Work' : 'Corrective Actions'}</h2>
         <table class="actions">
           <thead>
             <tr>
