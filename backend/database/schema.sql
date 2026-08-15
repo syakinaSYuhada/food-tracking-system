@@ -182,7 +182,7 @@ CREATE TABLE defects (
 
   loss_rate_per_unit DECIMAL(10, 2) NOT NULL DEFAULT 0,
   estimated_loss DECIMAL(12, 2) NOT NULL DEFAULT 0,
-  loss_status VARCHAR(40) NOT NULL DEFAULT 'pending_review'
+  loss_status VARCHAR(40) NOT NULL DEFAULT 'no_loss'
     CHECK (loss_status IN ('pending_review', 'no_loss', 'loss_confirmed')),
   loss_confirmed_date DATE,
 
@@ -219,7 +219,11 @@ CREATE TABLE defects (
       qty_on_hold >= 0 AND
       qty_reworked >= 0 AND
       qty_released >= 0
-    )
+    ),
+
+  -- qty_on_hold is intentionally excluded: it is not a "handled" bucket (see lossService.validateCumulativeHandledQuantities).
+  CONSTRAINT chk_defect_handled_not_exceed_affected
+    CHECK (qty_relabelled + qty_repacked + qty_reworked + qty_released + qty_discarded <= qty_affected)
 );
 
 -- =========================================================
