@@ -452,7 +452,6 @@ const WORKFLOW_VISUALS = {
 }
 
 function buildWorkflowSteps({
-  actions,
   visibleActions,
   stats,
   rootCauseConfirmed,
@@ -460,9 +459,10 @@ function buildWorkflowSteps({
   managerView,
   workerHasAssignedAction,
   canAssign,
+  workflow,
   handlers
 }) {
-  const totalActions = actions.length
+  const totalActions = stats.total
   const submittedCount = stats.submitted
   const verifiedCount = stats.verified
   const hasActions = totalActions > 0
@@ -482,14 +482,15 @@ function buildWorkflowSteps({
         subtitle: 'Manager has not assigned corrective actions yet',
         status: 'Pending',
         visual: 'warning',
-        hint: managerView ? null : 'Waiting for manager',
+        hint: managerView ? (workflow?.phase === 'assign' ? workflow.nextStep : null) : 'Waiting for manager',
         action: managerView && canAssign ? { label: 'Assign Action', onClick: handlers.assignAction } : null
       },
       {
         title: 'Action Completion',
         subtitle: 'Waiting for assigned actions',
         status: 'Not Started',
-        visual: 'neutral'
+        visual: 'neutral',
+        tag: 'by worker'
       },
       {
         title: 'Manager Verification',
@@ -564,9 +565,11 @@ function buildWorkflowSteps({
     },
     {
       title: 'Action Completion',
-      subtitle: `${submittedCount}/${totalActions} submitted`,
+      subtitle: `${submittedCount}/${totalActions} submitted, ${totalActions - submittedCount} pending`,
       status: step2Complete ? 'Completed' : 'Pending',
       visual: step2Complete ? 'completed' : 'warning',
+      tag: 'by worker',
+      hint: managerView && workflow?.phase === 'worker_complete' ? workflow.nextStep : null,
       action: step2Action
     },
     {
@@ -574,7 +577,7 @@ function buildWorkflowSteps({
       subtitle: `${verifiedCount}/${totalActions} verified`,
       status: step3Status,
       visual: step3Visual,
-      hint: step3Hint,
+      hint: managerView && workflow?.phase === 'manager_verify' ? workflow.nextStep : step3Hint,
       action: step3Action
     },
     {
@@ -584,6 +587,7 @@ function buildWorkflowSteps({
         : 'Available after actions are verified',
       status: rootCauseConfirmed ? 'Completed' : actionsVerified ? 'Ready' : 'Locked',
       visual: rootCauseConfirmed ? 'completed' : actionsVerified ? 'warning' : 'neutral',
+      hint: managerView && workflow?.phase === 'confirm_root_cause' ? workflow.nextStep : null,
       action: step4Action
     },
     {
@@ -595,19 +599,23 @@ function buildWorkflowSteps({
           : 'Available after root cause is finalized',
       status: isClosed ? 'Completed' : rootCauseConfirmed ? 'Ready' : 'Locked',
       visual: isClosed ? 'completed' : rootCauseConfirmed ? 'warning' : 'neutral',
+      hint: managerView && workflow?.phase === 'close' ? workflow.nextStep : null,
       action: step5Action
     }
   ]
 }
 
-function WorkflowStep({ number, title, subtitle, status, visual = 'neutral', hint, action }) {
+function WorkflowStep({ number, title, subtitle, status, visual = 'neutral', hint, action, tag }) {
   const tone = WORKFLOW_VISUALS[visual] || WORKFLOW_VISUALS.neutral
 
   return (
     <div className={`flex items-center gap-4 rounded-xl border p-4 ${tone.container}`}>
       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-bold ${tone.badge}`}>{number}</div>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold text-brand-ink">{title}</div>
+        <div className="text-sm font-semibold text-brand-ink">
+          {title}
+          {tag && <span className="ml-2 text-xs font-normal text-brand-muted">— {tag}</span>}
+        </div>
         {subtitle && <div className="text-xs text-brand-muted">{subtitle}</div>}
         {hint && <div className="mt-1 text-xs text-brand-muted">{hint}</div>}
       </div>
@@ -714,10 +722,7 @@ function ManagerOverview({
   setShowEditDetails,
   onSavedDetails,
   reviewedAt,
-  workflowSteps,
-  verifiedActionCount,
-  totalActionCount,
-  actions
+  workflowSteps
 }) {
   const suggestedHandlingItems = [
     { title: 'Suggested Product Handling', value: defect.suggested_product_handling },
@@ -767,10 +772,11 @@ function ManagerOverview({
           </p>
         )}
 
-        <div className="mt-5 grid grid-cols-1 gap-4 border-t border-brand-border/60 pt-4 md:grid-cols-3">
+        <div className="mt-5 grid grid-cols-1 gap-4 border-t border-brand-border/60 pt-4 md:grid-cols-4">
           <Info label="Detected Stage" value={defect.detected_at_stage} />
           <Info label="Problem Level" value={defect.problem_level} />
           <Info label="Qty Affected" value={defect.qty_affected} />
+          <Info label="Containment" value={defect.containment_status} />
         </div>
 
         <div className="mt-5 border-t border-brand-border/60 pt-4">
@@ -818,22 +824,9 @@ function ManagerOverview({
               visual={step.visual}
               hint={step.hint}
               action={step.action}
+              tag={step.tag}
             />
           ))}
-        </div>
-      </div>
-
-      <div className="surface-card p-5">
-        <h3 className="text-sm font-bold text-brand-ink">Verification Progress</h3>
-        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div className="rounded-2xl border border-brand-border/70 bg-brand-50/60 p-4">
-            <p className="text-sm font-semibold text-brand-muted">Actions Verified</p>
-            <p className="mt-2 text-2xl font-bold text-brand-ink">{verifiedActionCount}/{totalActionCount || 0}</p>
-          </div>
-          <div className="rounded-2xl border border-brand-border/70 bg-brand-50/60 p-4">
-            <p className="text-sm font-semibold text-brand-muted">Actions Pending Verification</p>
-            <p className="mt-2 text-2xl font-bold text-brand-ink">{actions.filter((a) => a.status !== 'verified').length}</p>
-          </div>
         </div>
       </div>
     </div>
@@ -1063,7 +1056,6 @@ export default function DefectDetails({ user }) {
   const rootCauseOptions = rule?.root_cause_options || []
   const workflow = getDefectWorkflow(defect, actions, managerView)
   const { stats, canClose: canCloseDefect, canConfirmRootCause, canAssign, confirmBlockers, blockers: closeBlockers } = workflow
-  const { verified: verifiedActionCount, total: totalActionCount } = stats
   const rootCauseConfirmed = workflow.rootConfirmed
   const workerHasAssignedAction = (defect?.corrective_actions || []).some(
     (action) => Number(action.assigned_to) === Number(currentUser?.id)
@@ -1248,7 +1240,6 @@ export default function DefectDetails({ user }) {
   }
 
   const workflowSteps = buildWorkflowSteps({
-    actions,
     visibleActions,
     stats,
     rootCauseConfirmed,
@@ -1256,6 +1247,7 @@ export default function DefectDetails({ user }) {
     managerView,
     workerHasAssignedAction,
     canAssign,
+    workflow,
     handlers: {
       assignAction: () => openAssignModal('product_handling'),
       viewActions: () => setTab('actions'),
@@ -1351,7 +1343,9 @@ export default function DefectDetails({ user }) {
           />
         </div>
 
-        <NextStepBanner workflow={workflow} activeTab={tab} onGoToTab={setTab} managerView={managerView} />
+        {!(managerView && tab === 'overview') && (
+          <NextStepBanner workflow={workflow} activeTab={tab} onGoToTab={setTab} managerView={managerView} />
+        )}
 
         {hasExpiryMismatch(defect) && (
           <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-900">
@@ -1418,16 +1412,11 @@ export default function DefectDetails({ user }) {
           managerView ? (
             <ManagerOverview
               defect={defect}
-              managerView={managerView}
               showEditDetails={showEditDetails}
               setShowEditDetails={setShowEditDetails}
               onSavedDetails={load}
               reviewedAt={reviewedAt}
               workflowSteps={workflowSteps}
-              verifiedActionCount={verifiedActionCount}
-              totalActionCount={totalActionCount}
-              actions={actions}
-              navigate={navigate}
             />
           ) : (
             <WorkerOverview
