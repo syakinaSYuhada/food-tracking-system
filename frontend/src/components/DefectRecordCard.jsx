@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import ListActionButton from './ListActionButton'
 import EntityRow from './EntityRow'
@@ -61,26 +61,9 @@ function shouldShowWorkerPriorityBadge(priority) {
   return normalized === 'high' || normalized === 'urgent' || normalized === 'critical'
 }
 
-function resolveReporterRole(defect, users = []) {
-  const role = defect.reportedByRole ?? defect.reported_by_role
-  if (role) return role
-
-  const reporterId = defect.createdBy ?? defect.created_by
-  if (reporterId == null || !users.length) return null
-
-  const reporter = users.find((user) => Number(user.id) === Number(reporterId))
-  return reporter?.role ?? null
-}
-
-function shouldShowWorkerReportBadge(defect, managerView, users = []) {
-  if (!managerView) return false
-  return resolveReporterRole(defect, users) === 'worker'
-}
-
 export default function DefectRecordCard({
   defect,
   managerView,
-  users = [],
   workerAssignedDefectIds,
   expanded,
   onToggle,
@@ -90,8 +73,7 @@ export default function DefectRecordCard({
   const accentClass = getCardAccentClass(defect)
   const cardRingClass = getCardRingClass(defect)
   const reviewDueBadge = getReviewDueBadge(defect.reviewDueDate, defect.status, { workerView: !managerView })
-  const showWorkerReportBadge = shouldShowWorkerReportBadge(defect, managerView, users)
-  const showWorkerPriority = !managerView && shouldShowWorkerPriorityBadge(defect.priority)
+  const showPriorityBadge = shouldShowWorkerPriorityBadge(defect.priority)
   const hasAssignedAction = managerView ? undefined : Boolean(workerAssignedDefectIds?.has(Number(defect.id)))
   const Badge = EntityRow.Badge
 
@@ -118,21 +100,22 @@ export default function DefectRecordCard({
               audience={managerView ? undefined : 'worker'}
               title={managerView ? undefined : defectStatusBadgeTitle(defect.status, hasAssignedAction)}
             />
-            {showWorkerReportBadge && <Badge tone="green">Worker report</Badge>}
+            {managerView && <Badge tone="slate">{defect.problemLevel}</Badge>}
+            {showPriorityBadge && (
+              <Badge
+                tone={getPriorityBadgeTone(defect.priority)}
+                title="Defect Priority — how quickly the manager should review this report"
+              >
+                {formatDefectPriorityLabel(defect.priority)} Priority
+              </Badge>
+            )}
             {reviewDueBadge && (
               <Badge
                 tone={reviewDueBadge.tone}
                 title={reviewDueBadge.title || 'Manager review due date — not a corrective action due date'}
               >
+                {reviewDueBadge.tone === 'red' && <AlertTriangle size={10} strokeWidth={2.5} />}
                 {reviewDueBadge.label}
-              </Badge>
-            )}
-            {showWorkerPriority && (
-              <Badge
-                tone={getPriorityBadgeTone(defect.priority)}
-                title="Defect Priority — how quickly the manager should review this report"
-              >
-                {formatDefectPriorityLabel(defect.priority)}
               </Badge>
             )}
           </div>
@@ -160,15 +143,6 @@ export default function DefectRecordCard({
         </div>
 
         <div className="list-row-actions">
-          {managerView && <Badge tone="slate">{defect.problemLevel}</Badge>}
-          {managerView && (
-            <Badge
-              tone={getPriorityBadgeTone(defect.priority)}
-              title="Defect Priority — how quickly the manager should review this report"
-            >
-              {formatDefectPriorityLabel(defect.priority)}
-            </Badge>
-          )}
           <ListActionButton intent="view" onClick={onView} />
           <button
             type="button"

@@ -675,7 +675,6 @@ export default function Defects({ user }) {
   const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
   const [defects, setDefects] = useState([])
-  const [users, setUsers] = useState([])
   const [workerAssignedDefectIds, setWorkerAssignedDefectIds] = useState(new Set())
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -724,14 +723,6 @@ export default function Defects({ user }) {
       setLoading(false)
     }
   }
-
-  useEffect(() => {
-    if (managerView) {
-      api.get('/users')
-        .then((res) => setUsers(res.data.data || []))
-        .catch((error) => console.error(error))
-    }
-  }, [managerView])
 
   useEffect(() => {
     if (managerView || currentUser?.id) {
@@ -1122,7 +1113,6 @@ export default function Defects({ user }) {
                   key={defect.id}
                   defect={defect}
                   managerView={managerView}
-                  users={users}
                   currentUserId={currentUser?.id}
                   workerAssignedDefectIds={workerAssignedDefectIds}
                   expanded={expanded === defect.id}
