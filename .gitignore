@@ -19,3 +19,4 @@ backend/uploads/
 .verify-*.mjs
 .verify-*.js
 _audit-*.js
+.claude/
