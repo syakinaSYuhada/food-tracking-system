@@ -106,10 +106,6 @@ function ProductRow({ product, onReload, managerView }) {
         icon={<div className="list-row-icon bg-brand-50 text-base">{productIcon(product.category)}</div>}
         title={product.name}
         subtitle={`${product.code || '-'} · ${product.category} · ${product.packaging} · ${product.size}`}
-        meta={[
-          { label: 'Defects', value: `${product.defects} defects` },
-          { label: 'Batches', value: `${product.batches} batches` }
-        ]}
         badges={[
           { label: `${product.defects} defects`, tone: Number(product.defects) > 0 ? 'red' : 'slate' },
           { label: `${product.batches} batches`, tone: 'blue' }
