@@ -1108,48 +1108,68 @@ export default function Defects({ user }) {
                 />
               )
             ) : (
-              paged.items.map((defect) => (
-                <DefectRecordCard
-                  key={defect.id}
-                  defect={defect}
-                  managerView={managerView}
-                  currentUserId={currentUser?.id}
-                  workerAssignedDefectIds={workerAssignedDefectIds}
-                  expanded={expanded === defect.id}
-                  onToggle={() => setExpanded(expanded === defect.id ? null : defect.id)}
-                  onView={() => navigate(`/defects/${defect.id}`)}
-                >
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                    <DefectRecordCard.InfoCard title="Defect Information">
-                      <Info label="Defect ID" value={defect.code} />
-                      <Info label="Defect Type" value={defect.defectType} />
-                      <Info label="Detection Stage" value={defect.detectedStage} />
-                      <Info label="Qty Affected" value={defect.qtyAffected} />
-                      <Info label="Containment" value={defect.containmentStatus} />
-                    </DefectRecordCard.InfoCard>
+              paged.items.map((defect) => {
+                const hasReviewUrgencyContent = Boolean(
+                  defect.priority || defect.reviewDueDate || defect.urgencyReason
+                )
+                const hasHandlingContent = Boolean(
+                  defect.suggestedProductHandling || defect.suggestedMachineHandling || defect.relatedToolMachine
+                )
 
-                    <DefectRecordCard.InfoCard title="Manager Review Urgency">
-                      <Info label="Defect Priority" value={titleCase(defect.priority)} />
-                      <Info label="Manager Review Due Date" value={defect.reviewDueDate || '-'} />
-                      <Info label="Urgency Reason" value={defect.urgencyReason || '-'} />
-                      <p className="mt-2 text-xs text-brand-muted">
-                        Set by worker at report time. Not a corrective action due date.
-                      </p>
-                    </DefectRecordCard.InfoCard>
+                return (
+                  <DefectRecordCard
+                    key={defect.id}
+                    defect={defect}
+                    managerView={managerView}
+                    currentUserId={currentUser?.id}
+                    workerAssignedDefectIds={workerAssignedDefectIds}
+                    expanded={expanded === defect.id}
+                    onToggle={() => setExpanded(expanded === defect.id ? null : defect.id)}
+                    onView={() => navigate(`/defects/${defect.id}`)}
+                  >
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                      <DefectRecordCard.InfoCard title="Defect Information">
+                        <Info label="Defect Type" value={defect.defectType} />
+                        <Info label="Detection Stage" value={defect.detectedStage} />
+                        <Info label="Containment" value={defect.containmentStatus} />
+                      </DefectRecordCard.InfoCard>
 
-                    <DefectRecordCard.InfoCard title="Handling Recommendation">
-                      <Info label="Suggested Product Handling" value={defect.suggestedProductHandling} />
-                      <Info label="Suggested Machine / Process Check" value={defect.suggestedMachineHandling} />
-                      <Info label="Related Tool / Area" value={defect.relatedToolMachine} />
-                      <Info label={managerView ? 'Corrective Action Progress' : 'My Work Progress'} value={defect.actionProgress} />
-                    </DefectRecordCard.InfoCard>
+                      {hasReviewUrgencyContent && (
+                        <DefectRecordCard.InfoCard title="Manager Review Urgency">
+                          <Info label="Defect Priority" value={titleCase(defect.priority)} />
+                          {defect.reviewDueDate && (
+                            <Info label="Manager Review Due Date" value={defect.reviewDueDate} />
+                          )}
+                          {defect.urgencyReason && (
+                            <Info label="Urgency Reason" value={defect.urgencyReason} />
+                          )}
+                          <p className="mt-2 text-xs text-brand-muted">
+                            Set by worker at report time. Not a corrective action due date.
+                          </p>
+                        </DefectRecordCard.InfoCard>
+                      )}
 
-                    <DefectRecordCard.InfoCard title="Description">
-                      <div className="text-body text-brand-muted">{defect.description || 'No description provided.'}</div>
-                    </DefectRecordCard.InfoCard>
-                  </div>
-                </DefectRecordCard>
-              ))
+                      {hasHandlingContent && (
+                        <DefectRecordCard.InfoCard title="Handling Recommendation">
+                          {defect.suggestedProductHandling && (
+                            <Info label="Suggested Product Handling" value={defect.suggestedProductHandling} />
+                          )}
+                          {defect.suggestedMachineHandling && (
+                            <Info label="Suggested Machine / Process Check" value={defect.suggestedMachineHandling} />
+                          )}
+                          {defect.relatedToolMachine && (
+                            <Info label="Related Tool / Area" value={defect.relatedToolMachine} />
+                          )}
+                        </DefectRecordCard.InfoCard>
+                      )}
+
+                      <DefectRecordCard.InfoCard title="Description">
+                        <div className="text-body text-brand-muted">{defect.description || 'No description provided.'}</div>
+                      </DefectRecordCard.InfoCard>
+                    </div>
+                  </DefectRecordCard>
+                )
+              })
             )}
             </div>
           </div>
