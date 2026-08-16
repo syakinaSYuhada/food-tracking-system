@@ -1,8 +1,8 @@
+import { AlertTriangle } from 'lucide-react'
 import ListActionButton from './ListActionButton'
 import EntityRow from './EntityRow'
 import StatusBadge from './StatusBadge'
 import { getDaysLate, isActionOverdue } from '../utils/dueDate'
-import { formatCaStatusLabel } from '../utils/caStatusLabel'
 import { getWorkerActionProgressHint } from '../utils/workerActionProgressHint'
 
 function formatDisplayDate(value) {
@@ -102,13 +102,24 @@ export default function CorrectiveActionRow({
           <div className="flex flex-wrap items-center gap-1">
             <span className="list-row-code">{action.code}</span>
             <StatusBadge kind="ca" value={action.status} audience={managerView ? undefined : 'worker'} />
-            {!managerView && highPriority && (
+            {pendingReview && !overdue && (
+              <Badge tone="amber">Awaiting Verification</Badge>
+            )}
+            {highPriority && (
               <Badge tone={priority === 'critical' ? 'red' : 'orange'}>
-                CA {titleCase(action.priority)}
+                {titleCase(action.priority)} Priority
               </Badge>
             )}
             {!managerView && action.evidenceRequired && (
               <Badge tone="amber">Evidence Required</Badge>
+            )}
+            {overdue && (
+              <Badge tone="red">
+                <AlertTriangle size={10} strokeWidth={2.5} />
+                {managerView
+                  ? `Overdue${daysLate > 0 ? ` · ${daysLate}d` : ''}`
+                  : `Action Required · Overdue by ${daysLate || 1} day${daysLate === 1 ? '' : 's'}`}
+              </Badge>
             )}
           </div>
           <p className="list-row-meta line-clamp-1 !text-brand-ink">{action.task}</p>
@@ -156,21 +167,6 @@ export default function CorrectiveActionRow({
           onClick={(event) => event.stopPropagation()}
           onKeyDown={(event) => event.stopPropagation()}
         >
-          {overdue && (
-            <Badge tone="red">
-              {managerView
-                ? `Overdue${daysLate > 0 ? ` · ${daysLate}d` : ''}`
-                : `Action Required · Overdue by ${daysLate || 1} day${daysLate === 1 ? '' : 's'}`}
-            </Badge>
-          )}
-          {pendingReview && !overdue && (
-            <Badge tone="amber">{formatCaStatusLabel('completed')}</Badge>
-          )}
-          {managerView && highPriority && (
-            <Badge tone={priority === 'critical' ? 'red' : 'orange'}>
-              {titleCase(action.priority)}
-            </Badge>
-          )}
           <ListActionButton intent="view" onClick={onOpen} />
           {showManagerActions && (
             <>
