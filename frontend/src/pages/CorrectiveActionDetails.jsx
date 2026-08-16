@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Printer, XCircle } from 'lucide-react'
+import { ArrowLeft, Calendar, CalendarCheck, Clock, Eye, FileSearch, Flag, Link2, Printer, Search, User, XCircle } from 'lucide-react'
 import api from '../api/client'
 import StatusBadge from '../components/StatusBadge'
 import Button from '../components/Button'
@@ -29,15 +29,6 @@ function titleCase(value) {
 // step at all — so the header badge stays visible for those two as the only place that
 // distinguishes them.
 const STEPPER_REPRESENTABLE_STATUSES = ['assigned', 'in_progress', 'completed', 'verified']
-
-function Info({ label, value }) {
-  return (
-    <div>
-      <p className="text-[11px] font-semibold uppercase text-brand-muted">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-brand-ink">{value || '-'}</p>
-    </div>
-  )
-}
 
 function normalizeAction(row) {
   return {
@@ -433,7 +424,7 @@ export default function CorrectiveActionDetails({ user }) {
 
   return (
     <div className="space-y-6">
-      <div className="text-sm text-brand-muted">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-brand-muted">
         <button
           type="button"
           onClick={() => navigate('/corrective-actions')}
@@ -442,6 +433,11 @@ export default function CorrectiveActionDetails({ user }) {
           <ArrowLeft size={14} />
           Back to {managerView ? 'Corrective Actions' : 'My Work'}
         </button>
+        {isActionOverdue(action.dueDate, action.status) && (
+          <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
+            Overdue
+          </span>
+        )}
       </div>
 
       <div className="surface-card-accent p-6">
@@ -449,10 +445,6 @@ export default function CorrectiveActionDetails({ user }) {
           <div>
             <p className="page-eyebrow">{managerView ? 'Corrective Action' : 'My Work'}</p>
             <h1 className="mt-1 text-2xl font-bold text-brand-ink">{action.code}</h1>
-            <p className="mt-1 text-sm text-brand-muted">{action.task}</p>
-            <p className="text-sm text-brand-muted">
-              {action.defectCode} · {action.productName || '-'} · Batch {action.batchNumber || '-'}
-            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button color="slate" variant="subtle" size="sm" onClick={() => printCorrectiveActionSummary(action, managerView ? 'manager' : 'worker')}>
@@ -466,11 +458,18 @@ export default function CorrectiveActionDetails({ user }) {
                 title={managerView ? getCaStatusExplanation(action.status) : undefined}
               />
             )}
-            {isActionOverdue(action.dueDate, action.status) && (
-              <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
-                Overdue
-              </span>
-            )}
+            <Button
+              color="slate"
+              variant="subtle"
+              size="sm"
+              onClick={() => navigate(
+                ['completed', 'verified', 'rejected'].includes(action.status)
+                  ? `/defects/${action.defectId}?tab=root-cause`
+                  : `/defects/${action.defectId}`
+              )}
+            >
+              <Eye size={14} /> View Defect
+            </Button>
           </div>
         </div>
 
@@ -515,7 +514,7 @@ export default function CorrectiveActionDetails({ user }) {
           </div>
         )}
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex items-start">
           {['Pending', 'In Progress', 'Submitted', 'Verified'].map((label, idx) => {
             const statusOrder = ['assigned', 'in_progress', 'completed', 'verified']
             const mappedStatus = action.status === 'rejected' ? 'assigned' : action.status
@@ -524,32 +523,47 @@ export default function CorrectiveActionDetails({ user }) {
             const done = stepIndex < currentIndex
             const active = stepIndex === currentIndex
             return (
-              <div key={label} className="flex items-center gap-3">
-                <div className="flex items-center">
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm ${done ? 'bg-emerald-600 text-white' : active ? 'bg-brand-600 text-white' : 'bg-brand-100 text-brand-600'}`}>
+              <div key={label} className={`flex items-center ${idx < 3 ? 'flex-1' : ''}`}>
+                <div className="flex flex-col items-center">
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${done ? 'bg-emerald-600 text-white' : active ? 'bg-brand-600 text-white' : 'bg-brand-100 text-brand-600'}`}>
                     {done ? '✓' : stepIndex + 1}
                   </div>
-                  {idx < 3 && (
-                    <div className={`ml-2 mr-2 hidden h-1 w-16 sm:block md:w-20 ${stepIndex < currentIndex ? 'bg-emerald-300' : 'bg-brand-border'}`} />
-                  )}
+                  <div className="mt-2 text-xs font-semibold text-brand-muted">{label}</div>
                 </div>
-                <div className="text-sm font-semibold text-brand-muted">{label}</div>
+                {idx < 3 && (
+                  <div className={`mx-2 h-1 flex-1 rounded-full ${stepIndex < currentIndex ? 'bg-emerald-300' : 'bg-brand-border'}`} />
+                )}
               </div>
             )
           })}
         </div>
+
+        <div className="mt-6 border-t border-brand-border/60 pt-4">
+          <p className="text-[11px] font-semibold uppercase text-brand-muted">Action Type</p>
+          <p className="mt-1 text-sm font-semibold text-brand-ink">{action.type === 'product_handling' ? 'Product Handling' : 'Corrective Action'}</p>
+          <p className="mt-3 text-sm text-brand-ink">{action.task}</p>
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-brand-muted">
+            <Link2 size={14} className="shrink-0" />
+            Related Defect: {action.defectCode} · {action.productName || '-'} · Batch {action.batchNumber || '-'}
+          </p>
+        </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className={`rounded-2xl border border-amber-100 bg-amber-50 p-4 ${managerView ? 'lg:col-span-2' : ''}`}>
-          <div className="mb-3 text-base font-bold text-brand-ink">Task</div>
-          <p className="text-sm font-semibold text-brand-ink">{action.task}</p>
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            <Info label="Action Type" value={action.type === 'product_handling' ? 'Product Handling' : 'Corrective Action'} />
-            <Info label="CA Priority" value={titleCase(action.priority)} />
+      <div className="surface-card p-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+          <div className="flex items-start gap-2">
+            <Flag size={16} className="mt-0.5 shrink-0 text-brand-muted" />
             <div>
-              <p className="text-[11px] font-semibold uppercase text-brand-muted">CA Due Date</p>
+              <p className="text-[11px] font-semibold uppercase text-brand-muted">Priority</p>
+              <p className="mt-1 text-sm font-semibold text-brand-ink">{titleCase(action.priority)}</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2">
+            <Calendar size={16} className="mt-0.5 shrink-0 text-brand-muted" />
+            <div>
+              <p className="text-[11px] font-semibold uppercase text-brand-muted">Due Date</p>
               {canEditDueDate && editingDueDate ? (
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <input
@@ -577,31 +591,62 @@ export default function CorrectiveActionDetails({ user }) {
               )}
             </div>
           </div>
-        </div>
 
-        {!managerView && (
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-            <div className="mb-3 text-base font-bold text-brand-ink">Complete These 4 Steps</div>
-            <ul className="space-y-2 text-sm text-brand-muted">
-              {[
-                'Enter Investigation Result',
-                'Enter Action Taken',
-                action.evidenceRequired ? 'Upload Evidence' : 'Evidence Not Required',
-                'Submit Completion'
-              ].map((item, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <div className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-600 text-xs text-white">{i + 1}</div>
-                  <div>{item}</div>
-                </li>
-              ))}
-            </ul>
+          <div className="flex items-start gap-2">
+            <User size={16} className="mt-0.5 shrink-0 text-brand-muted" />
+            <div>
+              <p className="text-[11px] font-semibold uppercase text-brand-muted">Assigned To</p>
+              <p className="mt-1 text-sm font-semibold text-brand-ink">{action.assignedToName || '-'}</p>
+            </div>
           </div>
-        )}
+
+          <div className="flex items-start gap-2">
+            <CalendarCheck size={16} className="mt-0.5 shrink-0 text-brand-muted" />
+            <div>
+              <p className="text-[11px] font-semibold uppercase text-brand-muted">Assigned On</p>
+              <p className="mt-1 text-sm font-semibold text-brand-ink">{action.created_at ? String(action.created_at).split('T')[0] : '-'}</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2">
+            <Clock size={16} className="mt-0.5 shrink-0 text-brand-muted" />
+            <div>
+              <p className="text-[11px] font-semibold uppercase text-brand-muted">Last Updated</p>
+              <p className="mt-1 text-sm font-semibold text-brand-ink">{action.updated_at ? String(action.updated_at).split('T')[0] : '-'}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
+      {!managerView && (
+        <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+          <div className="mb-3 text-base font-bold text-brand-ink">Complete These 4 Steps</div>
+          <ul className="space-y-2 text-sm text-brand-muted">
+            {[
+              'Enter Investigation Result',
+              'Enter Action Taken',
+              action.evidenceRequired ? 'Upload Evidence' : 'Evidence Not Required',
+              'Submit Completion'
+            ].map((item, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <div className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-600 text-xs text-white">{i + 1}</div>
+                <div>{item}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="pt-2">
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_320px]">
-          <SectionCard title="Completion / Investigation">
+        <div className="grid grid-cols-1 gap-4">
+          <SectionCard
+            title={(
+              <span className="inline-flex items-center gap-2">
+                <Search size={16} className="text-brand-muted" />
+                Investigation / Completion
+              </span>
+            )}
+          >
               {managerView && (
                 <div className="mb-4 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-700">
                   Read-only manager view. Findings are entered by <b>the assigned worker</b>.
@@ -765,42 +810,26 @@ export default function CorrectiveActionDetails({ user }) {
                   <div><span className="font-semibold text-brand-ink">Completion Notes:</span> {action.completionNotes || '-'}</div>
                 </div>
               ) : (
-                <p className="text-sm text-brand-muted">No findings submitted yet. Waiting for the assigned worker to complete this action.</p>
+                <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+                  <FileSearch size={40} className="text-brand-muted/50" />
+                  <div>
+                    <p className="text-sm font-semibold text-brand-ink">No findings submitted yet.</p>
+                    <p className="mt-1 text-sm text-brand-muted">Waiting for the assigned worker to complete this action.</p>
+                  </div>
+                </div>
               )}
           </SectionCard>
-
-          <div className="space-y-4">
-              <SectionCard title="Action Details">
-                <div className="space-y-3">
-                  <Info label="Action ID" value={action.code} />
-                  <Info label="Assigned To" value={action.assignedToName} />
-                  <Info label="Assigned On" value={action.created_at ? String(action.created_at).split('T')[0] : '-'} />
-                </div>
-              </SectionCard>
-          </div>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-brand-border/70 pt-4">
-        <Button
-          color="slate"
-          variant="subtle"
-          onClick={() => navigate(
-            ['completed', 'verified', 'rejected'].includes(action.status)
-              ? `/defects/${action.defectId}?tab=root-cause`
-              : `/defects/${action.defectId}`
-          )}
-        >
-          View Defect
-        </Button>
-
         {managerView && action.status === 'completed' && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
             Manager review: use <b>Reject</b> or <b>Verify</b> below
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="ml-auto flex flex-wrap items-center gap-3">
           {!managerView && isAssignee && !isClosedDefect && (action.status === 'assigned' || action.status === 'rejected') && (
             <Button onClick={startAction}>
               {action.status === 'rejected' ? 'Restart Action' : 'Start Action'}
