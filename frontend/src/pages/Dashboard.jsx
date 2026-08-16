@@ -430,186 +430,200 @@ export default function Dashboard({ user }) {
         ) : null}
       />
 
-      <div className="list-kpi-grid lg:grid-cols-4">
-        <KPICard density="command" title="Total Defects" value={kpis.total_defects ?? '-'} subtitle="This period" icon={<Layers size={18} />} tone="blue" />
-        <KPICard density="command" title="Open Defects" value={kpis.open_defects ?? '-'} subtitle="Not closed" icon={<Package size={18} />} tone="amber" />
-        <KPICard density="command" title="Open Actions" value={kpis.open_actions ?? '-'} subtitle="In progress" icon={<CheckSquare size={18} />} tone="purple" />
-        <KPICard
-          density="command"
-          title="Expiry Mismatches"
-          value={kpis.expiry_mismatch_batches ?? 0}
-          subtitle="Label vs retort"
-          icon={<AlertTriangle size={18} />}
-          tone="red"
-          highlight={Number(kpis.expiry_mismatch_batches) > 0}
-          onClick={() => navigate('/reports?tab=traceability&view=expiry-defect-cases')}
-        />
+      <div className="space-y-3">
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Performance Overview</p>
+
+        <div className="list-kpi-grid lg:grid-cols-4">
+          <KPICard density="command" title="Total Defects" value={kpis.total_defects ?? '-'} subtitle="This period" icon={<Layers size={18} />} tone="blue" />
+          <KPICard density="command" title="Open Defects" value={kpis.open_defects ?? '-'} subtitle="Not closed" icon={<Package size={18} />} tone="amber" />
+          <KPICard density="command" title="Open Actions" value={kpis.open_actions ?? '-'} subtitle="In progress" icon={<CheckSquare size={18} />} tone="purple" />
+          <KPICard
+            density="command"
+            title="Expiry Mismatches"
+            value={kpis.expiry_mismatch_batches ?? 0}
+            subtitle="Label vs retort"
+            icon={<AlertTriangle size={18} />}
+            tone="red"
+            highlight={Number(kpis.expiry_mismatch_batches) > 0}
+            onClick={() => navigate('/reports?tab=traceability&view=expiry-defect-cases')}
+          />
+        </div>
+
+        <div className="list-kpi-strip lg:grid-cols-3">
+          <KPICard
+            density="command"
+            title="Loss at Risk"
+            value={money(kpis.loss_at_risk ?? 0)}
+            subtitle="Open defects · held inventory"
+            icon={<AlertTriangle size={18} />}
+            tone="amber"
+            highlight={Number(kpis.loss_at_risk) > 0}
+          />
+          <KPICard
+            density="command"
+            title="Pending Loss"
+            value={money(kpis.pending_loss ?? 0)}
+            subtitle="Discarded · case still open"
+            icon={<TrendingDown size={18} />}
+            tone="purple"
+            highlight={Number(kpis.pending_loss) > 0}
+          />
+          <KPICard
+            density="command"
+            title="Confirmed Loss"
+            value={money(kpis.confirmed_loss ?? 0)}
+            subtitle="Finalized on close"
+            icon={<TrendingDown size={18} />}
+            tone="red"
+          />
+        </div>
       </div>
 
-      <div className="list-kpi-strip lg:grid-cols-3">
-        <KPICard
-          density="command"
-          title="Loss at Risk"
-          value={money(kpis.loss_at_risk ?? 0)}
-          subtitle="Open defects · held inventory"
-          icon={<AlertTriangle size={18} />}
-          tone="amber"
-          highlight={Number(kpis.loss_at_risk) > 0}
-        />
-        <KPICard
-          density="command"
-          title="Pending Loss"
-          value={money(kpis.pending_loss ?? 0)}
-          subtitle="Discarded · case still open"
-          icon={<TrendingDown size={18} />}
-          tone="purple"
-          highlight={Number(kpis.pending_loss) > 0}
-        />
-        <KPICard
-          density="command"
-          title="Confirmed Loss"
-          value={money(kpis.confirmed_loss ?? 0)}
-          subtitle="Finalized on close"
-          icon={<TrendingDown size={18} />}
-          tone="red"
-        />
-      </div>
+      {(pendingReviewCount > 0 || readyForRootCause.length > 0) && (
+        <div className="space-y-3">
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Awaiting Your Sign-off</p>
 
-      {pendingReviewCount > 0 && (
-        <SectionCard
-          title="Pending Review — Corrective Actions"
-          subtitle={`Worker-submitted actions waiting for verify or reject. (${pendingReviewCount} pending)`}
-        >
-          <div className="space-y-3">
-            {pendingReviewActions.slice(0, 5).map((action) => (
-              <AnalyticRow
-                key={action.id}
-                accentClass="bg-amber-500"
-                title={action.action_code}
-                subtitle={action.task}
-                meta={`${action.defect_code} · ${action.assigned_to_name} · ${action.product_name}`}
-                badge={<StatusBadge kind="ca" value={action.ca_status} />}
-                action={(
-                  <ListActionButton intent="review" onClick={() => navigate(`/corrective-actions/${action.id}`)} />
-                )}
-              />
-            ))}
-          </div>
-          <ListActionButton intent="open" label="Open All Corrective Actions" className="mt-2 list-action-btn" onClick={() => navigate('/corrective-actions')} />
-        </SectionCard>
+          {pendingReviewCount > 0 && (
+            <SectionCard
+              title="Pending Review — Corrective Actions"
+              subtitle={`Worker-submitted actions waiting for verify or reject. (${pendingReviewCount} pending)`}
+            >
+              <div className="space-y-3">
+                {pendingReviewActions.slice(0, 5).map((action) => (
+                  <AnalyticRow
+                    key={action.id}
+                    accentClass="bg-amber-500"
+                    title={action.action_code}
+                    subtitle={action.task}
+                    meta={`${action.defect_code} · ${action.assigned_to_name} · ${action.product_name}`}
+                    badge={<StatusBadge kind="ca" value={action.ca_status} />}
+                    action={(
+                      <ListActionButton intent="review" onClick={() => navigate(`/corrective-actions/${action.id}`)} />
+                    )}
+                  />
+                ))}
+              </div>
+              <ListActionButton intent="open" label="Open All Corrective Actions" className="mt-2 list-action-btn" onClick={() => navigate('/corrective-actions')} />
+            </SectionCard>
+          )}
+
+          {readyForRootCause.length > 0 && (
+            <SectionCard
+              title="Ready for Root Cause Confirmation"
+              subtitle={`Actions verified, awaiting your root cause sign-off. (${readyForRootCause.length} ready)`}
+            >
+              <div className="space-y-3">
+                {readyForRootCause.slice(0, 5).map((defect) => (
+                  <AnalyticRow
+                    key={defect.id}
+                    accentClass="bg-slate-500"
+                    title={`${defect.defect_code} — ${defect.defect_type}`}
+                    subtitle={`${defect.product_name} · Batch ${defect.batch_number}`}
+                    meta={`${defect.action_progress} · Reported ${formatDate(defect.created_at)}`}
+                    badge={<StatusBadge kind="root_cause" value={defect.root_cause_status} />}
+                    action={(
+                      <ListActionButton intent="review" onClick={() => navigate(`/defects/${defect.id}?tab=root-cause`)} />
+                    )}
+                  />
+                ))}
+              </div>
+            </SectionCard>
+          )}
+        </div>
       )}
 
-      {readyForRootCause.length > 0 && (
-        <SectionCard
-          title="Ready for Root Cause Confirmation"
-          subtitle={`Actions verified, awaiting your root cause sign-off. (${readyForRootCause.length} ready)`}
-        >
-          <div className="space-y-3">
-            {readyForRootCause.slice(0, 5).map((defect) => (
-              <AnalyticRow
-                key={defect.id}
-                accentClass="bg-slate-500"
-                title={`${defect.defect_code} — ${defect.defect_type}`}
-                subtitle={`${defect.product_name} · Batch ${defect.batch_number}`}
-                meta={`${defect.action_progress} · Reported ${formatDate(defect.created_at)}`}
-                badge={<StatusBadge kind="root_cause" value={defect.root_cause_status} />}
-                action={(
-                  <ListActionButton intent="review" onClick={() => navigate(`/defects/${defect.id}?tab=root-cause`)} />
-                )}
+      <div className="space-y-3">
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Trends &amp; Analysis</p>
+
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
+          <ChartCard
+            title="Defect Trend"
+            subtitle="Defect volume over time for the selected period."
+            className="lg:col-span-3"
+          >
+            <DefectTrendChart
+              data={trendData}
+              emptyMessage="No defects recorded for this period."
+            />
+          </ChartCard>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
+          <ChartCard
+            title="Defects by Type"
+            subtitle="Most frequent defect categories in the selected period."
+            className="lg:col-span-2"
+          >
+            <DefectsByTypeChart
+              data={defectsByType}
+              emptyMessage="No defects recorded for this period."
+            />
+          </ChartCard>
+
+          <ChartCard
+            title="Actions by Status"
+            subtitle="Corrective action progress breakdown."
+          >
+            <ActionsByStatusChart
+              data={caStatus}
+              emptyMessage="No corrective actions in this period yet."
+            />
+          </ChartCard>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
+          <SectionCard title="Top Root Causes" subtitle="Confirmed and suspected causes grouped by frequency." className="lg:col-span-1">
+            {rootCauses.length === 0 ? (
+              <EmptyState
+                title="No root cause data yet"
+                description="Root causes appear after manager confirmation on investigations."
               />
-            ))}
-          </div>
-        </SectionCard>
-      )}
+            ) : (
+              <div className="compact-list-stack">
+                {rootCauses.slice(0, 5).map((root, i) => (
+                  <AnalyticRow
+                    key={`${root.name}-${i}`}
+                    accentClass="bg-brand-500"
+                    title={root.name}
+                    subtitle={`${root.confirmed} confirmed · ${root.suspected} suspected · ${root.pending} pending`}
+                    trailing={(
+                      <div className="text-right">
+                        <p className="text-micro uppercase text-brand-muted">Total</p>
+                        <p className="text-base font-bold text-brand-ink">{root.cases}</p>
+                      </div>
+                    )}
+                  />
+                ))}
+              </div>
+            )}
+          </SectionCard>
 
-      <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
-        <ChartCard
-          title="Defect Trend"
-          subtitle="Defect volume over time for the selected period."
-          className="lg:col-span-3"
-        >
-          <DefectTrendChart
-            data={trendData}
-            emptyMessage="No defects recorded for this period."
-          />
-        </ChartCard>
-      </div>
-
-      <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
-        <ChartCard
-          title="Defects by Type"
-          subtitle="Most frequent defect categories in the selected period."
-          className="lg:col-span-2"
-        >
-          <DefectsByTypeChart
-            data={defectsByType}
-            emptyMessage="No defects recorded for this period."
-          />
-        </ChartCard>
-
-        <ChartCard
-          title="Actions by Status"
-          subtitle="Corrective action progress breakdown."
-        >
-          <ActionsByStatusChart
-            data={caStatus}
-            emptyMessage="No corrective actions in this period yet."
-          />
-        </ChartCard>
-      </div>
-
-      <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
-        <SectionCard title="Top Root Causes" subtitle="Confirmed and suspected causes grouped by frequency." className="lg:col-span-1">
-          {rootCauses.length === 0 ? (
-            <EmptyState
-              title="No root cause data yet"
-              description="Root causes appear after manager confirmation on investigations."
-            />
-          ) : (
-            <div className="compact-list-stack">
-              {rootCauses.slice(0, 5).map((root, i) => (
-                <AnalyticRow
-                  key={`${root.name}-${i}`}
-                  accentClass="bg-brand-500"
-                  title={root.name}
-                  subtitle={`${root.confirmed} confirmed · ${root.suspected} suspected · ${root.pending} pending`}
-                  trailing={(
-                    <div className="text-right">
-                      <p className="text-micro uppercase text-brand-muted">Total</p>
-                      <p className="text-base font-bold text-brand-ink">{root.cases}</p>
-                    </div>
-                  )}
-                />
-              ))}
-            </div>
-          )}
-        </SectionCard>
-
-        <SectionCard title="Recent Defects" subtitle="Latest defect records in the selected period." className="lg:col-span-2">
-          {latest.length === 0 ? (
-            <EmptyState
-              title="No recent defects"
-              description="Defects recorded in the selected period will appear here."
-              actionLabel="View All Defects"
-              onAction={() => navigate('/defects')}
-              icon={Package}
-            />
-          ) : (
-            <div className="compact-list-stack">
-              {latest.slice(0, 5).map((d) => (
-                <AnalyticRow
-                  key={d.id ?? d.defect_code}
-                  accentClass="bg-brand-500"
-                  title={d.defect_code}
-                  subtitle={`${d.product_name} · Batch ${d.batch_number}`}
-                  meta={d.created_at ? `Recorded ${formatDate(d.created_at)}` : undefined}
-                  badge={<StatusBadge value={d.defect_status} />}
-                  action={actionButton(d.defect_status, navigate, d.id)}
-                />
-              ))}
-            </div>
-          )}
-        </SectionCard>
+          <SectionCard title="Recent Defects" subtitle="Latest defect records in the selected period." className="lg:col-span-2">
+            {latest.length === 0 ? (
+              <EmptyState
+                title="No recent defects"
+                description="Defects recorded in the selected period will appear here."
+                actionLabel="View All Defects"
+                onAction={() => navigate('/defects')}
+                icon={Package}
+              />
+            ) : (
+              <div className="compact-list-stack">
+                {latest.slice(0, 5).map((d) => (
+                  <AnalyticRow
+                    key={d.id ?? d.defect_code}
+                    accentClass="bg-brand-500"
+                    title={d.defect_code}
+                    subtitle={`${d.product_name} · Batch ${d.batch_number}`}
+                    meta={d.created_at ? `Recorded ${formatDate(d.created_at)}` : undefined}
+                    badge={<StatusBadge value={d.defect_status} />}
+                    action={actionButton(d.defect_status, navigate, d.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </SectionCard>
+        </div>
       </div>
     </div>
   )

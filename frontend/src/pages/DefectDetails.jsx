@@ -735,27 +735,43 @@ function ManagerOverview({
 
       <div className="surface-card p-5">
         <h3 className="text-sm font-bold text-brand-ink">Defect Summary</h3>
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4">
-          <Info
-            label="Product Batch"
-            value={(
-              <button
-                type="button"
-                onClick={() => navigate(`/batches/${defect.batch_id}`)}
-                className="hover:text-brand-600 hover:underline"
-              >
-                {defect.product_name} / {defect.batch_number}
-              </button>
-            )}
-          />
-          <Info label="Detected Stage" value={defect.detected_at_stage} />
-          <Info label="Defect Type" value={defect.defect_type} />
-          <Info label="Problem Level" value={defect.problem_level} />
-          <Info label="Qty Affected" value={defect.qty_affected} />
-          <Info label="Containment" value={defect.containment_status} />
-          <Info label="Corrective Action Progress" value={defect.action_progress} />
-          <Info label="Expected Expiry" value={formatDate(defect.correct_expiry_date)} />
-          <Info label="Printed Expiry" value={formatDate(defect.printed_expiry_date)} />
+
+        <div className="mt-4">
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Defect Details</p>
+          <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-4">
+            <Info
+              label="Product Batch"
+              value={(
+                <button
+                  type="button"
+                  onClick={() => navigate(`/batches/${defect.batch_id}`)}
+                  className="hover:text-brand-600 hover:underline"
+                >
+                  {defect.product_name} / {defect.batch_number}
+                </button>
+              )}
+            />
+            <Info label="Detected Stage" value={defect.detected_at_stage} />
+            <Info label="Defect Type" value={defect.defect_type} />
+            <Info label="Problem Level" value={defect.problem_level} />
+            <Info label="Qty Affected" value={defect.qty_affected} />
+          </div>
+        </div>
+
+        <div className="mt-5 border-t border-brand-border/60 pt-4">
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Handling &amp; Progress</p>
+          <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-4">
+            <Info label="Containment" value={defect.containment_status} />
+            <Info label="Corrective Action Progress" value={defect.action_progress} />
+          </div>
+        </div>
+
+        <div className="mt-5 border-t border-brand-border/60 pt-4">
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Expiry Check</p>
+          <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-4">
+            <Info label="Expected Expiry" value={formatDate(defect.correct_expiry_date)} />
+            <Info label="Printed Expiry" value={formatDate(defect.printed_expiry_date)} />
+          </div>
         </div>
       </div>
 
