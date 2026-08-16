@@ -542,7 +542,7 @@ export default function CorrectiveActionDetails({ user }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+        <div className={`rounded-2xl border border-amber-100 bg-amber-50 p-4 ${managerView ? 'lg:col-span-2' : ''}`}>
           <div className="mb-3 text-base font-bold text-brand-ink">Task</div>
           <p className="text-sm font-semibold text-brand-ink">{action.task}</p>
           <div className="mt-4 grid grid-cols-2 gap-4">
@@ -579,15 +579,9 @@ export default function CorrectiveActionDetails({ user }) {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-          <div className="mb-3 text-base font-bold text-brand-ink">
-            {managerView ? (action.assignedToName ? `Assigned to ${action.assignedToName}` : 'Worker Responsibility') : 'Complete These 4 Steps'}
-          </div>
-          {managerView ? (
-            <div className="space-y-2 text-sm text-brand-muted">
-              <p>Workers enter findings and evidence. Managers only review and verify or reject.</p>
-            </div>
-          ) : (
+        {!managerView && (
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+            <div className="mb-3 text-base font-bold text-brand-ink">Complete These 4 Steps</div>
             <ul className="space-y-2 text-sm text-brand-muted">
               {[
                 'Enter Investigation Result',
@@ -601,8 +595,8 @@ export default function CorrectiveActionDetails({ user }) {
                 </li>
               ))}
             </ul>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="pt-2">
