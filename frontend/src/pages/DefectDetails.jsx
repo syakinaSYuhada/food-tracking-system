@@ -681,9 +681,8 @@ function DescriptionEvidenceCard({ defect }) {
   return (
     <div className="relative mt-2 surface-card p-6">
       <h3 className="absolute -top-3 left-6 bg-white px-3 text-sm font-bold text-brand-ink">Defect Description + Evidence</h3>
-      <div className="mt-2"><Info label="Description" value={defect.description || 'No description provided.'} /></div>
       {defect.investigation_notes && (
-        <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50/60 p-4">
+        <div className="mt-2 rounded-xl border border-amber-100 bg-amber-50/60 p-4">
           <Info label="Worker's Possible Cause" value={defect.investigation_notes} />
         </div>
       )}
@@ -711,16 +710,23 @@ function DescriptionEvidenceCard({ defect }) {
 
 function ManagerOverview({
   defect,
-  managerView,
   showEditDetails,
   setShowEditDetails,
   onSavedDetails,
+  reviewedAt,
   workflowSteps,
   verifiedActionCount,
   totalActionCount,
-  actions,
-  navigate
+  actions
 }) {
+  const suggestedHandlingItems = [
+    { title: 'Suggested Product Handling', value: defect.suggested_product_handling },
+    { title: 'Suggested Machine / Process Check', value: defect.suggested_machine_handling },
+    { title: 'Related Tool / Machine / Area', value: defect.related_tool_machine }
+  ].filter((item) => item.value)
+
+  const expiryMismatch = hasExpiryMismatch(defect)
+
   return (
     <div className="mt-6 space-y-5">
       {showEditDetails && (
@@ -731,46 +737,68 @@ function ManagerOverview({
         />
       )}
 
-      <ReviewUrgencyBanner defect={defect} managerView={managerView} onEdit={() => setShowEditDetails(true)} />
-
       <div className="surface-card p-5">
-        <h3 className="text-sm font-bold text-brand-ink">Defect Summary</h3>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h3 className="text-sm font-bold text-brand-ink">About this defect</h3>
+          {defect.defect_status !== 'closed' && (
+            <Button color="slate" variant="subtle" size="sm" onClick={() => setShowEditDetails(true)}>
+              <Edit size={14} />
+              Edit Details
+            </Button>
+          )}
+        </div>
 
-        <div className="mt-4">
-          <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Defect Details</p>
-          <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-4">
-            <Info
-              label="Product Batch"
-              value={(
-                <button
-                  type="button"
-                  onClick={() => navigate(`/batches/${defect.batch_id}`)}
-                  className="hover:text-brand-600 hover:underline"
-                >
-                  {defect.product_name} / {defect.batch_number}
-                </button>
-              )}
-            />
-            <Info label="Detected Stage" value={defect.detected_at_stage} />
-            <Info label="Defect Type" value={defect.defect_type} />
-            <Info label="Problem Level" value={defect.problem_level} />
-            <Info label="Qty Affected" value={defect.qty_affected} />
+        {defect.defect_status === 'new' ? (
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <Info label="Priority" value={formatDefectPriorityLabel(defect.priority)} />
+            <Info label="Review Due Date" value={formatDate(defect.review_due_date) || '-'} />
+            {getReviewDueBadge(defect.review_due_date, defect.defect_status) && (
+              <Info
+                label="Review Status"
+                value={getReviewDueBadge(defect.review_due_date, defect.defect_status).label}
+              />
+            )}
           </div>
+        ) : (
+          <p className="mt-4 text-sm text-brand-muted">
+            {reviewedAt
+              ? `Reviewed ${formatDate(reviewedAt)} · reported ${formatDefectPriorityLabel(defect.priority).toLowerCase()} priority`
+              : `Reported ${formatDefectPriorityLabel(defect.priority).toLowerCase()} priority`}
+          </p>
+        )}
+
+        <div className="mt-5 grid grid-cols-1 gap-4 border-t border-brand-border/60 pt-4 md:grid-cols-3">
+          <Info label="Detected Stage" value={defect.detected_at_stage} />
+          <Info label="Problem Level" value={defect.problem_level} />
+          <Info label="Qty Affected" value={defect.qty_affected} />
         </div>
 
         <div className="mt-5 border-t border-brand-border/60 pt-4">
-          <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Handling &amp; Progress</p>
-          <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-4">
-            <Info label="Containment" value={defect.containment_status} />
-            <Info label="Corrective Action Progress" value={defect.action_progress} />
-          </div>
+          <Info label="Description" value={defect.description || 'No description provided.'} />
         </div>
+
+        {suggestedHandlingItems.length > 0 && (
+          <div className="mt-5 border-t border-brand-border/60 pt-4">
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Suggested Handling</p>
+            <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-3">
+              {suggestedHandlingItems.map((item) => (
+                <Info key={item.title} label={item.title} value={item.value} />
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-5 border-t border-brand-border/60 pt-4">
           <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Expiry Check</p>
-          <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-3">
             <Info label="Expected Expiry" value={formatDate(defect.correct_expiry_date)} />
             <Info label="Printed Expiry" value={formatDate(defect.printed_expiry_date)} />
+            <div>
+              <p className="text-[11px] font-semibold uppercase text-brand-muted">Verdict</p>
+              <span className={`mt-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${expiryMismatch ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                {expiryMismatch ? 'Mismatch' : 'Match'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -796,13 +824,7 @@ function ManagerOverview({
       </div>
 
       <div className="surface-card p-5">
-        <h3 className="text-sm font-bold text-brand-ink">Suggested Handling & Related Information</h3>
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <Suggestion title="Suggested Product Handling" value={defect.suggested_product_handling} />
-          <Suggestion title="Suggested Machine / Process Check" value={defect.suggested_machine_handling} />
-          <Suggestion title="Related Tool / Machine / Area" value={defect.related_tool_machine} />
-        </div>
-
+        <h3 className="text-sm font-bold text-brand-ink">Verification Progress</h3>
         <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="rounded-2xl border border-brand-border/70 bg-brand-50/60 p-4">
             <p className="text-sm font-semibold text-brand-muted">Actions Verified</p>
@@ -948,6 +970,7 @@ export default function DefectDetails({ user }) {
   const [savingSuspected, setSavingSuspected] = useState(false)
   const [printingSummary, setPrintingSummary] = useState(false)
   const [showEditDetails, setShowEditDetails] = useState(false)
+  const [reviewedAt, setReviewedAt] = useState(null)
 
   function applyRootCauseSelection(value, options, setCause, setOther) {
     if (!value) return
@@ -981,6 +1004,20 @@ export default function DefectDetails({ user }) {
       )
       setDefect({ ...data, photos })
       setUsers(usersRes?.data?.data || [])
+
+      if (data.defect_status !== 'new') {
+        try {
+          const activityRes = await api.get(`/defects/${id}/activity`)
+          const reviewEntry = (activityRes.data.data || []).find((item) => item.action_type === 'START_REVIEW')
+          setReviewedAt(reviewEntry?.created_at || null)
+        } catch (activityError) {
+          console.error(activityError)
+          setReviewedAt(null)
+        }
+      } else {
+        setReviewedAt(null)
+      }
+
       const ruleRes = await api.get(`/defects/rules/by-type/${encodeURIComponent(data.defect_type)}`)
       const loadedRule = ruleRes.data.data
       setRule(loadedRule)
@@ -1299,13 +1336,13 @@ export default function DefectDetails({ user }) {
               kind="root_cause"
               audience={managerView ? undefined : 'worker'}
             />
-            {defect.suspected_root_cause && defect.root_cause_status !== 'confirmed' && (
-              <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-700">
-                Suspected: {defect.suspected_root_cause}
-              </span>
-            )}
           </div>
         </div>
+        {defect.root_cause_status === 'suspected' && defect.suspected_root_cause && (
+          <p className="mt-3 text-sm text-brand-muted">
+            <span className="font-semibold text-brand-ink">Suspected root cause:</span> {defect.suspected_root_cause}
+          </p>
+        )}
         <div className="mt-6 border-b border-brand-border/70 pb-4">
           <TabPills
             items={tabs.map(([value, label]) => ({ value, label }))}
@@ -1385,6 +1422,7 @@ export default function DefectDetails({ user }) {
               showEditDetails={showEditDetails}
               setShowEditDetails={setShowEditDetails}
               onSavedDetails={load}
+              reviewedAt={reviewedAt}
               workflowSteps={workflowSteps}
               verifiedActionCount={verifiedActionCount}
               totalActionCount={totalActionCount}
@@ -1677,9 +1715,5 @@ export default function DefectDetails({ user }) {
       )}
     </div>
   )
-}
-
-function Suggestion({ title, value }) {
-  return <div className="surface-card p-4"><p className="text-xs font-bold uppercase text-brand-muted">{title}</p><p className="mt-2 font-semibold text-brand-ink">{value || '-'}</p></div>
 }
 
