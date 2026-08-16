@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { AlertTriangle, ChevronDown, ChevronUp, FileWarning, FolderOpen, Layers, Plus, Search, SearchCheck, SlidersHorizontal } from 'lucide-react'
+import { AlertTriangle, FileWarning, FolderOpen, Layers, Plus, Search, SearchCheck } from 'lucide-react'
 import api from '../api/client'
 import DefectRecordCard from '../components/DefectRecordCard'
 import ListPagination from '../components/ListPagination'
@@ -29,6 +29,8 @@ import {
   todayDateString
 } from '../utils/defectReviewDue'
 import ListDateFilter from '../components/ListDateFilter'
+import LabeledFilterSelect from '../components/LabeledFilterSelect'
+import FilterToggleButton from '../components/FilterToggleButton'
 import ListCsvExport from '../components/ListCsvExport'
 import {
   DEFECT_REPORTED_DATE_OPTIONS,
@@ -184,26 +186,6 @@ const SEVERITY_FILTER_OPTIONS = [
   { value: 'Cannot Be Sold', label: 'Cannot Be Sold' },
   { value: 'Food Safety Risk', label: 'Food Safety Risk' }
 ]
-
-function FilterChipGroup({ label, value, options, onChange }) {
-  return (
-    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-      <span className="shrink-0 text-[0.625rem] font-semibold uppercase leading-3 text-brand-muted sm:w-16">{label}</span>
-      <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
-        {options.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => onChange(option.value)}
-            className={value === option.value ? 'filter-chip-active' : 'filter-chip-idle'}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false }) {
   const toast = useToast()
@@ -1047,16 +1029,11 @@ export default function Defects({ user }) {
               className="list-toolbar-search-input"
             />
           </div>
-          <Button
-            color={activeFilterCount > 0 ? 'brand' : 'slate'}
-            variant="subtle"
-            size="sm"
+          <FilterToggleButton
+            open={filtersOpen}
+            activeCount={activeFilterCount}
             onClick={() => setFiltersOpen((current) => !current)}
-          >
-            <SlidersHorizontal size={14} />
-            Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-            {filtersOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </Button>
+          />
           <ListCsvExport
             title="Defect Records"
             filename={`qdts-defect-records-${reportedDateLabel.toLowerCase().replace(/\s+/g, '-')}.csv`}
@@ -1068,20 +1045,20 @@ export default function Defects({ user }) {
 
         {filtersOpen && (
         <div className="compact-filter-panel">
-            <FilterChipGroup
+            <LabeledFilterSelect
               label="Status"
               value={statusFilter}
               options={STATUS_FILTER_OPTIONS}
               onChange={setStatusFilter}
             />
-            <FilterChipGroup
+            <LabeledFilterSelect
               label="Severity"
               value={severityFilter}
               options={SEVERITY_FILTER_OPTIONS}
               onChange={setSeverityFilter}
             />
             {stageOptions.length > 1 && (
-              <FilterChipGroup
+              <LabeledFilterSelect
                 label="Detection Stage"
                 value={stageFilter}
                 options={stageOptions}
@@ -1089,7 +1066,7 @@ export default function Defects({ user }) {
               />
             )}
             {managerView && (
-              <FilterChipGroup
+              <LabeledFilterSelect
                 label="Review Urgency"
                 value={urgencyFilter}
                 options={URGENCY_FILTER_OPTIONS}
