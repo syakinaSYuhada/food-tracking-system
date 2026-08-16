@@ -10,7 +10,6 @@ import RejectActionModal from '../components/RejectActionModal'
 import FieldLabel from '../components/FieldLabel'
 import { isAssignedToUser, isManager } from '../utils/roleAccess'
 import { validateHandledQuantities } from '../utils/lossService'
-import { formatCaStatusLabel } from '../utils/caStatusLabel'
 import { getCaStatusExplanation } from '../utils/caStatusExplanation'
 import { printCorrectiveActionSummary } from '../utils/correctiveActionExport'
 import { isActionOverdue } from '../utils/dueDate'
@@ -23,6 +22,13 @@ function titleCase(value) {
   if (!value) return '-'
   return String(value).replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
+
+// The stepper (Pending/In Progress/Submitted/Verified) can only represent these four
+// statuses. Rejected and cancelled actions fall outside that progression — rejected is
+// remapped to look identical to "assigned" in the stepper, and cancelled lights up no
+// step at all — so the header badge stays visible for those two as the only place that
+// distinguishes them.
+const STEPPER_REPRESENTABLE_STATUSES = ['assigned', 'in_progress', 'completed', 'verified']
 
 function Info({ label, value }) {
   return (
@@ -452,12 +458,14 @@ export default function CorrectiveActionDetails({ user }) {
             <Button color="slate" variant="subtle" size="sm" onClick={() => printCorrectiveActionSummary(action, managerView ? 'manager' : 'worker')}>
               <Printer size={14} /> Print Summary
             </Button>
-            <StatusBadge
-              kind="ca"
-              value={action.status}
-              audience={managerView ? undefined : 'worker'}
-              title={managerView ? getCaStatusExplanation(action.status) : undefined}
-            />
+            {!STEPPER_REPRESENTABLE_STATUSES.includes(action.status) && (
+              <StatusBadge
+                kind="ca"
+                value={action.status}
+                audience={managerView ? undefined : 'worker'}
+                title={managerView ? getCaStatusExplanation(action.status) : undefined}
+              />
+            )}
             {isActionOverdue(action.dueDate, action.status) && (
               <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
                 Overdue
@@ -538,6 +546,7 @@ export default function CorrectiveActionDetails({ user }) {
           <div className="mb-3 text-base font-bold text-brand-ink">Task</div>
           <p className="text-sm font-semibold text-brand-ink">{action.task}</p>
           <div className="mt-4 grid grid-cols-2 gap-4">
+            <Info label="Action Type" value={action.type === 'product_handling' ? 'Product Handling' : 'Corrective Action'} />
             <Info label="CA Priority" value={titleCase(action.priority)} />
             <div>
               <p className="text-[11px] font-semibold uppercase text-brand-muted">CA Due Date</p>
@@ -571,10 +580,11 @@ export default function CorrectiveActionDetails({ user }) {
         </div>
 
         <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-          <div className="mb-3 text-base font-bold text-brand-ink">{managerView ? 'Worker Responsibility' : 'Complete These 4 Steps'}</div>
+          <div className="mb-3 text-base font-bold text-brand-ink">
+            {managerView ? (action.assignedToName ? `Assigned to ${action.assignedToName}` : 'Worker Responsibility') : 'Complete These 4 Steps'}
+          </div>
           {managerView ? (
             <div className="space-y-2 text-sm text-brand-muted">
-              <p>Assigned to <span className="font-semibold text-brand-ink">{action.assignedToName || '-'}</span></p>
               <p>Workers enter findings and evidence. Managers only review and verify or reject.</p>
             </div>
           ) : (
@@ -600,7 +610,7 @@ export default function CorrectiveActionDetails({ user }) {
           <SectionCard title="Completion / Investigation">
               {managerView && (
                 <div className="mb-4 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-700">
-                  Read-only manager view. Findings are entered by <b>{action.assignedToName || 'the assigned worker'}</b>.
+                  Read-only manager view. Findings are entered by <b>the assigned worker</b>.
                 </div>
               )}
 
@@ -761,21 +771,14 @@ export default function CorrectiveActionDetails({ user }) {
                   <div><span className="font-semibold text-brand-ink">Completion Notes:</span> {action.completionNotes || '-'}</div>
                 </div>
               ) : (
-                <p className="text-sm text-brand-muted">No findings submitted yet. Waiting for {action.assignedToName || 'assigned worker'} to complete this action.</p>
+                <p className="text-sm text-brand-muted">No findings submitted yet. Waiting for the assigned worker to complete this action.</p>
               )}
           </SectionCard>
 
           <div className="space-y-4">
-              <SectionCard title="Action Information">
+              <SectionCard title="Action Details">
                 <div className="space-y-3">
                   <Info label="Action ID" value={action.code} />
-                  <Info label="Action Type" value={action.type === 'product_handling' ? 'Product Handling' : 'Corrective Action'} />
-                  <Info label="Status" value={formatCaStatusLabel(action.status, managerView ? 'manager' : 'worker')} />
-                </div>
-              </SectionCard>
-
-              <SectionCard title="Assignment">
-                <div className="space-y-3">
                   <Info label="Assigned To" value={action.assignedToName} />
                   <Info label="Assigned On" value={action.created_at ? String(action.created_at).split('T')[0] : '-'} />
                 </div>
