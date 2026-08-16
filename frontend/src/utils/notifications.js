@@ -1,6 +1,7 @@
 import { isManager } from './roleAccess'
 import { isActionOverdue } from './dueDate'
 import { formatExpiryDate, hasExpiryMismatch } from './expiry'
+import { getDefectWorkflow } from './defectWorkflow'
 import {
   formatDefectPriorityLabel,
   getReviewDueStatus,
@@ -184,8 +185,9 @@ function selectNotificationItems(notifications, limit = PANEL_ITEM_LIMIT) {
   return items
 }
 
-function isReadyVerificationStatus(defect) {
-  return String(defect.defect_status || '').toLowerCase() === 'ready_verification'
+function getDefectPhase(defect, actions) {
+  const defectActions = actions.filter((action) => Number(action.defect_id) === Number(defect.id))
+  return getDefectWorkflow(defect, defectActions, true).phase
 }
 
 export const ATTENTION_TONE_BY_KIND = {
@@ -282,10 +284,7 @@ function buildRawNotifications(user, actions = [], defects = []) {
       })
 
     defects
-      .filter((defect) =>
-        isReadyVerificationStatus(defect)
-        && defect.root_cause_status !== 'confirmed'
-      )
+      .filter((defect) => getDefectPhase(defect, actions) === 'confirm_root_cause')
       .forEach((defect) => {
         notifications.push({
           id: `confirm-rc-${defect.id}`,
@@ -298,10 +297,7 @@ function buildRawNotifications(user, actions = [], defects = []) {
       })
 
     defects
-      .filter((defect) =>
-        isReadyVerificationStatus(defect)
-        && defect.root_cause_status === 'confirmed'
-      )
+      .filter((defect) => getDefectPhase(defect, actions) === 'close')
       .forEach((defect) => {
         notifications.push({
           id: `ready-close-${defect.id}`,
