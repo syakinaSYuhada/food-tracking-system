@@ -812,7 +812,7 @@ function ManagerOverview({
       <DescriptionEvidenceCard defect={defect} />
 
       <div className="surface-card p-5">
-        <h3 className="text-sm font-bold text-brand-ink">Current Workflow</h3>
+        <h3 className="text-sm font-bold text-brand-ink">Progress</h3>
         <div className="mt-4 space-y-3">
           {workflowSteps.map((step, index) => (
             <WorkflowStep
