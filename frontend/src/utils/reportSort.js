@@ -116,6 +116,23 @@ export function getReportSortConfig(tab) {
   return REPORT_SORT_CONFIG[tab] || null
 }
 
+const SORT_TYPE_GROUP_LABELS = {
+  number: 'By Amount',
+  string: 'By Name',
+  date: 'By Date'
+}
+
+export function groupSortOptionsByType(options) {
+  const types = [...new Set(options.map((option) => option.type))]
+  if (types.length <= 1) return null
+
+  return types.map((type) => ({
+    type,
+    label: SORT_TYPE_GROUP_LABELS[type] || type,
+    options: options.filter((option) => option.type === type)
+  }))
+}
+
 function getExpiryLatestDate(row, tableVariant = 'defects') {
   if (tableVariant === 'batch') {
     return row.retort_date || row.printed_expiry_date || row.correct_expiry_date || null

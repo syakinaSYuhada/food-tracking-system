@@ -12,7 +12,7 @@ import Button from '../components/Button'
 import TableExportActions from '../components/TableExportActions'
 import LoadingState from '../components/LoadingState'
 import DefectsByTypeChart from '../components/charts/DefectsByTypeChart'
-import { getReportSortConfig, sortReportRows } from '../utils/reportSort'
+import { getReportSortConfig, groupSortOptionsByType, sortReportRows } from '../utils/reportSort'
 const TAB_ROOT_CAUSE = 'Root Cause & Process'
 const TAB_FINANCIAL = 'Financial Impact'
 const TAB_TRACEABILITY = 'Product & Batch Traceability'
@@ -133,6 +133,7 @@ export default function Reports() {
       ? financialView
       : traceabilityView
   const activeSortConfig = getReportSortConfig(activeView)
+  const sortOptionGroups = activeSortConfig ? groupSortOptionsByType(activeSortConfig.options) : null
   useEffect(() => {
     const config = getReportSortConfig(activeView)
     if (!config) return
@@ -394,9 +395,17 @@ export default function Reports() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="list-toolbar-select-wide normal-case"
               >
-                {activeSortConfig.options.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
+                {sortOptionGroups
+                  ? sortOptionGroups.map((group) => (
+                      <optgroup key={group.type} label={group.label}>
+                        {group.options.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </optgroup>
+                    ))
+                  : activeSortConfig.options.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
               </select>
             </label>
             <label className="flex items-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">
