@@ -284,7 +284,7 @@
   }
 
   .attention-center {
-    @apply rounded-xl border border-amber-200/70 bg-gradient-to-br from-amber-50/70 via-white to-white px-3 py-2 shadow-xs transition-all duration-200 ease-smooth hover:-translate-y-px hover:border-amber-300/80 hover:shadow-card-hover;
+    @apply notification-card-warning px-3 py-2 transition-all duration-200 ease-smooth hover:-translate-y-px hover:shadow-card-hover;
   }
 
   .compact-list-row {

@@ -17,6 +17,7 @@ import LoadingState from '../components/LoadingState'
 import EmptyState from '../components/EmptyState'
 import EntityRow from '../components/EntityRow'
 import BaseModal from '../components/BaseModal'
+import NotificationCard from '../components/NotificationCard'
 import ListPagination from '../components/ListPagination'
 import ListDateFilter from '../components/ListDateFilter'
 import LabeledFilterSelect from '../components/LabeledFilterSelect'
@@ -832,24 +833,20 @@ function Batches({ user }) {
       )}
 
       {mismatchBatches > 0 && (
-        <button
-          type="button"
-          onClick={applyExpiryMismatchFilter}
-          aria-label="Filter batches with expiry mismatch"
-          title="Show batches with expiry mismatch"
-          className={[
-            'interactive-lift mb-4 flex w-full cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm text-red-700',
-            expiryMismatchFilterActive
-              ? 'border-brand-400 bg-red-50 ring-1 ring-brand-200/80'
-              : 'border-red-200 bg-red-50'
-          ].join(' ')}
-        >
-          <AlertTriangle size={16} />
-          <span>
-            {mismatchBatches} batch{mismatchBatches === 1 ? ' has' : 'es have'} an expiry date
-            mismatch. Review highlighted batches and create a defect record if needed.
-          </span>
-        </button>
+        <div className="mb-4">
+          <NotificationCard
+            tone="warning"
+            iconTone="error"
+            icon={AlertTriangle}
+            title="Batches with expiry date mismatch"
+            description={`${mismatchBatches} batch${mismatchBatches === 1 ? '' : 'es'} need review. Create a defect record if needed.`}
+            action={(
+              <Button size="sm" color="amber" onClick={applyExpiryMismatchFilter}>
+                {expiryMismatchFilterActive ? 'Showing Mismatched Batches' : 'Show Mismatched Batches'}
+              </Button>
+            )}
+          />
+        </div>
       )}
 
       {productFilter && (
