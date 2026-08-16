@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { AlertTriangle, ArrowLeft, CheckCircle, ChevronDown, ChevronUp, Edit, Eye, FileText, ListChecks, Paperclip, Play, Plus, Printer, Save, XCircle } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, CheckCircle, Edit, Eye, FileText, ListChecks, Paperclip, Play, Plus, Printer, Save, XCircle } from 'lucide-react'
 import api from '../api/client'
 import StatusBadge from '../components/StatusBadge'
 import BaseModal from '../components/BaseModal'
@@ -421,24 +421,6 @@ function NextStepBanner({ workflow, activeTab, managerView }) {
   )
 }
 
-const WORKFLOW_VISUALS = {
-  completed: {
-    container: 'border-emerald-200 bg-emerald-50',
-    badge: 'bg-emerald-600 text-white',
-    status: 'text-emerald-700'
-  },
-  warning: {
-    container: 'border-amber-200 bg-amber-50',
-    badge: 'bg-amber-500 text-white',
-    status: 'text-amber-800'
-  },
-  neutral: {
-    container: 'border-brand-border/70 bg-slate-50/80',
-    badge: 'bg-slate-200 text-slate-600',
-    status: 'text-brand-muted'
-  }
-}
-
 function buildWorkflowSteps({
   visibleActions,
   stats,
@@ -597,43 +579,39 @@ function buildWorkflowSteps({
   ]
 }
 
-function WorkflowStep({ number, title, subtitle, status, visual = 'neutral', hint, action, tag, compact = false }) {
-  const tone = WORKFLOW_VISUALS[visual] || WORKFLOW_VISUALS.neutral
-
-  if (compact) {
-    return (
-      <div className={`flex items-center gap-3 rounded-xl border px-3 py-2 ${tone.container}`}>
-        <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${tone.badge}`}>{number}</div>
-        <div className="min-w-0 flex-1 truncate text-sm font-medium text-brand-ink">{title}</div>
-        <div className={`shrink-0 text-xs font-semibold ${tone.status}`}>{status}</div>
-      </div>
-    )
-  }
+function HorizontalStepper({ steps }) {
+  const activeStep = steps.find((step) => step.hint)
 
   return (
-    <div className={`flex items-center gap-4 rounded-xl border p-4 ${tone.container}`}>
-      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-bold ${tone.badge}`}>{number}</div>
-      <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold text-brand-ink">
-          {title}
-          {tag && <span className="ml-2 text-xs font-normal text-brand-muted">— {tag}</span>}
-        </div>
-        {subtitle && <div className="text-xs text-brand-muted">{subtitle}</div>}
-        {hint && <div className="mt-1 text-xs text-brand-muted">{hint}</div>}
+    <div>
+      <div className="flex items-center">
+        {steps.map((step, index) => {
+          const isCompleted = step.visual === 'completed'
+          const isActive = Boolean(step.hint)
+          const nodeClass = isCompleted
+            ? 'bg-emerald-600 text-white'
+            : isActive
+              ? 'bg-brand-600 text-white ring-4 ring-brand-100'
+              : 'border-2 border-brand-200 bg-white text-brand-300'
+
+          return (
+            <div key={step.title} className={`flex items-center ${index < steps.length - 1 ? 'flex-1' : ''}`}>
+              <div
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${nodeClass}`}
+                title={step.title}
+              >
+                {isCompleted ? '✓' : index + 1}
+              </div>
+              {index < steps.length - 1 && (
+                <div className={`mx-2 h-1 flex-1 rounded-full ${isCompleted ? 'bg-emerald-300' : 'bg-brand-border'}`} />
+              )}
+            </div>
+          )
+        })}
       </div>
-      <div className="flex shrink-0 flex-col items-end gap-2">
-        <div className={`text-sm font-medium ${tone.status}`}>{status}</div>
-        {action && (
-          <Button
-            size="sm"
-            color={action.color || 'brand'}
-            variant={action.variant || 'subtle'}
-            onClick={action.onClick}
-          >
-            {action.label}
-          </Button>
-        )}
-      </div>
+      {activeStep?.hint && (
+        <p className="mt-3 text-sm text-brand-muted">{activeStep.hint}</p>
+      )}
     </div>
   )
 }
@@ -729,8 +707,6 @@ function ManagerOverview({
   reviewedAt,
   workflowSteps
 }) {
-  const [showAllSteps, setShowAllSteps] = useState(false)
-
   const suggestedHandlingItems = [
     { title: 'Suggested Product Handling', value: defect.suggested_product_handling },
     { title: 'Suggested Machine / Process Check', value: defect.suggested_machine_handling },
@@ -819,35 +795,12 @@ function ManagerOverview({
       <DescriptionEvidenceCard defect={defect} />
 
       <div className="surface-card p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="flex items-center gap-2 text-sm font-bold text-brand-ink">
-            <ListChecks size={16} className="text-brand-muted" />
-            Progress
-          </h3>
-          <button
-            type="button"
-            onClick={() => setShowAllSteps((current) => !current)}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-900"
-          >
-            {showAllSteps ? 'Show less' : 'Show full timeline'}
-            {showAllSteps ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-        </div>
-        <div className="mt-4 space-y-3">
-          {workflowSteps.map((step, index) => (
-            <WorkflowStep
-              key={step.title}
-              number={index + 1}
-              title={step.title}
-              subtitle={step.subtitle}
-              status={step.status}
-              visual={step.visual}
-              hint={step.hint}
-              action={step.action}
-              tag={step.tag}
-              compact={!showAllSteps && !step.hint}
-            />
-          ))}
+        <h3 className="flex items-center gap-2 text-sm font-bold text-brand-ink">
+          <ListChecks size={16} className="text-brand-muted" />
+          Progress
+        </h3>
+        <div className="mt-4">
+          <HorizontalStepper steps={workflowSteps} />
         </div>
       </div>
     </div>
