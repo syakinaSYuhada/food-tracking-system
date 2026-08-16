@@ -14,6 +14,8 @@ import { isManager } from '../utils/roleAccess'
 import { paginateItems } from '../utils/pagination'
 import { isActionOverdue } from '../utils/dueDate'
 import ListCsvExport from '../components/ListCsvExport'
+import LabeledFilterSelect from '../components/LabeledFilterSelect'
+import FilterToggleButton from '../components/FilterToggleButton'
 import { useToast } from '../components/Toast'
 import { formatCaStatusLabel } from '../utils/caStatusLabel'
 import {
@@ -105,21 +107,6 @@ const TYPE_FILTER_OPTIONS = [
   { value: 'machine_process_check', label: 'Machine Check' }
 ]
 
-function CompactFilterSelect({ label, value, options, onChange, wide = false }) {
-  return (
-    <select
-      aria-label={label}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className={wide ? 'list-toolbar-select-wide' : 'list-toolbar-select'}
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>{option.label}</option>
-      ))}
-    </select>
-  )
-}
-
 function normalizeAction(row) {
   return {
     ...row,
@@ -172,6 +159,19 @@ export default function CorrectiveActions({ user }) {
   const [batchFilter, setBatchFilter] = useState(null)
   const [page, setPage] = useState(1)
   const [rejectActionId, setRejectActionId] = useState(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  const activeFilterCount = [
+    statusFilter !== 'all',
+    priorityFilter !== 'all',
+    typeFilter !== 'all',
+    assigneeFilter !== 'all',
+    caDueFilter !== 'all'
+  ].filter(Boolean).length
+
+  useEffect(() => {
+    if (activeFilterCount > 0) setFiltersOpen(true)
+  }, [activeFilterCount])
 
   const currentUser = user
   const managerView = isManager(user)
@@ -523,39 +523,10 @@ export default function CorrectiveActions({ user }) {
               className="list-toolbar-search-input"
             />
           </div>
-          <CompactFilterSelect
-            label="Status"
-            value={statusFilter}
-            options={STATUS_FILTER_OPTIONS(statusAudience)}
-            onChange={setStatusFilter}
-          />
-          <CompactFilterSelect
-            label="CA Priority"
-            value={priorityFilter}
-            options={PRIORITY_FILTER_OPTIONS}
-            onChange={setPriorityFilter}
-          />
-          <CompactFilterSelect
-            label="Type"
-            value={typeFilter}
-            options={TYPE_FILTER_OPTIONS}
-            onChange={setTypeFilter}
-          />
-          {managerView && (
-            <CompactFilterSelect
-              label="Assigned To"
-              value={assigneeFilter}
-              options={assigneeOptions}
-              onChange={setAssigneeFilter}
-              wide
-            />
-          )}
-          <CompactFilterSelect
-            label="CA Due"
-            value={caDueFilter}
-            options={CA_DUE_DATE_OPTIONS}
-            onChange={setCaDueFilter}
-            wide
+          <FilterToggleButton
+            open={filtersOpen}
+            activeCount={activeFilterCount}
+            onClick={() => setFiltersOpen((current) => !current)}
           />
           <ListCsvExport
             title={managerView ? 'Corrective Actions' : 'My Work'}
@@ -570,6 +541,43 @@ export default function CorrectiveActions({ user }) {
             </Button>
           )}
         </div>
+
+        {filtersOpen && (
+          <div className="compact-filter-panel">
+            <LabeledFilterSelect
+              label="Status"
+              value={statusFilter}
+              options={STATUS_FILTER_OPTIONS(statusAudience)}
+              onChange={setStatusFilter}
+            />
+            <LabeledFilterSelect
+              label="CA Priority"
+              value={priorityFilter}
+              options={PRIORITY_FILTER_OPTIONS}
+              onChange={setPriorityFilter}
+            />
+            <LabeledFilterSelect
+              label="Type"
+              value={typeFilter}
+              options={TYPE_FILTER_OPTIONS}
+              onChange={setTypeFilter}
+            />
+            {managerView && (
+              <LabeledFilterSelect
+                label="Assigned To"
+                value={assigneeFilter}
+                options={assigneeOptions}
+                onChange={setAssigneeFilter}
+              />
+            )}
+            <LabeledFilterSelect
+              label="CA Due"
+              value={caDueFilter}
+              options={CA_DUE_DATE_OPTIONS}
+              onChange={setCaDueFilter}
+            />
+          </div>
+        )}
 
         <div className="list-panel-body">
           {loading ? (

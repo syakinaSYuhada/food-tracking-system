@@ -13,6 +13,8 @@ import { paginateItems } from '../utils/pagination'
 import { isManager } from '../utils/roleAccess'
 import { useToast } from '../components/Toast'
 import { useConfirm } from '../components/ConfirmDialog'
+import LabeledFilterSelect from '../components/LabeledFilterSelect'
+import FilterToggleButton from '../components/FilterToggleButton'
 
 function UserRow({ user, managerView, currentUserId, onToggleStatus, togglingUserId }) {
   const initials = String(user.full_name || user.username || '?')
@@ -73,8 +75,14 @@ export default function Users() {
   const [page, setPage] = useState(1)
   const [showAdd, setShowAdd] = useState(false)
   const [togglingUserId, setTogglingUserId] = useState(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const managerView = isManager(currentUser)
+  const activeFilterCount = roleFilter !== 'all' ? 1 : 0
+
+  useEffect(() => {
+    if (activeFilterCount > 0) setFiltersOpen(true)
+  }, [activeFilterCount])
 
   const loadUsers = useCallback(async () => {
     setLoading(true)
@@ -174,9 +182,36 @@ export default function Users() {
       </PageHeader>
 
       <div className="list-kpi-strip">
-        <KPICard title="Users" value={users.length} tone="blue" icon={<UsersIcon size={14} />} />
-        <KPICard title="Managers" value={managers} tone="purple" icon={<Shield size={14} />} />
-        <KPICard title="Workers" value={workers} tone="green" icon={<HardHat size={14} />} />
+        <KPICard
+          title="Users"
+          value={users.length}
+          tone="blue"
+          icon={<UsersIcon size={14} />}
+          active={roleFilter === 'all'}
+          onClick={() => setRoleFilter('all')}
+          ariaLabel="Show all users"
+          hoverTitle="Show all users"
+        />
+        <KPICard
+          title="Managers"
+          value={managers}
+          tone="purple"
+          icon={<Shield size={14} />}
+          active={roleFilter === 'manager'}
+          onClick={() => setRoleFilter('manager')}
+          ariaLabel="Filter users with Manager role"
+          hoverTitle="Filter users with Manager role"
+        />
+        <KPICard
+          title="Workers"
+          value={workers}
+          tone="green"
+          icon={<HardHat size={14} />}
+          active={roleFilter === 'worker'}
+          onClick={() => setRoleFilter('worker')}
+          ariaLabel="Filter users with Worker role"
+          hoverTitle="Filter users with Worker role"
+        />
       </div>
 
       <div className="list-panel">
@@ -191,17 +226,27 @@ export default function Users() {
             />
           </div>
 
-          <select
-            aria-label="Role"
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="list-toolbar-select"
-          >
-            <option value="all">All Roles</option>
-            <option value="manager">Manager</option>
-            <option value="worker">Worker</option>
-          </select>
+          <FilterToggleButton
+            open={filtersOpen}
+            activeCount={activeFilterCount}
+            onClick={() => setFiltersOpen((current) => !current)}
+          />
         </div>
+
+        {filtersOpen && (
+          <div className="compact-filter-panel border-t border-brand-border/60 px-3 py-2">
+            <LabeledFilterSelect
+              label="Role"
+              value={roleFilter}
+              onChange={setRoleFilter}
+              options={[
+                { value: 'all', label: 'All Roles' },
+                { value: 'manager', label: 'Manager' },
+                { value: 'worker', label: 'Worker' }
+              ]}
+            />
+          </div>
+        )}
 
         <div className="list-panel-body">
           {paged.items.length === 0 ? (

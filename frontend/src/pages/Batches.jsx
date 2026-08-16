@@ -19,6 +19,8 @@ import EntityRow from '../components/EntityRow'
 import BaseModal from '../components/BaseModal'
 import ListPagination from '../components/ListPagination'
 import ListDateFilter from '../components/ListDateFilter'
+import LabeledFilterSelect from '../components/LabeledFilterSelect'
+import FilterToggleButton from '../components/FilterToggleButton'
 import ListCsvExport from '../components/ListCsvExport'
 import { paginateItems } from '../utils/pagination'
 import {
@@ -572,6 +574,17 @@ function Batches({ user }) {
   const [attentionPeriod, setAttentionPeriod] = useState(null)
   const [periodDefectBatchIds, setPeriodDefectBatchIds] = useState(null)
   const [productFilter, setProductFilter] = useState(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  const activeFilterCount = [
+    statusFilter !== 'all',
+    expiryFilter !== 'all',
+    retortDateFilter !== 'all'
+  ].filter(Boolean).length
+
+  useEffect(() => {
+    if (activeFilterCount > 0) setFiltersOpen(true)
+  }, [activeFilterCount])
 
   async function loadBatches() {
     try {
@@ -919,35 +932,11 @@ function Batches({ user }) {
               className="list-toolbar-search-input"
             />
           </div>
-          <select
-            aria-label="Status"
-            value={statusFilter}
-            onChange={(e) => {
-              setDefectsOnlyFilter(false)
-              setOnHoldOnlyFilter(false)
-              setStatusFilter(e.target.value)
-            }}
-            className="list-toolbar-select"
-          >
-            <option value="all">All Status</option>
-            <option value="approved">Approved</option>
-            <option value="on_hold">On Hold</option>
-            <option value="defective">Defective</option>
-          </select>
-          <select
-            aria-label="Expiry"
-            value={expiryFilter}
-            onChange={(e) => {
-              setDefectsOnlyFilter(false)
-              setOnHoldOnlyFilter(false)
-              setExpiryFilter(e.target.value)
-            }}
-            className="list-toolbar-select-wide"
-          >
-            <option value="all">All Expiry</option>
-            <option value="mismatch">Expiry Mismatch</option>
-            <option value="matched">Expiry Matched</option>
-          </select>
+          <FilterToggleButton
+            open={filtersOpen}
+            activeCount={activeFilterCount}
+            onClick={() => setFiltersOpen((current) => !current)}
+          />
           <ListCsvExport
             title="Batch Records"
             filename={`qdts-batches-${retortDateLabel.toLowerCase().replace(/\s+/g, '-')}.csv`}
@@ -957,7 +946,37 @@ function Batches({ user }) {
           />
         </div>
 
+        {filtersOpen && (
         <div className="compact-filter-panel border-t border-brand-border/60 px-3 py-2">
+          <LabeledFilterSelect
+            label="Status"
+            value={statusFilter}
+            onChange={(value) => {
+              setDefectsOnlyFilter(false)
+              setOnHoldOnlyFilter(false)
+              setStatusFilter(value)
+            }}
+            options={[
+              { value: 'all', label: 'All Status' },
+              { value: 'approved', label: 'Approved' },
+              { value: 'on_hold', label: 'On Hold' },
+              { value: 'defective', label: 'Defective' }
+            ]}
+          />
+          <LabeledFilterSelect
+            label="Expiry"
+            value={expiryFilter}
+            onChange={(value) => {
+              setDefectsOnlyFilter(false)
+              setOnHoldOnlyFilter(false)
+              setExpiryFilter(value)
+            }}
+            options={[
+              { value: 'all', label: 'All Expiry' },
+              { value: 'mismatch', label: 'Expiry Mismatch' },
+              { value: 'matched', label: 'Expiry Matched' }
+            ]}
+          />
           <ListDateFilter
             label="Retort Date"
             value={retortDateFilter}
@@ -969,6 +988,7 @@ function Batches({ user }) {
             onCustomToChange={setRetortTo}
           />
         </div>
+        )}
 
         <div className="list-panel-body">
           {paged.items.length === 0 ? (

@@ -32,6 +32,8 @@ const PRODUCT_EXPORT_COLUMNS = [
 ]
 import { paginateItems } from '../utils/pagination'
 import ListCsvExport from '../components/ListCsvExport'
+import LabeledFilterSelect from '../components/LabeledFilterSelect'
+import FilterToggleButton from '../components/FilterToggleButton'
 
 function DetailField({ label, value }) {
   return (
@@ -190,6 +192,17 @@ function Products({ user }) {
   const [page, setPage] = useState(1)
   const [showAdd, setShowAdd] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  const activeFilterCount = [
+    statusFilter !== 'all',
+    categoryFilter !== 'all',
+    defectsOnlyFilter
+  ].filter(Boolean).length
+
+  useEffect(() => {
+    if (activeFilterCount > 0) setFiltersOpen(true)
+  }, [activeFilterCount])
 
   async function loadProducts() {
     try {
@@ -345,31 +358,11 @@ function Products({ user }) {
               className="list-toolbar-search-input"
             />
           </div>
-          <select
-            aria-label="Status"
-            value={statusFilter}
-            onChange={(e) => {
-              setDefectsOnlyFilter(false)
-              setStatusFilter(e.target.value)
-            }}
-            className="list-toolbar-select"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="development">Development</option>
-            <option value="archived">Archived</option>
-          </select>
-          <select
-            aria-label="Category"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="list-toolbar-select-wide"
-          >
-            <option value="all">All Categories</option>
-            {categories.map((category) => (
-              <option key={category} value={category}>{category}</option>
-            ))}
-          </select>
+          <FilterToggleButton
+            open={filtersOpen}
+            activeCount={activeFilterCount}
+            onClick={() => setFiltersOpen((current) => !current)}
+          />
           {(statusFilter !== 'all' || categoryFilter !== 'all' || search || defectsOnlyFilter) && (
             <Button
               color="slate"
@@ -389,6 +382,34 @@ function Products({ user }) {
             rows={filtered}
           />
         </div>
+
+        {filtersOpen && (
+          <div className="compact-filter-panel border-t border-brand-border/60 px-3 py-2">
+            <LabeledFilterSelect
+              label="Status"
+              value={statusFilter}
+              onChange={(value) => {
+                setDefectsOnlyFilter(false)
+                setStatusFilter(value)
+              }}
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'development', label: 'Development' },
+                { value: 'archived', label: 'Archived' }
+              ]}
+            />
+            <LabeledFilterSelect
+              label="Category"
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+              options={[
+                { value: 'all', label: 'All Categories' },
+                ...categories.map((category) => ({ value: category, label: category }))
+              ]}
+            />
+          </div>
+        )}
 
         <div className="list-panel-body">
           {paged.items.length === 0 ? (

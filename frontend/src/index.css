@@ -389,7 +389,7 @@
   }
 
   .compact-filter-panel {
-    @apply space-y-1.5 border-b border-brand-border/60 bg-slate-50/30 p-2;
+    @apply flex flex-wrap items-start gap-x-6 gap-y-2.5 border-b border-brand-border/60 bg-slate-50/30 p-3;
   }
 
   .compact-grid {
@@ -398,19 +398,6 @@
 
   .compact-list-stack {
     @apply space-y-2;
-  }
-
-  /* ── Filter chips ── */
-  .filter-chip {
-    @apply inline-flex shrink-0 items-center rounded-full border px-3 py-1.5 text-caption font-semibold transition-all duration-200 ease-smooth;
-  }
-
-  .filter-chip-idle {
-    @apply filter-chip border-brand-border/80 bg-white py-1 text-[0.6875rem] text-brand-muted hover:border-brand-300 hover:bg-brand-50/50 hover:text-brand-ink hover:shadow-xs;
-  }
-
-  .filter-chip-active {
-    @apply filter-chip border-brand-500 bg-brand-50 py-1 text-[0.6875rem] text-brand-700 shadow-xs ring-1 ring-brand-100;
   }
 
   /* ── Action notification ── */

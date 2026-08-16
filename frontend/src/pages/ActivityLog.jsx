@@ -8,6 +8,8 @@ import EmptyState from '../components/EmptyState'
 import ActivityTimelineRow from '../components/ActivityTimelineRow'
 import ListDateFilter from '../components/ListDateFilter'
 import TableExportActions from '../components/TableExportActions'
+import LabeledFilterSelect from '../components/LabeledFilterSelect'
+import FilterToggleButton from '../components/FilterToggleButton'
 import { downloadReportExcel, downloadReportPdf } from '../utils/reportExport'
 import {
   ACTIVITY_LOG_DATE_OPTIONS,
@@ -93,6 +95,7 @@ export default function ActivityLog() {
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
   const [page, setPage] = useState(1)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const dateFilterLabel = useMemo(
     () => getDateFilterLabel(dateFilter, { customFrom, customTo }),
@@ -102,6 +105,15 @@ export default function ActivityLog() {
   const hasActiveFilters = search.trim().length > 0
     || entityFilter !== 'all'
     || dateFilter !== 'all'
+
+  const activeFilterCount = [
+    entityFilter !== 'all',
+    dateFilter !== 'all'
+  ].filter(Boolean).length
+
+  useEffect(() => {
+    if (activeFilterCount > 0) setFiltersOpen(true)
+  }, [activeFilterCount])
 
   async function loadLogs(nextPage = page) {
     setLoading(true)
@@ -218,17 +230,11 @@ export default function ActivityLog() {
               className="list-toolbar-search-input"
             />
           </div>
-          <select
-            aria-label="Entity"
-            value={entityFilter}
-            onChange={(e) => setEntityFilter(e.target.value)}
-            className="list-toolbar-select-wide"
-          >
-            <option value="all">All Entities</option>
-            <option value="defect">Defects</option>
-            <option value="corrective_action">Corrective Actions</option>
-            <option value="batch">Batches</option>
-          </select>
+          <FilterToggleButton
+            open={filtersOpen}
+            activeCount={activeFilterCount}
+            onClick={() => setFiltersOpen((current) => !current)}
+          />
           <TableExportActions
             title="Activity Log Report"
             heading="Activity Log Report"
@@ -242,18 +248,31 @@ export default function ActivityLog() {
           />
         </div>
 
-        <div className="compact-filter-panel border-t border-brand-border/60 px-3 py-2">
-          <ListDateFilter
-            label="Date Range"
-            value={dateFilter}
-            options={ACTIVITY_LOG_DATE_OPTIONS}
-            onChange={setDateFilter}
-            customFrom={customFrom}
-            customTo={customTo}
-            onCustomFromChange={setCustomFrom}
-            onCustomToChange={setCustomTo}
-          />
-        </div>
+        {filtersOpen && (
+          <div className="compact-filter-panel border-t border-brand-border/60 px-3 py-2">
+            <LabeledFilterSelect
+              label="Entity"
+              value={entityFilter}
+              onChange={setEntityFilter}
+              options={[
+                { value: 'all', label: 'All Entities' },
+                { value: 'defect', label: 'Defects' },
+                { value: 'corrective_action', label: 'Corrective Actions' },
+                { value: 'batch', label: 'Batches' }
+              ]}
+            />
+            <ListDateFilter
+              label="Date Range"
+              value={dateFilter}
+              options={ACTIVITY_LOG_DATE_OPTIONS}
+              onChange={setDateFilter}
+              customFrom={customFrom}
+              customTo={customTo}
+              onCustomFromChange={setCustomFrom}
+              onCustomToChange={setCustomTo}
+            />
+          </div>
+        )}
 
         <div className="list-panel-body">
           {loading ? (
