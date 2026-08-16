@@ -391,12 +391,9 @@ function BlockerBanner({ title, items, strongBorder = false, className = '' }) {
   )
 }
 
-function NextStepBanner({ workflow, activeTab, onGoToTab, managerView }) {
+function NextStepBanner({ workflow, activeTab, managerView }) {
   if (!workflow.nextStep) return null
 
-  const onTargetTab = workflow.nextTab !== 'overview' && activeTab === workflow.nextTab
-  const actionsTabLabel = managerView ? 'Corrective Actions' : 'My Work'
-  const rootTabLabel = managerView ? 'Root Cause' : 'What Caused It'
   const message =
     workflow.phase === 'confirm_root_cause'
       ? activeTab === 'root'
@@ -420,15 +417,6 @@ function NextStepBanner({ workflow, activeTab, onGoToTab, managerView }) {
     <div className={containerClass}>
       <p className={`font-semibold ${workflow.isClosed ? 'text-slate-900' : ''}`}>Next step</p>
       <p className="mt-1">{message}</p>
-      {!workflow.isClosed && workflow.nextTab !== 'overview' && !onTargetTab && (
-        <button
-          type="button"
-          onClick={() => onGoToTab(workflow.nextTab)}
-          className="mt-2 font-semibold text-brand-700 underline"
-        >
-          Go to {workflow.nextTab === 'actions' ? actionsTabLabel : rootTabLabel} tab
-        </button>
-      )}
     </div>
   )
 }
@@ -1344,7 +1332,7 @@ export default function DefectDetails({ user }) {
         </div>
 
         {!(managerView && tab === 'overview') && (
-          <NextStepBanner workflow={workflow} activeTab={tab} onGoToTab={setTab} managerView={managerView} />
+          <NextStepBanner workflow={workflow} activeTab={tab} managerView={managerView} />
         )}
 
         {hasExpiryMismatch(defect) && (
@@ -1546,7 +1534,7 @@ export default function DefectDetails({ user }) {
             <div className="surface-card p-5">
               <h3 className="font-bold text-brand-ink">Investigation Findings</h3>
               {completedFindings.length === 0 ? (
-                <p className="mt-2 text-sm text-brand-muted">No completed investigation actions yet. Workers should complete machine/process checks before recording suspected root cause.</p>
+                <p className="mt-2 text-sm text-brand-muted">None of this defect's {visibleActions.length} corrective action(s) have recorded investigation findings yet.</p>
               ) : (
                 <div className="mt-3 space-y-3">
                   {completedFindings.map((action) => (
