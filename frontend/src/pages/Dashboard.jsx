@@ -17,21 +17,12 @@ import DefectsByTypeChart from '../components/charts/DefectsByTypeChart'
 import DefectTrendChart from '../components/charts/DefectTrendChart'
 import ActionsByStatusChart from '../components/charts/ActionsByStatusChart'
 import ReportPeriodFilter, { buildReportPeriodParams, createdInReportPeriod, currentMonthValue } from '../components/ReportPeriodFilter'
-import {
-  formatUrgentReviewCountSummary,
-  hasUrgentReviewAttention,
-  summarizeUrgentReviewAttention
-} from '../utils/defectReviewDue'
 import { isManager } from '../utils/roleAccess'
 import { isActionOverdue, isActionDueThisWeek } from '../utils/dueDate'
 import { hasExpiryMismatch } from '../utils/expiry'
 import { buildWorkerAttentionItems, summarizeWorkerAttention } from '../utils/workerAttention'
 import { formatCaStatusLabel } from '../utils/caStatusLabel'
-import {
-  buildAttentionPath,
-  buildAttentionPrimaryPath,
-  getAttentionActionLabel
-} from '../utils/attentionNavigation'
+import { buildManagerAttentionSummary } from '../utils/notifications'
 import { defectStatusHint } from '../utils/defectStatusHint'
 
 const PIE_COLORS = ['#1F8F73', '#146356', '#C2410C', '#F59E0B', '#7EC6AE']
@@ -171,11 +162,6 @@ export default function Dashboard({ user }) {
     [periodDefects]
   )
 
-  const reviewAttentionSummary = useMemo(
-    () => summarizeUrgentReviewAttention(periodDefects),
-    [periodDefects]
-  )
-
   const data = useMemo(() => {
     if (!summary) return null
 
@@ -292,7 +278,7 @@ export default function Dashboard({ user }) {
         <AttentionCenter
           items={workerAttentionItems}
           action={(
-            <Button color="amber" variant="subtle" size="sm" className="list-action-btn" onClick={() => navigate('/corrective-actions')}>
+            <Button color="amber" size="sm" className="list-action-btn" onClick={() => navigate('/corrective-actions')}>
               View Assigned Actions
             </Button>
           )}
@@ -388,41 +374,13 @@ export default function Dashboard({ user }) {
   if (!data) return <div className="text-sm text-red-600">Failed to load dashboard.</div>
 
   const { kpis, defectsByType, caStatus, trendData, rootCauses, latest } = data
-  const newReportCount = Number(kpis.new_reports ?? 0)
   const pendingReviewCount = Number(kpis.pending_review_actions ?? 0)
-  const overdueActionCount = periodActions.filter((action) =>
-    isActionOverdue(action.due_date, action.ca_status)
-  ).length
 
-  const attentionItems = [
-    overdueActionCount > 0 && {
-      id: 'overdue',
-      count: overdueActionCount,
-      label: `${overdueActionCount} overdue action${overdueActionCount === 1 ? '' : 's'}`,
-      onClick: () => navigate(buildAttentionPath('/corrective-actions', period, selectedMonth, { caDue: 'overdue' }))
-    },
-    Number(kpis.expiry_mismatch_batches) > 0 && {
-      id: 'expiry',
-      count: Number(kpis.expiry_mismatch_batches),
-      label: `${kpis.expiry_mismatch_batches} expiry mismatch${Number(kpis.expiry_mismatch_batches) === 1 ? '' : 'es'}`,
-      onClick: () => navigate(buildAttentionPath('/batches', period, selectedMonth, { expiry: 'mismatch' }))
-    },
-    managerView && hasUrgentReviewAttention(reviewAttentionSummary) && {
-      id: 'urgent-review',
-      count: reviewAttentionSummary.urgent + reviewAttentionSummary.dueToday + reviewAttentionSummary.overdue,
-      label: `Urgent defect reports need review (${formatUrgentReviewCountSummary(reviewAttentionSummary)})`,
-      subtitle: 'Review urgent or due-today worker reports before assigning corrective actions.',
-      onClick: () => navigate(buildAttentionPath('/defects', period, selectedMonth, { filter: 'urgent_review' }))
-    },
-    managerView && newReportCount > 0 && !hasUrgentReviewAttention(reviewAttentionSummary) && {
-      id: 'new-reports',
-      count: newReportCount,
-      label: `${newReportCount} worker report${newReportCount === 1 ? '' : 's'} need your review`,
-      onClick: () => navigate(buildAttentionPath('/defects', period, selectedMonth, { filter: 'new' }))
-    }
-  ].filter(Boolean)
-
-  const visibleAttentionItems = attentionItems.filter((item) => item.count > 0)
+  // All-time, not period-scoped: this must stay in lockstep with the header bell
+  // (buildNotifications) since both answer the same question — "what currently
+  // needs attention" — regardless of which reporting period the dashboard is showing.
+  const attentionItems = buildManagerAttentionSummary(managerActions, managerDefects, navigate)
+  const visibleAttentionItems = attentionItems
 
   return (
     <div className="page-stack mx-auto w-full max-w-[1280px]">
@@ -463,12 +421,11 @@ export default function Dashboard({ user }) {
         action={visibleAttentionItems.length > 0 ? (
           <Button
             color="amber"
-            variant="subtle"
             size="sm"
             className="list-action-btn"
-            onClick={() => navigate(buildAttentionPrimaryPath(period, selectedMonth, visibleAttentionItems))}
+            onClick={visibleAttentionItems.length === 1 ? visibleAttentionItems[0].onClick : () => navigate('/corrective-actions')}
           >
-            {getAttentionActionLabel(visibleAttentionItems)}
+            {visibleAttentionItems.length === 1 ? 'View Details' : 'View All'}
           </Button>
         ) : null}
       />

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import Button from './Button'
 import { isManager } from '../utils/roleAccess'
-import { buildNotifications } from '../utils/notifications'
+import { buildNotifications, getAttentionTone } from '../utils/notifications'
 import { fetchNotificationData } from '../utils/notificationData'
 
 const toneStyles = {
@@ -23,39 +23,28 @@ const toneStyles = {
   green: 'bg-emerald-50 text-emerald-700 ring-emerald-100'
 }
 
-function getNotificationVisual(item) {
-  if (item.kind === 'new-assignment') {
-    return { tone: 'blue', Icon: Info }
-  }
-  if (item.kind === 'evidence-required') {
-    return { tone: 'amber', Icon: AlertTriangle }
-  }
-  if (item.kind === 'overdue' || item.id.startsWith('overdue-ca')) {
-    return { tone: 'red', Icon: AlertTriangle }
-  }
-  if (item.kind === 'expiry' || item.id.startsWith('expiry')) {
-    return { tone: 'amber', Icon: AlertTriangle }
-  }
-  if (item.kind === 'submitted-review' || item.kind === 'pending-verification' || item.title.includes('Submitted for Review')) {
-    return { tone: 'purple', Icon: CheckSquare }
-  }
-  if (item.kind === 'new-defect' || item.id.startsWith('new-defect')) {
-    return { tone: 'blue', Icon: FileWarning }
-  }
-  if (item.kind === 'confirm-root-cause' || item.id.startsWith('confirm-rc-')) {
-    return { tone: 'purple', Icon: ClipboardList }
-  }
-  if (item.kind === 'ready-to-close' || item.kind === 'ready-verification' || item.id.startsWith('ready-close-')) {
-    return { tone: 'green', Icon: CheckCircle2 }
-  }
-  if (item.kind === 'report-submitted' || item.id.startsWith('report-')) {
-    return { tone: 'blue', Icon: ClipboardList }
-  }
-  if (item.kind === 'attention' || item.id.startsWith('ca-')) {
-    return { tone: 'purple', Icon: CheckSquare }
-  }
+const ICON_BY_KIND = {
+  overdue: AlertTriangle,
+  'evidence-required': AlertTriangle,
+  'urgent-review': AlertTriangle,
+  expiry: AlertTriangle,
+  'submitted-review': CheckSquare,
+  'new-defect': FileWarning,
+  'confirm-root-cause': ClipboardList,
+  'ready-to-close': CheckCircle2,
+  'new-assignment': Info,
+  attention: CheckSquare,
+  'report-submitted': ClipboardList
+}
 
-  return { tone: 'blue', Icon: Bell }
+// Tone comes from the same shared map the header bell badge and the Dashboard's
+// Attention Required section both use, so a given kind of item always reads the
+// same color no matter which of the two surfaces it's shown on.
+function getNotificationVisual(item) {
+  return {
+    tone: getAttentionTone(item.kind),
+    Icon: ICON_BY_KIND[item.kind] || Bell
+  }
 }
 
 export default function NotificationsPanel({ user, onClose, onNavigate }) {
@@ -91,18 +80,18 @@ export default function NotificationsPanel({ user, onClose, onNavigate }) {
             <Bell size={15} />
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-brand-ink">Notifications</div>
-            <div className="text-[0.6875rem] leading-4 text-brand-muted">In-app notifications</div>
+            <div className="text-sm font-semibold text-brand-ink">Attention Required</div>
+            <div className="text-[0.6875rem] leading-4 text-brand-muted">Things currently needing your action</div>
             <div className="text-[0.6875rem] leading-4 text-brand-muted">
               {loading
                 ? 'Checking for updates...'
                 : totalCount > items.length
-                  ? `${totalCount} pending items · showing ${items.length}`
-                  : `${items.length} pending item${items.length === 1 ? '' : 's'}`}
+                  ? `${totalCount} open items · showing ${items.length}`
+                  : `${items.length} open item${items.length === 1 ? '' : 's'}`}
             </div>
           </div>
         </div>
-        <button type="button" onClick={onClose} className="icon-btn !h-8 !w-8" aria-label="Close notifications">
+        <button type="button" onClick={onClose} className="icon-btn !h-8 !w-8" aria-label="Close attention items">
           <X size={14} />
         </button>
       </div>

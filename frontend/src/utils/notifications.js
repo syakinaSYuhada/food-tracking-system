@@ -188,9 +188,28 @@ function isReadyVerificationStatus(defect) {
   return String(defect.defect_status || '').toLowerCase() === 'ready_verification'
 }
 
-export function buildNotifications(user, actions = [], defects = []) {
+export const ATTENTION_TONE_BY_KIND = {
+  overdue: 'red',
+  'evidence-required': 'amber',
+  'urgent-review': 'amber',
+  expiry: 'amber',
+  'submitted-review': 'purple',
+  'new-defect': 'blue',
+  'confirm-root-cause': 'purple',
+  'ready-to-close': 'green',
+  'new-assignment': 'blue',
+  attention: 'purple',
+  'report-submitted': 'blue'
+}
+
+export function getAttentionTone(kind) {
+  return ATTENTION_TONE_BY_KIND[kind] || 'blue'
+}
+
+function buildRawNotifications(user, actions = [], defects = []) {
   const notifications = []
   const managerView = isManager(user)
+  const urgentReviewDefectIds = new Set()
 
   if (managerView) {
     actions
@@ -210,6 +229,7 @@ export function buildNotifications(user, actions = [], defects = []) {
       .map((defect) => ({ defect, notification: getUrgentReviewNotification(defect) }))
       .filter((entry) => entry.notification)
       .forEach(({ defect, notification }) => {
+        urgentReviewDefectIds.add(defect.id)
         notifications.push({
           id: `urgent-review-${defect.id}`,
           kind: 'urgent-review',
@@ -249,7 +269,7 @@ export function buildNotifications(user, actions = [], defects = []) {
       })
 
     defects
-      .filter((defect) => defect.defect_status === 'new')
+      .filter((defect) => defect.defect_status === 'new' && !urgentReviewDefectIds.has(defect.id))
       .forEach((defect) => {
         notifications.push({
           id: `new-defect-${defect.id}`,
@@ -329,10 +349,51 @@ export function buildNotifications(user, actions = [], defects = []) {
       })
   }
 
+  return notifications
+}
+
+export function buildNotifications(user, actions = [], defects = []) {
+  const notifications = buildRawNotifications(user, actions, defects)
   const sorted = notifications.sort((a, b) => a.priority - b.priority)
 
   return {
     items: selectNotificationItems(sorted),
     count: sorted.length
   }
+}
+
+const ATTENTION_GROUP_ORDER = [
+  { kind: 'overdue', id: 'overdue', pluralLabel: (n) => `${n} overdue action${n === 1 ? '' : 's'}`, path: '/corrective-actions?caDue=overdue' },
+  { kind: 'submitted-review', id: 'submitted-review', pluralLabel: (n) => `${n} action${n === 1 ? '' : 's'} submitted for verification`, path: '/corrective-actions?status=completed' },
+  { kind: 'urgent-review', id: 'urgent-review', pluralLabel: (n) => `${n} defect report${n === 1 ? '' : 's'} need urgent review`, path: '/defects?filter=urgent_review' },
+  { kind: 'new-defect', id: 'new-reports', pluralLabel: (n) => `${n} new defect report${n === 1 ? '' : 's'} need review`, path: '/defects?filter=new' },
+  { kind: 'expiry', id: 'expiry', pluralLabel: (n) => `${n} batch${n === 1 ? '' : 'es'} with expiry mismatch`, path: '/batches?expiry=mismatch' },
+  { kind: 'confirm-root-cause', id: 'confirm-root-cause', pluralLabel: (n) => `${n} defect${n === 1 ? '' : 's'} ready to confirm root cause`, path: '/defects' },
+  { kind: 'ready-to-close', id: 'ready-to-close', pluralLabel: (n) => `${n} defect${n === 1 ? '' : 's'} ready to close`, path: '/defects' }
+]
+
+// Grouped, all-time attention counts for the manager Dashboard — built from the exact
+// same predicates as the header bell (buildNotifications) so the two surfaces can never
+// disagree on what currently needs attention.
+export function buildManagerAttentionSummary(actions = [], defects = [], navigate) {
+  const notifications = buildRawNotifications({ role: 'manager' }, actions, defects)
+  const countsByKind = new Map()
+
+  notifications.forEach((item) => {
+    countsByKind.set(item.kind, (countsByKind.get(item.kind) || 0) + 1)
+  })
+
+  return ATTENTION_GROUP_ORDER
+    .map((group) => {
+      const count = countsByKind.get(group.kind) || 0
+      if (count === 0) return null
+      return {
+        id: group.id,
+        tone: getAttentionTone(group.kind),
+        count,
+        label: group.pluralLabel(count),
+        onClick: navigate ? () => navigate(group.path) : undefined
+      }
+    })
+    .filter(Boolean)
 }

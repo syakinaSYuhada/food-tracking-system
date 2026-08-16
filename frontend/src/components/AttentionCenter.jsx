@@ -1,5 +1,13 @@
 import { AlertTriangle } from 'lucide-react'
 
+const DOT_TONE = {
+  red: 'bg-red-500',
+  amber: 'bg-amber-500',
+  purple: 'bg-purple-500',
+  blue: 'bg-brand-500',
+  green: 'bg-emerald-500'
+}
+
 export default function AttentionCenter({ title = 'Attention Required', items = [], action }) {
   const visibleItems = items.filter((item) => item.count > 0)
   const totalCount = visibleItems.reduce((sum, item) => sum + item.count, 0)
@@ -27,9 +35,10 @@ export default function AttentionCenter({ title = 'Attention Required', items = 
               <button
                 type="button"
                 onClick={item.onClick}
-                className={`text-left ${item.onClick ? 'hover:text-brand-700 hover:underline' : ''}`}
+                className={`inline-flex items-center gap-1.5 text-left ${item.onClick ? 'hover:text-brand-700 hover:underline' : ''}`}
               >
-                • {item.label}
+                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${DOT_TONE[item.tone] || DOT_TONE.blue}`} aria-hidden="true" />
+                {item.label}
               </button>
               {item.subtitle && (
                 <p className="pl-3 text-[0.625rem] leading-4 text-brand-muted">{item.subtitle}</p>

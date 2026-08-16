@@ -259,6 +259,7 @@ function AppShell({ children, user, onLogout }) {
                 type="button"
                 onClick={() => setShowNotifications((current) => !current)}
                 className="icon-btn relative"
+                aria-label={notificationCount > 0 ? `Attention required: ${notificationCount} open items` : 'Attention required: nothing pending'}
               >
                 <Bell size={16} />
                 {notificationCount > 0 && (

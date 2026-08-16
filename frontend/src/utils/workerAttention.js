@@ -1,5 +1,6 @@
 import { isActionOverdue } from './dueDate'
 import { hasExpiryMismatch } from './expiry'
+import { getAttentionTone } from './notifications'
 
 function actionStatus(action) {
   return String(action.ca_status || action.status || '').toLowerCase()
@@ -72,36 +73,42 @@ export function buildWorkerAttentionItems(summary, navigate) {
   return [
     overdueCount > 0 && {
       id: 'overdue',
+      tone: getAttentionTone('overdue'),
       count: overdueCount,
       label: `${overdueCount} overdue action${overdueCount === 1 ? '' : 's'}`,
       onClick: () => navigate('/corrective-actions?caDue=overdue')
     },
     rejectedCount > 0 && {
       id: 'rejected',
+      tone: getAttentionTone('evidence-required'),
       count: rejectedCount,
       label: `${rejectedCount} rejected action${rejectedCount === 1 ? '' : 's'} need rework`,
       onClick: () => navigate('/corrective-actions?status=rejected')
     },
     evidenceCount > 0 && {
       id: 'evidence',
+      tone: getAttentionTone('evidence-required'),
       count: evidenceCount,
       label: `${evidenceCount} action${evidenceCount === 1 ? '' : 's'} require evidence`,
       onClick: () => navigate('/corrective-actions?status=assigned')
     },
     attentionCount > 0 && {
       id: 'attention',
+      tone: getAttentionTone('attention'),
       count: attentionCount,
       label: `${attentionCount} assigned action${attentionCount === 1 ? '' : 's'} need your attention`,
       onClick: () => navigate('/corrective-actions')
     },
     reportsWaitingCount > 0 && {
       id: 'reports-waiting',
+      tone: getAttentionTone('report-submitted'),
       count: reportsWaitingCount,
       label: `${reportsWaitingCount} report${reportsWaitingCount === 1 ? '' : 's'} waiting for manager review`,
       onClick: () => navigate('/defects?mine=true&status=awaiting_manager')
     },
     expiryMismatchCount > 0 && {
       id: 'expiry',
+      tone: getAttentionTone('expiry'),
       count: expiryMismatchCount,
       label: `${expiryMismatchCount} report${expiryMismatchCount === 1 ? '' : 's'} with expiry mismatch`,
       onClick: () => navigate('/defects?mine=true&expiry=mismatch')
