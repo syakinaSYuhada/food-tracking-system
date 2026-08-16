@@ -639,7 +639,7 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
 }
 
 function Info({ label, value }) {
-  return <div><p className="text-xs font-semibold uppercase text-brand-muted">{label}</p><p className="mt-1 font-semibold text-brand-ink">{value || '-'}</p></div>
+  return <div><p className="text-xs font-semibold uppercase text-brand-muted">{label}</p><p className="mt-1 text-sm font-semibold text-brand-ink">{value || '-'}</p></div>
 }
 function Input({ label, value, onChange, type = 'text', min, required = false }) {
   return (
