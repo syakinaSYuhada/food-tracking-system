@@ -923,7 +923,8 @@ export default function DefectDetails({ user }) {
   const location = useLocation()
   const toast = useToast()
   const confirm = useConfirm()
-  const initialTab = new URLSearchParams(location.search).get('tab') === 'root-cause' ? 'root' : 'overview'
+  const tabParam = new URLSearchParams(location.search).get('tab')
+  const initialTab = tabParam === 'root-cause' ? 'root' : tabParam === 'actions' ? 'actions' : 'overview'
   const [tab, setTab] = useState(initialTab)
   const [defect, setDefect] = useState(null)
   const [rule, setRule] = useState(null)
