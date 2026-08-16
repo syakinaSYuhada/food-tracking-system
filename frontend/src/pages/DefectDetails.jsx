@@ -474,11 +474,10 @@ function buildWorkflowSteps({
         action: managerView && canAssign ? { label: 'Assign Action', onClick: handlers.assignAction } : null
       },
       {
-        title: 'Action Completion',
+        title: 'Worker Action Completion',
         subtitle: 'Waiting for assigned actions',
         status: 'Not Started',
-        visual: 'neutral',
-        tag: 'by worker'
+        visual: 'neutral'
       },
       {
         title: 'Manager Verification',
@@ -552,17 +551,22 @@ function buildWorkflowSteps({
       action: viewActionsButton
     },
     {
-      title: 'Action Completion',
-      subtitle: `${submittedCount}/${totalActions} submitted, ${totalActions - submittedCount} pending`,
+      title: 'Worker Action Completion',
+      subtitle: managerView && workflow?.phase === 'worker_complete'
+        ? null
+        : `${submittedCount}/${totalActions} submitted, ${totalActions - submittedCount} pending`,
       status: step2Complete ? 'Completed' : 'Pending',
       visual: step2Complete ? 'completed' : 'warning',
-      tag: 'by worker',
-      hint: managerView && workflow?.phase === 'worker_complete' ? workflow.nextStep : null,
+      hint: managerView && workflow?.phase === 'worker_complete'
+        ? `Waiting for workers to complete actions (${submittedCount}/${totalActions} submitted, ${totalActions - submittedCount} pending).`
+        : null,
       action: step2Action
     },
     {
       title: 'Manager Verification',
-      subtitle: `${verifiedCount}/${totalActions} verified`,
+      subtitle: managerView && workflow?.phase === 'manager_verify'
+        ? null
+        : `${verifiedCount}/${totalActions} verified`,
       status: step3Status,
       visual: step3Visual,
       hint: managerView && workflow?.phase === 'manager_verify' ? workflow.nextStep : step3Hint,
@@ -760,7 +764,7 @@ function ManagerOverview({
         </div>
 
         {defect.defect_status === 'new' ? (
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div className="mt-1 grid grid-cols-1 gap-3 md:grid-cols-3">
             <Info label="Priority" value={formatDefectPriorityLabel(defect.priority)} />
             <Info label="Review Due Date" value={formatDate(defect.review_due_date) || '-'} />
             {getReviewDueBadge(defect.review_due_date, defect.defect_status) && (
@@ -771,26 +775,26 @@ function ManagerOverview({
             )}
           </div>
         ) : (
-          <p className="mt-4 text-sm text-brand-muted">
+          <p className="mt-1 text-sm text-brand-muted">
             {reviewedAt
               ? `Reviewed ${formatDate(reviewedAt)} · reported ${formatDefectPriorityLabel(defect.priority).toLowerCase()} priority`
               : `Reported ${formatDefectPriorityLabel(defect.priority).toLowerCase()} priority`}
           </p>
         )}
 
-        <div className="mt-5 grid grid-cols-1 gap-4 border-t border-brand-border/60 pt-4 md:grid-cols-4">
+        <div className="mt-3 grid grid-cols-1 gap-4 border-t border-brand-border/60 pt-3 md:grid-cols-4">
           <Info label="Detected Stage" value={defect.detected_at_stage} />
           <Info label="Problem Level" value={defect.problem_level} />
           <Info label="Qty Affected" value={defect.qty_affected} />
           <Info label="Containment" value={defect.containment_status} />
         </div>
 
-        <div className="mt-5 border-t border-brand-border/60 pt-4">
+        <div className="mt-3 border-t border-brand-border/60 pt-3">
           <Info label="Description" value={defect.description || 'No description provided.'} />
         </div>
 
         {suggestedHandlingItems.length > 0 && (
-          <div className="mt-5 border-t border-brand-border/60 pt-4">
+          <div className="mt-3 border-t border-brand-border/60 pt-3">
             <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Suggested Handling</p>
             <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-3">
               {suggestedHandlingItems.map((item) => (
@@ -800,19 +804,14 @@ function ManagerOverview({
           </div>
         )}
 
-        <div className="mt-5 border-t border-brand-border/60 pt-4">
+        <div className="mt-3 border-t border-brand-border/60 pt-3">
           <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Expiry Check</p>
-          <div className="mt-2 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <Info label="Expected Expiry" value={formatDate(defect.correct_expiry_date)} />
-              <Info label="Printed Expiry" value={formatDate(defect.printed_expiry_date)} />
-              <div>
-                <p className="text-[11px] font-semibold uppercase text-brand-muted">Verdict</p>
-                <span className={`mt-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${expiryMismatch ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                  {expiryMismatch ? 'Mismatch' : 'Match'}
-                </span>
-              </div>
-            </div>
+          <div className="mt-2 flex flex-wrap items-center gap-6">
+            <Info label="Expected Expiry" value={formatDate(defect.correct_expiry_date)} />
+            <Info label="Printed Expiry" value={formatDate(defect.printed_expiry_date)} />
+            <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${expiryMismatch ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+              {expiryMismatch ? 'Mismatch' : 'Match'}
+            </span>
           </div>
         </div>
       </div>
@@ -1305,7 +1304,7 @@ export default function DefectDetails({ user }) {
 
   return (
     <div className="space-y-6">
-      <div className="text-sm text-brand-muted">
+      <div className="sticky top-16 z-10 bg-softBg py-2 text-sm text-brand-muted">
         <button
           type="button"
           onClick={() => navigate('/defects')}
