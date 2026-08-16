@@ -595,15 +595,17 @@ function HorizontalStepper({ steps }) {
               : 'border-2 border-brand-200 bg-white text-brand-300'
 
           return (
-            <div key={step.title} className={`flex items-center ${index < steps.length - 1 ? 'flex-1' : ''}`}>
-              <div
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${nodeClass}`}
-                title={step.title}
-              >
-                {isCompleted ? '✓' : index + 1}
+            <div key={step.title} className={`flex items-start ${index < steps.length - 1 ? 'flex-1' : ''}`}>
+              <div className="flex flex-col items-center">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${nodeClass}`}>
+                  {isCompleted ? '✓' : index + 1}
+                </div>
+                <div className="mt-1.5 max-w-[90px] text-center text-[11px] leading-tight text-brand-muted">
+                  {step.title}
+                </div>
               </div>
               {index < steps.length - 1 && (
-                <div className={`mx-2 h-1 flex-1 rounded-full ${isCompleted ? 'bg-emerald-300' : 'bg-brand-border'}`} />
+                <div className={`mx-2 mt-4 h-1 flex-1 rounded-full ${isCompleted ? 'bg-emerald-300' : 'bg-brand-border'}`} />
               )}
             </div>
           )
@@ -726,6 +728,16 @@ function ManagerOverview({
       )}
 
       <div className="surface-card p-5">
+        <h3 className="flex items-center gap-2 text-sm font-bold text-brand-ink">
+          <ListChecks size={16} className="text-brand-muted" />
+          Progress
+        </h3>
+        <div className="mt-4">
+          <HorizontalStepper steps={workflowSteps} />
+        </div>
+      </div>
+
+      <div className="surface-card p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <h3 className="flex items-center gap-2 text-sm font-bold text-brand-ink">
             <FileText size={16} className="text-brand-muted" />
@@ -793,16 +805,6 @@ function ManagerOverview({
       </div>
 
       <DescriptionEvidenceCard defect={defect} />
-
-      <div className="surface-card p-5">
-        <h3 className="flex items-center gap-2 text-sm font-bold text-brand-ink">
-          <ListChecks size={16} className="text-brand-muted" />
-          Progress
-        </h3>
-        <div className="mt-4">
-          <HorizontalStepper steps={workflowSteps} />
-        </div>
-      </div>
     </div>
   )
 }
