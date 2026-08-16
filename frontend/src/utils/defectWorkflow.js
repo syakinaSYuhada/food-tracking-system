@@ -24,6 +24,24 @@ export function getActionStats(actions = []) {
   }
 }
 
+// Pure phase decision, no array filtering — takes already-computed counts (cancelled
+// actions already excluded, matching getActionStats' "active" list) plus the two
+// defect-level flags that aren't derivable from action counts alone. This is the single
+// source of truth for phase; both getDefectWorkflow and notifications.js's getDefectPhase
+// call through here so the decision can never drift between the two call sites.
+export function computeDefectPhase({ total, submitted, verified, rootConfirmed, isClosed }) {
+  const hasActions = total > 0
+  const allSubmitted = total === 0 || submitted === total
+  const allVerified = total === 0 || verified === total
+
+  if (isClosed) return 'closed'
+  if (!hasActions) return 'assign'
+  if (!allSubmitted) return 'worker_complete'
+  if (!allVerified) return 'manager_verify'
+  if (!rootConfirmed) return 'confirm_root_cause'
+  return 'close'
+}
+
 export function getDefectWorkflow(defect, actions = [], managerView = true) {
   if (!defect) {
     return {
@@ -45,13 +63,13 @@ export function getDefectWorkflow(defect, actions = [], managerView = true) {
   const isClosed = defect?.defect_status === 'closed'
   const rootConfirmed = defect?.root_cause_status === 'confirmed'
 
-  let phase
-  if (isClosed) phase = 'closed'
-  else if (!stats.hasActions) phase = 'assign'
-  else if (!stats.allSubmitted) phase = 'worker_complete'
-  else if (!stats.allVerified) phase = 'manager_verify'
-  else if (!rootConfirmed) phase = 'confirm_root_cause'
-  else phase = 'close'
+  const phase = computeDefectPhase({
+    total: stats.total,
+    submitted: stats.submitted,
+    verified: stats.verified,
+    rootConfirmed,
+    isClosed
+  })
 
   const blockers = []
   if (!isClosed && stats.hasActions && !stats.allVerified) {

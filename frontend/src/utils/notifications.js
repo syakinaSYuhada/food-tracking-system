@@ -1,7 +1,7 @@
 import { isManager } from './roleAccess'
 import { isActionOverdue } from './dueDate'
 import { formatExpiryDate, hasExpiryMismatch } from './expiry'
-import { getDefectWorkflow } from './defectWorkflow'
+import { getActionStats, computeDefectPhase } from './defectWorkflow'
 import {
   formatDefectPriorityLabel,
   getReviewDueStatus,
@@ -187,7 +187,15 @@ function selectNotificationItems(notifications, limit = PANEL_ITEM_LIMIT) {
 
 function getDefectPhase(defect, actions) {
   const defectActions = actions.filter((action) => Number(action.defect_id) === Number(defect.id))
-  return getDefectWorkflow(defect, defectActions, true).phase
+  const stats = getActionStats(defectActions)
+
+  return computeDefectPhase({
+    total: stats.total,
+    submitted: stats.submitted,
+    verified: stats.verified,
+    rootConfirmed: defect?.root_cause_status === 'confirmed',
+    isClosed: defect?.defect_status === 'closed'
+  })
 }
 
 export const ATTENTION_TONE_BY_KIND = {
