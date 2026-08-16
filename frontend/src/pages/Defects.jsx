@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AlertTriangle, FileWarning, FolderOpen, Layers, Plus, Search, SearchCheck } from 'lucide-react'
 import api from '../api/client'
-import DefectRecordCard from '../components/DefectRecordCard'
+import DefectRecordCard, { shouldShowWorkerPriorityBadge } from '../components/DefectRecordCard'
 import ListPagination from '../components/ListPagination'
 import PageHeader from '../components/PageHeader'
 import KPICard from '../components/KPICard'
@@ -1109,8 +1109,9 @@ export default function Defects({ user }) {
               )
             ) : (
               paged.items.map((defect) => {
+                const priorityBadgeShown = shouldShowWorkerPriorityBadge(defect.priority)
                 const hasReviewUrgencyContent = Boolean(
-                  defect.priority || defect.reviewDueDate || defect.urgencyReason
+                  !priorityBadgeShown || defect.reviewDueDate || defect.urgencyReason
                 )
                 const hasHandlingContent = Boolean(
                   defect.suggestedProductHandling || defect.suggestedMachineHandling || defect.relatedToolMachine
@@ -1129,14 +1130,14 @@ export default function Defects({ user }) {
                   >
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                       <DefectRecordCard.InfoCard title="Defect Information">
-                        <Info label="Defect Type" value={defect.defectType} />
-                        <Info label="Detection Stage" value={defect.detectedStage} />
                         <Info label="Containment" value={defect.containmentStatus} />
                       </DefectRecordCard.InfoCard>
 
                       {hasReviewUrgencyContent && (
                         <DefectRecordCard.InfoCard title="Manager Review Urgency">
-                          <Info label="Defect Priority" value={titleCase(defect.priority)} />
+                          {!priorityBadgeShown && (
+                            <Info label="Defect Priority" value={titleCase(defect.priority)} />
+                          )}
                           {defect.reviewDueDate && (
                             <Info label="Manager Review Due Date" value={defect.reviewDueDate} />
                           )}

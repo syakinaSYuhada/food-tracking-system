@@ -56,7 +56,7 @@ function getPriorityBadgeTone(priority) {
   return 'slate'
 }
 
-function shouldShowWorkerPriorityBadge(priority) {
+export function shouldShowWorkerPriorityBadge(priority) {
   const normalized = String(priority || '').toLowerCase()
   return normalized === 'high' || normalized === 'urgent' || normalized === 'critical'
 }
