@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { AlertTriangle, FileWarning, FolderOpen, Layers, Plus, Search, SearchCheck } from 'lucide-react'
+import { AlertTriangle, ClipboardCheck, FileWarning, FolderOpen, Layers, Plus, Search, SearchCheck, UserPlus } from 'lucide-react'
 import api from '../api/client'
 import DefectRecordCard, { shouldShowWorkerPriorityBadge } from '../components/DefectRecordCard'
+import AnalyticRow from '../components/AnalyticRow'
+import ListActionButton from '../components/ListActionButton'
 import ListPagination from '../components/ListPagination'
 import PageHeader from '../components/PageHeader'
 import KPICard from '../components/KPICard'
@@ -13,6 +15,7 @@ import LoadingState from '../components/LoadingState'
 import NotificationCard from '../components/NotificationCard'
 import FieldLabel from '../components/FieldLabel'
 import { isManager } from '../utils/roleAccess'
+import { computeDefectPhase } from '../utils/defectWorkflow'
 import useObjectUrl from '../utils/useObjectUrl'
 import { useToast } from '../components/Toast'
 import { paginateItems } from '../utils/pagination'
@@ -178,6 +181,29 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'ready_verification', label: 'Ready to Close' },
   { value: 'closed', label: 'Closed' }
 ]
+
+// Manager-only worklist shortcuts, appended to STATUS_FILTER_OPTIONS at the point of use.
+// "Needs Assignment" and "Needs Root Cause Confirmation" are workflow-phase concepts
+// (computeDefectPhase), not defect_status values, so they can't be literal entries in the
+// status enum above -- they're handled as special statusFilter values in the filter below.
+const WORKLIST_STATUS_OPTIONS = [
+  { value: 'needs_assignment', label: 'Needs Assignment' },
+  { value: 'needs_root_cause', label: 'Needs Root Cause Confirmation' }
+]
+
+// Mirrors notifications.js's getDefectPhase: the /defects list response already carries
+// total_actions/completed_actions/verified_actions per row (completed_actions there means
+// completed+verified, i.e. stats.submitted -- not stats.completed), so phase is derivable
+// with no per-defect actions-array fetch.
+function getWorklistPhase(defect) {
+  return computeDefectPhase({
+    total: Number(defect.total_actions || 0),
+    submitted: Number(defect.completed_actions || 0),
+    verified: Number(defect.verified_actions || 0),
+    rootConfirmed: defect.root_cause_status === 'confirmed',
+    isClosed: defect.status === 'closed'
+  })
+}
 
 const SEVERITY_FILTER_OPTIONS = [
   { value: 'all', label: 'All Severity' },
@@ -830,6 +856,8 @@ export default function Defects({ user }) {
           && ['new', 'under_review'].includes(defect.status)
       }
       if (statusFilter === 'open') return OPEN_DEFECT_STATUSES.includes(defect.status)
+      if (statusFilter === 'needs_assignment') return managerView && getWorklistPhase(defect) === 'assign'
+      if (statusFilter === 'needs_root_cause') return managerView && getWorklistPhase(defect) === 'confirm_root_cause'
       if (['under_review', 'action_assigned', 'in_progress', 'pending_verification', 'ready_verification', 'closed'].includes(statusFilter)) {
         return defect.status === statusFilter
       }
@@ -860,7 +888,7 @@ export default function Defects({ user }) {
 
   const kpis = useMemo(() => {
     if (loading) {
-      return { total: '-', newReports: '-', open: '-', affected: '-', underReview: '-' }
+      return { total: '-', newReports: '-', open: '-', affected: '-', underReview: '-', needsAssignment: '-', needsRootCause: '-' }
     }
 
     return {
@@ -868,7 +896,9 @@ export default function Defects({ user }) {
       newReports: defects.filter((d) => d.status === 'new').length,
       open: defects.filter((d) => OPEN_DEFECT_STATUSES.includes(d.status)).length,
       affected: defects.reduce((sum, d) => sum + d.qtyAffected, 0),
-      underReview: defects.filter((d) => d.status === 'under_review').length
+      underReview: defects.filter((d) => d.status === 'under_review').length,
+      needsAssignment: defects.filter((d) => getWorklistPhase(d) === 'assign').length,
+      needsRootCause: defects.filter((d) => getWorklistPhase(d) === 'confirm_root_cause').length
     }
   }, [defects, loading])
 
@@ -977,6 +1007,30 @@ export default function Defects({ user }) {
             icon={<Layers size={16} />}
           />
         )}
+        {managerView && (
+          <KpiCard
+            label="Needs Assignment"
+            value={kpis.needsAssignment}
+            subtitle="No corrective actions yet"
+            active={statusFilter === 'needs_assignment'}
+            highlight={kpis.needsAssignment > 0}
+            tone="amber"
+            onClick={() => setStatusFilter('needs_assignment')}
+            icon={<UserPlus size={16} />}
+          />
+        )}
+        {managerView && (
+          <KpiCard
+            label="Needs Root Cause Confirmation"
+            value={kpis.needsRootCause}
+            subtitle="All actions verified"
+            active={statusFilter === 'needs_root_cause'}
+            highlight={kpis.needsRootCause > 0}
+            tone="purple"
+            onClick={() => setStatusFilter('needs_root_cause')}
+            icon={<ClipboardCheck size={16} />}
+          />
+        )}
       </div>
 
       {managerView && hasUrgentReviewAttention(reviewAttention) && urgencyFilter !== 'urgent_review' && (
@@ -1039,7 +1093,7 @@ export default function Defects({ user }) {
             <LabeledFilterSelect
               label="Status"
               value={statusFilter}
-              options={STATUS_FILTER_OPTIONS}
+              options={managerView ? [...STATUS_FILTER_OPTIONS, ...WORKLIST_STATUS_OPTIONS] : STATUS_FILTER_OPTIONS}
               onChange={setStatusFilter}
             />
             <LabeledFilterSelect
@@ -1109,6 +1163,21 @@ export default function Defects({ user }) {
               )
             ) : (
               paged.items.map((defect) => {
+                if (statusFilter === 'needs_root_cause') {
+                  return (
+                    <AnalyticRow
+                      key={defect.id}
+                      accentClass="bg-purple-500"
+                      title={`${defect.code} — ${defect.defectType}`}
+                      subtitle={`${defect.productName} · Batch ${defect.batchNumber}`}
+                      meta={`${defect.actionProgress} · Reported ${defect.createdAt}`}
+                      action={(
+                        <ListActionButton intent="review" onClick={() => navigate(`/defects/${defect.id}?tab=root-cause`)} />
+                      )}
+                    />
+                  )
+                }
+
                 const priorityBadgeShown = shouldShowWorkerPriorityBadge(defect.priority)
                 const hasReviewUrgencyContent = Boolean(
                   !priorityBadgeShown || defect.reviewDueDate || defect.urgencyReason
