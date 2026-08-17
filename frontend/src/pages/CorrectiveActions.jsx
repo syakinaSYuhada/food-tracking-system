@@ -387,6 +387,14 @@ export default function CorrectiveActions({ user }) {
   const overdueKpiActive = caDueFilter === 'overdue' && statusFilter === 'all'
   const totalKpiActive = statusFilter === 'all' && caDueFilter === 'all'
 
+  const overdueCount = Number(kpis.overdue)
+  const pendingReviewCount = Number(kpis.pendingReview)
+  const managerSubtitle = loading
+    ? 'Overdue and pending review items are surfaced first. Verify or reject completed work directly from the list.'
+    : (overdueCount > 0 || pendingReviewCount > 0)
+      ? `${overdueCount} overdue, ${pendingReviewCount} awaiting verification — review these first.`
+      : 'All corrective actions are on track.'
+
   async function verifyAction(actionId) {
     try {
       await api.patch(`/corrective-actions/${actionId}/verify`, { verified_by: managerId })
@@ -405,7 +413,7 @@ export default function CorrectiveActions({ user }) {
       <PageHeader
         title={managerView ? 'Corrective Actions' : 'My Work'}
         subtitle={managerView
-          ? 'Overdue and pending review items are surfaced first. Verify or reject completed work directly from the list.'
+          ? managerSubtitle
           : 'Your assigned corrective work — overdue items appear at the top.'}
         eyebrow={managerView ? 'Quality Control' : 'Worker Portal'}
       />
@@ -449,7 +457,7 @@ export default function CorrectiveActions({ user }) {
         )}
       </div>
 
-      <div className={`grid grid-cols-2 gap-2 ${managerView ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
+      <div className={`grid grid-cols-2 gap-2 !mt-6 ${managerView ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
         <KPICard
           variant="secondary"
           title={managerView ? 'Total Actions' : 'My Work'}
