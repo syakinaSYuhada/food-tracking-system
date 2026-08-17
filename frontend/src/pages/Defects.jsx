@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { AlertTriangle, ClipboardCheck, FileWarning, FolderOpen, Layers, Plus, Search, SearchCheck, UserPlus } from 'lucide-react'
+import { AlertTriangle, FileWarning, FolderOpen, Layers, Plus, Search } from 'lucide-react'
 import api from '../api/client'
 import DefectRecordCard, { shouldShowWorkerPriorityBadge } from '../components/DefectRecordCard'
 import AnalyticRow from '../components/AnalyticRow'
@@ -8,6 +8,7 @@ import ListActionButton from '../components/ListActionButton'
 import ListPagination from '../components/ListPagination'
 import PageHeader from '../components/PageHeader'
 import KPICard from '../components/KPICard'
+import TabPills from '../components/TabPills'
 import Button from '../components/Button'
 import BaseModal from '../components/BaseModal'
 import EmptyState from '../components/EmptyState'
@@ -170,26 +171,28 @@ function getValidationMessage(form, step, workerReport, qtyExceedsBatch) {
 
 const OPEN_DEFECT_STATUSES = ['new', 'under_review', 'action_assigned', 'in_progress', 'pending_verification', 'ready_verification']
 
-const STATUS_FILTER_OPTIONS = [
-  { value: 'all', label: 'All' },
-  { value: 'new', label: 'New Reports' },
-  { value: 'open', label: 'Open' },
-  { value: 'under_review', label: 'Under Review' },
-  { value: 'action_assigned', label: 'Actions Assigned' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'pending_verification', label: 'Pending Verification' },
-  { value: 'ready_verification', label: 'Ready to Close' },
-  { value: 'closed', label: 'Closed' }
-]
+function getStatusFilterOptions(managerView) {
+  const options = [
+    { value: 'all', label: 'All' },
+    { value: 'new', label: 'New Reports' },
+    { value: 'open', label: 'Open' },
+    { value: 'under_review', label: 'Under Review' },
+    { value: 'action_assigned', label: 'Actions Assigned' },
+    { value: 'in_progress', label: 'In Progress' },
+    { value: 'pending_verification', label: 'Pending Verification' },
+    { value: 'ready_verification', label: 'Ready to Close' },
+    { value: 'closed', label: 'Closed' }
+  ]
 
-// Manager-only worklist shortcuts, appended to STATUS_FILTER_OPTIONS at the point of use.
-// "Needs Assignment" and "Needs Root Cause Confirmation" are workflow-phase concepts
-// (computeDefectPhase), not defect_status values, so they can't be literal entries in the
-// status enum above -- they're handled as special statusFilter values in the filter below.
-const WORKLIST_STATUS_OPTIONS = [
-  { value: 'needs_assignment', label: 'Needs Assignment' },
-  { value: 'needs_root_cause', label: 'Needs Root Cause Confirmation' }
-]
+  // Manager view: New Reports, Under Review, Needs Assignment, and Needs Root Cause
+  // Confirmation are now owned by the tab bar, so keeping them here too would give
+  // managers two controls for the same filter.
+  if (managerView) {
+    return options.filter((option) => option.value !== 'new' && option.value !== 'under_review')
+  }
+
+  return options
+}
 
 // Mirrors notifications.js's getDefectPhase: the /defects list response already carries
 // total_actions/completed_actions/verified_actions per row (completed_actions there means
@@ -944,8 +947,20 @@ export default function Defects({ user }) {
         </p>
       )}
 
-      <div className="list-kpi-grid">
-        {!managerView && (
+      {managerView ? (
+        <TabPills
+          items={[
+            { value: 'all', label: `All Defects (${kpis.total})` },
+            { value: 'new', label: `New (Awaiting Review) (${kpis.newReports})` },
+            { value: 'under_review', label: `Under Review (${kpis.underReview})` },
+            { value: 'needs_assignment', label: `Needs Assignment (${kpis.needsAssignment})` },
+            { value: 'needs_root_cause', label: `Needs Root Cause Confirmation (${kpis.needsRootCause})` }
+          ]}
+          value={statusFilter}
+          onChange={setStatusFilter}
+        />
+      ) : (
+        <div className="list-kpi-grid">
           <KpiCard
             label="My Reports"
             value={kpis.total}
@@ -959,19 +974,6 @@ export default function Defects({ user }) {
             }}
             icon={<Layers size={16} />}
           />
-        )}
-        {managerView ? (
-          <KpiCard
-            label="New Reports"
-            value={kpis.newReports}
-            subtitle="Worker reports awaiting review"
-            active={statusFilter === 'new'}
-            highlight={kpis.newReports > 0}
-            tone="amber"
-            onClick={() => setStatusFilter('new')}
-            icon={<FileWarning size={16} />}
-          />
-        ) : (
           <KpiCard
             label="Awaiting Manager"
             value={loading ? '-' : defects.filter((d) => Number(d.createdBy) === Number(currentUser?.id) && ['new', 'under_review'].includes(d.status)).length}
@@ -983,8 +985,6 @@ export default function Defects({ user }) {
             onClick={() => setStatusFilter('new')}
             icon={<FileWarning size={16} />}
           />
-        )}
-        {!managerView && (
           <KpiCard
             label="Open"
             value={kpis.open}
@@ -993,49 +993,14 @@ export default function Defects({ user }) {
             onClick={() => setStatusFilter('open')}
             icon={<FolderOpen size={16} />}
           />
-        )}
-        {managerView ? (
-          <KpiCard
-            label="Under Review"
-            value={kpis.underReview}
-            subtitle="Manager actively reviewing"
-            active={statusFilter === 'under_review'}
-            onClick={() => setStatusFilter('under_review')}
-            icon={<SearchCheck size={16} />}
-          />
-        ) : (
           <KpiCard
             label="Affected Units"
             value={kpis.affected}
             subtitle="Total quantity impacted"
             icon={<Layers size={16} />}
           />
-        )}
-        {managerView && (
-          <KpiCard
-            label="Needs Assignment"
-            value={kpis.needsAssignment}
-            subtitle="No corrective actions yet"
-            active={statusFilter === 'needs_assignment'}
-            highlight={kpis.needsAssignment > 0}
-            tone="amber"
-            onClick={() => setStatusFilter('needs_assignment')}
-            icon={<UserPlus size={16} />}
-          />
-        )}
-        {managerView && (
-          <KpiCard
-            label="Needs Root Cause Confirmation"
-            value={kpis.needsRootCause}
-            subtitle="All actions verified"
-            active={statusFilter === 'needs_root_cause'}
-            highlight={kpis.needsRootCause > 0}
-            tone="purple"
-            onClick={() => setStatusFilter('needs_root_cause')}
-            icon={<ClipboardCheck size={16} />}
-          />
-        )}
-      </div>
+        </div>
+      )}
 
       {managerView && hasUrgentReviewAttention(reviewAttention) && urgencyFilter !== 'urgent_review' && (
         <NotificationCard
@@ -1097,7 +1062,7 @@ export default function Defects({ user }) {
             <LabeledFilterSelect
               label="Status"
               value={statusFilter}
-              options={managerView ? [...STATUS_FILTER_OPTIONS, ...WORKLIST_STATUS_OPTIONS] : STATUS_FILTER_OPTIONS}
+              options={getStatusFilterOptions(managerView)}
               onChange={setStatusFilter}
             />
             <LabeledFilterSelect
