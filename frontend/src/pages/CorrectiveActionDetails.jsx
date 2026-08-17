@@ -484,7 +484,7 @@ export default function CorrectiveActionDetails({ user }) {
           </div>
         )}
 
-        {managerView && action.status === 'completed' && (
+        {managerView && action.status === 'completed' && !isClosedDefect && (
           <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             Verify or reject this action here, or return to{' '}
             <button
