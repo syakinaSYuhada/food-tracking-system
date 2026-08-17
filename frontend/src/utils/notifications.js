@@ -45,7 +45,7 @@ function getUrgentReviewNotification(defect) {
   if (!isOpenDefect(defect)) return null
 
   const status = getDefectStatus(defect)
-  const reviewStatus = getReviewDueStatus(defect.review_due_date, status, defect.root_cause_status)
+  const reviewStatus = getReviewDueStatus(defect.review_due_date, status, defect.root_cause_status, defect.total_actions, defect.verified_actions)
 
   if (reviewStatus === 'overdue') {
     return {
