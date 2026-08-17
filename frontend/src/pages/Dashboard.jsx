@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertCircle, CheckSquare, ClipboardList, Clock, Layers, Package, Plus, TrendingDown, AlertTriangle } from 'lucide-react'
+import { AlertCircle, CheckSquare, ClipboardList, Clock, Layers, Package, Plus, AlertTriangle } from 'lucide-react'
 import api from '../api/client'
 import StatusBadge from '../components/StatusBadge'
 import Button from '../components/Button'
@@ -26,10 +26,6 @@ import { buildManagerAttentionSummary } from '../utils/notifications'
 import { defectStatusHint } from '../utils/defectStatusHint'
 
 const PIE_COLORS = ['#1F8F73', '#146356', '#C2410C', '#F59E0B', '#7EC6AE']
-
-function money(value) {
-  return `RM ${Number(value || 0).toFixed(2)}`
-}
 
 function formatDate(value) {
   if (!value) return '-'
@@ -61,7 +57,6 @@ export default function Dashboard({ user }) {
   const navigate = useNavigate()
   const managerView = isManager(user)
   const [summary, setSummary] = useState(null)
-  const [rootReport, setRootReport] = useState(null)
   const [workerActions, setWorkerActions] = useState([])
   const [workerDefects, setWorkerDefects] = useState([])
   const [managerActions, setManagerActions] = useState([])
@@ -84,9 +79,8 @@ export default function Dashboard({ user }) {
         if (managerView) {
           const summaryParams = buildReportPeriodParams(period, selectedMonth)
 
-          const [summaryRes, rootRes, actionsRes, defectsRes] = await Promise.all([
+          const [summaryRes, actionsRes, defectsRes] = await Promise.all([
             api.get('/reports/dashboard/summary', { params: summaryParams }),
-            api.get('/reports/root-causes', { params: summaryParams }),
             api.get('/corrective-actions'),
             api.get('/defects')
           ])
@@ -94,9 +88,7 @@ export default function Dashboard({ user }) {
           if (cancelled) return
 
           const s = summaryRes?.data?.data ?? summaryRes?.data ?? {}
-          const r = rootRes?.data?.data ?? rootRes?.data ?? {}
           setSummary(s)
-          setRootReport(r)
           setManagerActions(actionsRes.data.data || [])
           setManagerDefects(defectsRes.data.data || [])
           setWorkerActions([])
@@ -113,7 +105,6 @@ export default function Dashboard({ user }) {
           setWorkerActions(actionsRes.data.data || [])
           setWorkerDefects(defectsRes.data.data || [])
           setSummary(null)
-          setRootReport(null)
         }
       } catch (error) {
         console.error(error)
@@ -183,26 +174,14 @@ export default function Dashboard({ user }) {
       value: Number(t.value || t.defects || 0)
     }))
 
-    const rootCauses = [...(rootReport?.breakdown || [])]
-      .sort((a, b) => Number(b.total || 0) - Number(a.total || 0))
-      .slice(0, 5)
-      .map((item) => ({
-        name: item.root_cause,
-        cases: Number(item.total ?? item.count ?? 0),
-        confirmed: Number(item.confirmed ?? 0),
-        suspected: Number(item.suspected ?? 0),
-        pending: Number(item.pending_investigation ?? 0)
-      }))
-
     return {
       kpis,
       defectsByType,
       caStatus,
       trendData,
-      rootCauses,
       latest: summary.latest_defects || []
     }
-  }, [summary, rootReport])
+  }, [summary])
 
   if (initialLoading) return <LoadingState label="Loading dashboard..." />
 
@@ -373,7 +352,7 @@ export default function Dashboard({ user }) {
 
   if (!data) return <div className="text-sm text-red-600">Failed to load dashboard.</div>
 
-  const { kpis, defectsByType, caStatus, trendData, rootCauses, latest } = data
+  const { kpis, defectsByType, caStatus, trendData, latest } = data
   const pendingReviewCount = Number(kpis.pending_review_actions ?? 0)
 
   // All-time, not period-scoped: this must stay in lockstep with the header bell
@@ -433,49 +412,10 @@ export default function Dashboard({ user }) {
       <div className="space-y-3">
         <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Performance Overview</p>
 
-        <div className="list-kpi-grid lg:grid-cols-4">
+        <div className="list-kpi-grid lg:grid-cols-3">
           <KPICard density="command" title="Total Defects" value={kpis.total_defects ?? '-'} subtitle="This period" icon={<Layers size={18} />} tone="blue" />
           <KPICard density="command" title="Open Defects" value={kpis.open_defects ?? '-'} subtitle="Not closed" icon={<Package size={18} />} tone="amber" />
           <KPICard density="command" title="Open Actions" value={kpis.open_actions ?? '-'} subtitle="In progress" icon={<CheckSquare size={18} />} tone="purple" />
-          <KPICard
-            density="command"
-            title="Expiry Mismatches"
-            value={kpis.expiry_mismatch_batches ?? 0}
-            subtitle="Label vs retort"
-            icon={<AlertTriangle size={18} />}
-            tone="red"
-            highlight={Number(kpis.expiry_mismatch_batches) > 0}
-            onClick={() => navigate('/reports?tab=traceability&view=expiry-defect-cases')}
-          />
-        </div>
-
-        <div className="list-kpi-strip lg:grid-cols-3">
-          <KPICard
-            density="command"
-            title="Loss at Risk"
-            value={money(kpis.loss_at_risk ?? 0)}
-            subtitle="Open defects · held inventory"
-            icon={<AlertTriangle size={18} />}
-            tone="amber"
-            highlight={Number(kpis.loss_at_risk) > 0}
-          />
-          <KPICard
-            density="command"
-            title="Pending Loss"
-            value={money(kpis.pending_loss ?? 0)}
-            subtitle="Discarded · case still open"
-            icon={<TrendingDown size={18} />}
-            tone="purple"
-            highlight={Number(kpis.pending_loss) > 0}
-          />
-          <KPICard
-            density="command"
-            title="Confirmed Loss"
-            value={money(kpis.confirmed_loss ?? 0)}
-            subtitle="Finalized on close"
-            icon={<TrendingDown size={18} />}
-            tone="red"
-          />
         </div>
       </div>
 
@@ -571,33 +511,7 @@ export default function Dashboard({ user }) {
         </div>
 
         <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
-          <SectionCard title="Top Root Causes" subtitle="Confirmed and suspected causes grouped by frequency." className="lg:col-span-1">
-            {rootCauses.length === 0 ? (
-              <EmptyState
-                title="No root cause data yet"
-                description="Root causes appear after manager confirmation on investigations."
-              />
-            ) : (
-              <div className="compact-list-stack">
-                {rootCauses.slice(0, 5).map((root, i) => (
-                  <AnalyticRow
-                    key={`${root.name}-${i}`}
-                    accentClass="bg-brand-500"
-                    title={root.name}
-                    subtitle={`${root.confirmed} confirmed · ${root.suspected} suspected · ${root.pending} pending`}
-                    trailing={(
-                      <div className="text-right">
-                        <p className="text-micro uppercase text-brand-muted">Total</p>
-                        <p className="text-base font-bold text-brand-ink">{root.cases}</p>
-                      </div>
-                    )}
-                  />
-                ))}
-              </div>
-            )}
-          </SectionCard>
-
-          <SectionCard title="Recent Defects" subtitle="Latest defect records in the selected period." className="lg:col-span-2">
+          <SectionCard title="Recent Defects" subtitle="Latest defect records in the selected period." className="lg:col-span-3">
             {latest.length === 0 ? (
               <EmptyState
                 title="No recent defects"
