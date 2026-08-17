@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { AlertTriangle, ArrowLeft, CheckCircle, Edit, Eye, FileText, ListChecks, Paperclip, Play, Plus, Printer, Save, XCircle } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, CheckCircle, ChevronLeft, ChevronRight, Edit, Eye, FileText, ListChecks, Paperclip, Play, Plus, Printer, Save, X, XCircle } from 'lucide-react'
 import api from '../api/client'
 import StatusBadge from '../components/StatusBadge'
 import BaseModal from '../components/BaseModal'
@@ -667,7 +667,70 @@ function ReviewUrgencyBanner({ defect, managerView, onEdit }) {
   )
 }
 
+function EvidenceLightbox({ photos, index, onClose, onNavigate }) {
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
+  const photo = photos[index]
+  const hasMultiple = photos.length > 1
+
+  if (!photo) return null
+
+  return (
+    <div className="modal-overlay" onClick={onClose} role="presentation">
+      <div className="relative" onClick={(e) => e.stopPropagation()}>
+        <img
+          src={photo.url || photo}
+          alt={photo.fileName || 'Evidence photo'}
+          className="max-h-[85vh] max-w-[85vw] rounded-2xl object-contain shadow-float"
+        />
+        <button type="button" onClick={onClose} className="icon-btn absolute -top-3 -right-3" aria-label="Close">
+          <X size={16} />
+        </button>
+        {hasMultiple && (
+          <>
+            <button
+              type="button"
+              onClick={() => onNavigate(-1)}
+              className="icon-btn absolute left-3 top-1/2 -translate-y-1/2"
+              aria-label="Previous photo"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate(1)}
+              className="icon-btn absolute right-3 top-1/2 -translate-y-1/2"
+              aria-label="Next photo"
+            >
+              <ChevronRight size={18} />
+            </button>
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white">
+              {index + 1} / {photos.length}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function DescriptionEvidenceCard({ defect }) {
+  const [lightboxIndex, setLightboxIndex] = useState(null)
+  const photos = defect.photos || []
+
+  function navigateLightbox(delta) {
+    setLightboxIndex((current) => {
+      if (current === null || photos.length === 0) return current
+      return (current + delta + photos.length) % photos.length
+    })
+  }
+
   return (
     <div className="relative mt-2 surface-card p-6">
       <h3 className="absolute -top-3 left-6 flex items-center gap-2 bg-white px-3 text-sm font-bold text-brand-ink">
@@ -684,19 +747,32 @@ function DescriptionEvidenceCard({ defect }) {
           <p className="text-sm font-semibold text-brand-muted">Evidence / Photos</p>
         </div>
         <div className="mt-3">
-          {(defect.photos || []).length === 0 ? (
+          {photos.length === 0 ? (
             <div className="text-sm text-brand-muted">No photos uploaded.</div>
           ) : (
             <div className="mt-2 grid grid-cols-3 gap-2">
-              {(defect.photos || []).map((p, i) => (
-                <div key={p.id ?? p.url ?? i} className="aspect-square overflow-hidden rounded-md border border-brand-border/70 bg-brand-50">
+              {photos.map((p, i) => (
+                <button
+                  key={p.id ?? p.url ?? i}
+                  type="button"
+                  onClick={() => setLightboxIndex(i)}
+                  className="aspect-square overflow-hidden rounded-md border border-brand-border/70 bg-brand-50 transition-opacity hover:opacity-90"
+                >
                   <img src={p.url || p} alt={`evidence-${i}`} className="h-full w-full object-cover" />
-                </div>
+                </button>
               ))}
             </div>
           )}
         </div>
       </div>
+      {lightboxIndex !== null && (
+        <EvidenceLightbox
+          photos={photos}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={navigateLightbox}
+        />
+      )}
     </div>
   )
 }
