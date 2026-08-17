@@ -27,6 +27,7 @@ import {
   formatReviewDueDate,
   formatUrgentReviewCountSummary,
   getDefectAttentionReasons,
+  getReviewDueStatus,
   hasUrgentReviewAttention,
   mapRecommendedPriority,
   matchesUrgentReviewFilter,
@@ -1150,6 +1151,15 @@ export default function Defects({ user }) {
 
                 const attentionReasons = getDefectAttentionReasons(defect, managerView).reasons
 
+                const isReviewed = defect.status !== 'new'
+                const totalActions = defect.total_actions || 0
+                const verifiedActions = defect.verified_actions || 0
+                const isAssigned = totalActions > 0
+                const allActionsVerified = totalActions > 0 && verifiedActions === totalActions
+                const isRootCauseConfirmed = defect.root_cause_status === 'confirmed'
+                const isClosed = defect.status === 'closed'
+                const reviewDueStatus = getReviewDueStatus(defect.reviewDueDate, defect.status, defect.root_cause_status, defect.total_actions, defect.verified_actions)
+
                 return (
                   <DefectRecordCard
                     key={defect.id}
@@ -1161,20 +1171,63 @@ export default function Defects({ user }) {
                     onToggle={() => setExpanded(expanded === defect.id ? null : defect.id)}
                     onView={() => navigate(`/defects/${defect.id}`)}
                   >
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      {attentionReasons.length > 0 && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                         <div>
-                          {/* Invisible spacer matching Info's label row height, keeping this cell's icon+text aligned with sibling values */}
-                          <div className="h-4" aria-hidden="true" />
-                          <div className="mt-1 flex items-center gap-1">
-                            <AlertTriangle size={12} className="shrink-0 text-red-600" />
-                            <span className="text-sm font-semibold text-red-600">{attentionReasons.join(' · ')}</span>
-                          </div>
+                          <p className="text-xs font-semibold uppercase text-brand-muted">Reviewed</p>
+                          <p className={`mt-1 text-sm font-semibold ${isReviewed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isReviewed ? 'Yes' : 'No'}</p>
                         </div>
-                      )}
-                      <Info label="Review Due Date" value={defect.reviewDueDate} />
-                      <Info label="Containment" value={defect.containmentStatus} />
-                      <Info label="Description" value={defect.description} />
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-brand-muted">Assigned</p>
+                          <p className={`mt-1 text-sm font-semibold ${isAssigned ? 'text-emerald-600' : 'text-brand-ink'}`}>{isAssigned ? 'Yes' : 'No'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-brand-muted">Actions Verified</p>
+                          <p className={`mt-1 text-sm font-semibold ${allActionsVerified ? 'text-emerald-600' : 'text-brand-ink'}`}>{verifiedActions} / {totalActions}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-brand-muted">Root Cause Confirmed</p>
+                          <p className={`mt-1 text-sm font-semibold ${isRootCauseConfirmed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isRootCauseConfirmed ? 'Yes' : 'No'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-brand-muted">Closed</p>
+                          <p className={`mt-1 text-sm font-semibold ${isClosed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isClosed ? 'Yes' : 'No'}</p>
+                          <p className="mt-0.5 text-xs text-brand-muted">Requires all actions verified and root cause confirmed.</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        {attentionReasons.length > 0 && (
+                          <div>
+                            {/* Invisible spacer matching Info's label row height, keeping this cell's icon+text aligned with sibling values */}
+                            <div className="h-4" aria-hidden="true" />
+                            <div className="mt-1 flex items-center gap-1">
+                              <AlertTriangle size={12} className="shrink-0 text-red-600" />
+                              <span className="text-sm font-semibold text-red-600">{attentionReasons.join(' · ')}</span>
+                            </div>
+                          </div>
+                        )}
+                        {!isReviewed && (
+                          reviewDueStatus === 'overdue' ? (
+                            <div>
+                              <p className="text-xs font-semibold uppercase text-brand-muted">Review Due Date</p>
+                              <p className="mt-1 text-sm font-semibold text-red-600">Overdue</p>
+                              <p className="mt-0.5 text-xs text-brand-muted">Past due {defect.reviewDueDate}</p>
+                            </div>
+                          ) : (
+                            <Info label="Review Due Date" value={defect.reviewDueDate} />
+                          )
+                        )}
+                        <Info label="Containment" value={defect.containmentStatus} />
+                        <Info label="Description" value={defect.description} />
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-brand-muted">Problem Level</p>
+                          <p className="mt-1 text-sm font-semibold text-brand-ink">{defect.problemLevel || '-'}</p>
+                        </div>
+                        {!isClosed && (
+                          <Info label="Priority" value={formatDefectPriorityLabel(defect.priority)} />
+                        )}
+                      </div>
                     </div>
                   </DefectRecordCard>
                 )

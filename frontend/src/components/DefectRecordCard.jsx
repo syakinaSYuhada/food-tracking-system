@@ -37,7 +37,7 @@ export default function DefectRecordCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1">
             <span className="list-row-code">{defect.code}</span>
-            {needsAttention && (
+            {needsAttention && defect.status !== 'closed' && (
               <AlertTriangle size={12} className="shrink-0 text-red-600" title="Needs attention" />
             )}
             <StatusBadge
