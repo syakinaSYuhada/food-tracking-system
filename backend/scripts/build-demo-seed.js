@@ -519,7 +519,7 @@ const monthlyActionSupplements = [
   ca('CA053', 30, 2, '2026-04-28', 'medium', 'rejected', '2026-04-16 09:00:00', { task: 'Relabel batch code mismatch.', started: '2026-04-18 10:00:00', completed: '2026-04-22 11:00:00', rejected: '2026-04-23 14:00:00', rejectionReason: 'Before/after label photos not attached.' }),
   ca('CA054', 29, 2, '2026-04-25', 'low', 'cancelled', '2026-04-15 08:00:00', { task: 'Cancelled duplicate relabelling task.' }),
   ca('CA055', 34, 2, '2026-05-15', 'high', 'assigned', '2026-05-08 09:00:00', { task: 'Change expiry date mould; Test print expiry date before full labelling' }),
-  ca('CA056', 36, 3, '2026-05-22', 'high', 'completed', '2026-05-14 10:00:00', { task: 'Separate affected batch; Discard defective product', started: '2026-05-16 09:00:00', completed: '2026-05-20 16:00:00' }),
+  ca('CA056', 36, 3, '2026-05-22', 'high', 'verified', '2026-05-14 10:00:00', { task: 'Separate affected batch; Discard defective product', started: '2026-05-16 09:00:00', completed: '2026-05-20 16:00:00', verified: '2026-05-26' }),
   ca('CA057', 37, 3, '2026-05-25', 'medium', 'rejected', '2026-05-18 09:00:00', { type: 'machine_process_check', task: 'Adjust sealing machine pressure; Test sealing sample', started: '2026-05-19 10:00:00', completed: '2026-05-22 11:00:00', rejected: '2026-05-23 15:00:00', rejectionReason: 'Sample count below SOP minimum.' }),
   ca('CA058', 39, 3, '2026-06-02', 'medium', 'cancelled', '2026-05-26 08:00:00', { task: 'Cancelled after retort parameter update.' }),
   ca('CA059', 15, 3, '2026-03-20', 'medium', 'assigned', '2026-03-05 09:00:00', { type: 'machine_process_check', task: 'Adjust sealing machine pressure; Test sealing sample' }),
