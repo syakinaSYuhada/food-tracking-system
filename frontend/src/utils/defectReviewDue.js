@@ -63,6 +63,14 @@ export function isUrgentDefectPriority(defect) {
   return priority === 'urgent' || priority === 'critical'
 }
 
+export function getDefectAttentionReasons(defect, managerView) {
+  const reasons = []
+  if (getReviewDueStatus(defect?.reviewDueDate, defect?.status) === 'overdue') reasons.push('Overdue')
+  if (managerView && defect?.problemLevel === 'Food Safety Risk') reasons.push('Food Safety Risk')
+  if (isUrgentDefectPriority(defect)) reasons.push('Urgent Priority')
+  return { flagged: reasons.length > 0, reasons }
+}
+
 export function needsManagerReviewAttention(defect) {
   if (!isOpenDefect(defect)) return false
   return Boolean(getReviewDueStatus(defect.reviewDueDate || defect.review_due_date, getDefectStatus(defect)))

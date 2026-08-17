@@ -4,7 +4,7 @@ import EntityRow from './EntityRow'
 import StatusBadge from './StatusBadge'
 import { isActionOverdue } from '../utils/dueDate'
 import { getWorkerActionProgressHint } from '../utils/workerActionProgressHint'
-import { isCriticalActionPriority } from '../utils/actionPriority'
+import { getActionAttentionReasons } from '../utils/actionPriority'
 
 function formatDisplayDate(value) {
   if (!value || value === '-') return '-'
@@ -41,8 +41,7 @@ export default function CorrectiveActionRow({
 }) {
   const overdue = isActionOverdue(action.dueDate, action.status)
   const pendingReview = managerView && action.status === 'completed'
-  const criticalPriority = isCriticalActionPriority(action)
-  const needsAttention = overdue || criticalPriority
+  const needsAttention = getActionAttentionReasons(action).flagged
   const showManagerActions = managerView && action.status === 'completed'
   const verifyBlocked = managerView && action.status === 'completed'
     && action.evidenceRequired && !action.hasEvidence

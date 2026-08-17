@@ -4,15 +4,10 @@ import ListActionButton from './ListActionButton'
 import EntityRow from './EntityRow'
 import {
   formatReviewDueDate,
-  getReviewDueStatus,
-  isUrgentDefectPriority
+  getDefectAttentionReasons,
+  getReviewDueStatus
 } from '../utils/defectReviewDue'
 import { defectStatusBadgeTitle } from '../utils/defectStatusHint'
-
-export function shouldShowWorkerPriorityBadge(priority) {
-  const normalized = String(priority || '').toLowerCase()
-  return normalized === 'high' || normalized === 'urgent' || normalized === 'critical'
-}
 
 export default function DefectRecordCard({
   defect,
@@ -24,10 +19,7 @@ export default function DefectRecordCard({
   children
 }) {
   const reviewDueStatus = getReviewDueStatus(defect.reviewDueDate, defect.status)
-  const isUrgentPriority = isUrgentDefectPriority(defect)
-  const needsAttention = reviewDueStatus === 'overdue'
-    || (managerView && defect.problemLevel === 'Food Safety Risk')
-    || isUrgentPriority
+  const needsAttention = getDefectAttentionReasons(defect, managerView).flagged
   const hasAssignedAction = managerView ? undefined : Boolean(workerAssignedDefectIds?.has(Number(defect.id)))
 
   const reportedValue = defect.reportedByName
