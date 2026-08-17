@@ -84,7 +84,7 @@ const styles = {
   inactive: 'bg-slate-100 text-slate-600 border-slate-200/80'
 }
 
-function StatusBadge({ value, kind, audience, prefix, title }) {
+function StatusBadge({ value, kind, audience, prefix, title, listView = false }) {
   const normalized = String(value || '').toLowerCase()
   const workerDefectLabels = {
     action_assigned: 'Work Assigned'
@@ -99,6 +99,23 @@ function StatusBadge({ value, kind, audience, prefix, title }) {
           .replaceAll('_', ' ')
           .replace(/\b\w/g, (char) => char.toUpperCase())))
   const label = prefix ? `${prefix}: ${statusLabel}` : statusLabel
+
+  // List-view color simplification: for ca_status and defect_status only, no badge
+  // renders except the single "done" state (verified / closed), shown in green.
+  // Detail pages and every other kind/entity (batch, product, user, loss_status,
+  // root_cause) are untouched since they never pass listView.
+  if (listView && (kind === 'ca' || !kind)) {
+    const isDone = kind === 'ca' ? normalized === 'verified' : normalized === 'closed'
+    if (!isDone) return null
+
+    return (
+      <span className="badge bg-emerald-50 text-emerald-700 border-emerald-200/80" title={title}>
+        <span className="badge-dot bg-emerald-500" aria-hidden="true" />
+        {label}
+      </span>
+    )
+  }
+
   const styleClass = styles[normalized] || 'bg-slate-100 text-slate-700 border-slate-200/80'
   const dotClass = dotColors[normalized] || 'bg-slate-400'
 

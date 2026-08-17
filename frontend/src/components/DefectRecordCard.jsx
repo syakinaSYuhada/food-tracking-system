@@ -4,56 +4,17 @@ import ListActionButton from './ListActionButton'
 import EntityRow from './EntityRow'
 import {
   formatDefectPriorityLabel,
+  formatReviewDueDate,
   getReviewDueBadge,
-  getReviewDueStatus
+  getReviewDueStatus,
+  isUrgentDefectPriority
 } from '../utils/defectReviewDue'
 import { defectStatusBadgeTitle } from '../utils/defectStatusHint'
-
-const ACCENT_BY_LEVEL = {
-  'Food Safety Risk': 'bg-red-500',
-  'Cannot Be Sold': 'bg-orange-500',
-  'Hold for Review': 'bg-amber-500',
-  'Can Be Corrected': 'bg-brand-500'
-}
-
-const ACCENT_BY_STATUS = {
-  new: 'bg-emerald-400',
-  under_review: 'bg-violet-500',
-  action_assigned: 'bg-indigo-500',
-  in_progress: 'bg-blue-500',
-  pending_verification: 'bg-amber-500',
-  ready_verification: 'bg-purple-500',
-  closed: 'bg-slate-300'
-}
-
-function getDefaultAccentClass(defect) {
-  return ACCENT_BY_LEVEL[defect.problemLevel]
-    || ACCENT_BY_STATUS[defect.status]
-    || 'bg-brand-500'
-}
-
-function getCardAccentClass(defect) {
-  const reviewStatus = getReviewDueStatus(defect.reviewDueDate, defect.status)
-
-  if (defect.problemLevel === 'Food Safety Risk') return 'bg-red-500'
-  if (reviewStatus === 'overdue') return 'bg-red-500'
-  if (reviewStatus === 'today') return 'bg-amber-500'
-
-  return getDefaultAccentClass(defect)
-}
 
 function getCardRingClass(defect) {
   const reviewStatus = getReviewDueStatus(defect.reviewDueDate, defect.status)
   if (reviewStatus === 'overdue') return 'ring-1 ring-red-100/80'
   return ''
-}
-
-function getPriorityBadgeTone(priority) {
-  const normalized = String(priority || '').toLowerCase()
-  if (normalized === 'urgent' || normalized === 'critical') return 'redSoft'
-  if (normalized === 'high') return 'orange'
-  if (normalized === 'medium') return 'blue'
-  return 'slate'
 }
 
 export function shouldShowWorkerPriorityBadge(priority) {
@@ -70,10 +31,10 @@ export default function DefectRecordCard({
   onView,
   children
 }) {
-  const accentClass = getCardAccentClass(defect)
   const cardRingClass = getCardRingClass(defect)
+  const reviewDueStatus = getReviewDueStatus(defect.reviewDueDate, defect.status)
   const reviewDueBadge = getReviewDueBadge(defect.reviewDueDate, defect.status, { workerView: !managerView })
-  const showPriorityBadge = shouldShowWorkerPriorityBadge(defect.priority)
+  const isUrgentPriority = isUrgentDefectPriority(defect)
   const hasAssignedAction = managerView ? undefined : Boolean(workerAssignedDefectIds?.has(Number(defect.id)))
   const Badge = EntityRow.Badge
 
@@ -89,8 +50,6 @@ export default function DefectRecordCard({
         cardRingClass
       ].join(' ')}
     >
-      <div className={`list-row-accent ${accentClass}`} aria-hidden="true" />
-
       <div className="list-row-inner">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1">
@@ -99,22 +58,25 @@ export default function DefectRecordCard({
               value={defect.status}
               audience={managerView ? undefined : 'worker'}
               title={managerView ? undefined : defectStatusBadgeTitle(defect.status, hasAssignedAction)}
+              listView
             />
-            {managerView && <Badge tone="slate">{defect.problemLevel}</Badge>}
-            {showPriorityBadge && (
-              <Badge
-                tone={getPriorityBadgeTone(defect.priority)}
+            {managerView && defect.problemLevel === 'Food Safety Risk' && (
+              <span className="text-xs font-semibold text-red-700">Food Safety Risk</span>
+            )}
+            {isUrgentPriority && (
+              <span
+                className="text-xs font-semibold text-red-700"
                 title="Defect Priority — how quickly the manager should review this report"
               >
                 {formatDefectPriorityLabel(defect.priority)} Priority
-              </Badge>
+              </span>
             )}
-            {reviewDueBadge && (
+            {reviewDueBadge && reviewDueStatus === 'overdue' && (
               <Badge
                 tone={reviewDueBadge.tone}
                 title={reviewDueBadge.title || 'Manager review due date — not a corrective action due date'}
               >
-                {reviewDueBadge.tone === 'red' && <AlertTriangle size={10} strokeWidth={2.5} />}
+                <AlertTriangle size={10} strokeWidth={2.5} />
                 {reviewDueBadge.label}
               </Badge>
             )}
@@ -139,6 +101,13 @@ export default function DefectRecordCard({
             <span className="text-brand-border"> · </span>
             <span className="text-brand-muted/80" title={managerView ? 'Corrective actions assigned by manager' : 'Your assigned work progress'}>{managerView ? 'Corrective Actions:' : 'My Work:'}</span>{' '}
             <span className="font-medium text-brand-700">{defect.actionProgress}</span>
+            {reviewDueStatus === 'today' && (
+              <>
+                <span className="text-brand-border"> · </span>
+                <span className="text-brand-muted/80">Review Due:</span>{' '}
+                <span className="font-bold text-red-700">{formatReviewDueDate(defect.reviewDueDate)}</span>
+              </>
+            )}
           </p>
         </div>
 

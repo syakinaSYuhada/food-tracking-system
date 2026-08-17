@@ -4,6 +4,7 @@ import EntityRow from './EntityRow'
 import StatusBadge from './StatusBadge'
 import { getDaysLate, isActionOverdue } from '../utils/dueDate'
 import { getWorkerActionProgressHint } from '../utils/workerActionProgressHint'
+import { isCriticalActionPriority } from '../utils/actionPriority'
 
 function formatDisplayDate(value) {
   if (!value || value === '-') return '-'
@@ -19,19 +20,6 @@ function titleCase(value) {
 
 function actionTypeLabel(type) {
   return type === 'product_handling' ? 'Product Handling' : 'Machine Check'
-}
-
-function getAccentClass(action, managerView) {
-  const overdue = isActionOverdue(action.dueDate, action.status)
-  const pendingReview = managerView && action.status === 'completed'
-  const highPriority = ['high', 'critical'].includes(String(action.priority || '').toLowerCase())
-
-  if (overdue) return 'bg-red-500'
-  if (pendingReview) return 'bg-amber-500'
-  if (highPriority) return 'bg-orange-500'
-  if (action.status === 'verified') return 'bg-emerald-400'
-  if (action.status === 'in_progress') return 'bg-indigo-400'
-  return 'bg-slate-300'
 }
 
 function getRowTint(action, managerView) {
@@ -58,13 +46,11 @@ export default function CorrectiveActionRow({
 }) {
   const overdue = isActionOverdue(action.dueDate, action.status)
   const pendingReview = managerView && action.status === 'completed'
-  const priority = String(action.priority || '').toLowerCase()
-  const highPriority = priority === 'high' || priority === 'critical'
+  const criticalPriority = isCriticalActionPriority(action)
   const daysLate = getDaysLate(action.dueDate, action.status)
   const showManagerActions = managerView && action.status === 'completed'
   const verifyBlocked = managerView && action.status === 'completed'
     && action.evidenceRequired && !action.hasEvidence
-  const accentClass = getAccentClass(action, managerView)
   const rowTint = getRowTint(action, managerView)
   const Badge = EntityRow.Badge
   const workerProgressHint = !managerView ? getWorkerActionProgressHint(action.status) : null
@@ -94,20 +80,18 @@ export default function CorrectiveActionRow({
       tabIndex={0}
       aria-label={`Open corrective action ${action.code}`}
     >
-      <div className={`list-row-accent ${accentClass}`} aria-hidden="true" />
-
       <div className="list-row-inner">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1">
             <span className="list-row-code">{action.code}</span>
-            <StatusBadge kind="ca" value={action.status} audience={managerView ? undefined : 'worker'} />
+            <StatusBadge kind="ca" value={action.status} audience={managerView ? undefined : 'worker'} listView />
             {pendingReview && !overdue && (
               <Badge tone="amber">Awaiting Verification</Badge>
             )}
-            {highPriority && (
-              <Badge tone="orange">
+            {criticalPriority && (
+              <span className="text-xs font-semibold text-red-700">
                 {titleCase(action.priority)} Priority
-              </Badge>
+              </span>
             )}
             {!managerView && action.evidenceRequired && (
               <Badge tone="amber">Evidence Required</Badge>
