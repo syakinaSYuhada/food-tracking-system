@@ -496,7 +496,6 @@ export default function Dashboard({ user }) {
                     title={action.action_code}
                     subtitle={action.task}
                     meta={`${action.defect_code} · ${action.assigned_to_name} · ${action.product_name}`}
-                    badge={<StatusBadge kind="ca" value={action.ca_status} />}
                     action={(
                       <ListActionButton intent="review" onClick={() => navigate(`/corrective-actions/${action.id}`)} />
                     )}
