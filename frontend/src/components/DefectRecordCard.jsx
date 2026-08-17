@@ -18,7 +18,7 @@ export default function DefectRecordCard({
   onView,
   children
 }) {
-  const reviewDueStatus = getReviewDueStatus(defect.reviewDueDate, defect.status)
+  const reviewDueStatus = getReviewDueStatus(defect.reviewDueDate, defect.status, defect.root_cause_status)
   const needsAttention = getDefectAttentionReasons(defect, managerView).flagged
   const hasAssignedAction = managerView ? undefined : Boolean(workerAssignedDefectIds?.has(Number(defect.id)))
 

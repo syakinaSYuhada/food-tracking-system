@@ -647,10 +647,10 @@ function ReviewUrgencyBanner({ defect, managerView, onEdit }) {
       <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
         <Info label="Defect Priority" value={formatDefectPriorityLabel(defect.priority)} />
         <Info label="Manager Review Due Date / Review Needed By" value={formatDate(defect.review_due_date) || '-'} />
-        {getReviewDueBadge(defect.review_due_date, defect.defect_status) && (
+        {getReviewDueBadge(defect.review_due_date, defect.defect_status, defect.root_cause_status) && (
           <Info
             label="Review Status"
-            value={getReviewDueBadge(defect.review_due_date, defect.defect_status).label}
+            value={getReviewDueBadge(defect.review_due_date, defect.defect_status, defect.root_cause_status).label}
           />
         )}
       </div>
@@ -831,10 +831,10 @@ function ManagerOverview({
           <div className="mt-1 grid grid-cols-1 gap-3 md:grid-cols-3">
             <Info label="Priority" value={formatDefectPriorityLabel(defect.priority)} />
             <Info label="Review Due Date" value={formatDate(defect.review_due_date) || '-'} />
-            {getReviewDueBadge(defect.review_due_date, defect.defect_status) && (
+            {getReviewDueBadge(defect.review_due_date, defect.defect_status, defect.root_cause_status) && (
               <Info
                 label="Review Status"
-                value={getReviewDueBadge(defect.review_due_date, defect.defect_status).label}
+                value={getReviewDueBadge(defect.review_due_date, defect.defect_status, defect.root_cause_status).label}
               />
             )}
           </div>

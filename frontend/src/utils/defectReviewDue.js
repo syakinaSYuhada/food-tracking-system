@@ -18,9 +18,12 @@ export function todayDateString() {
   return `${year}-${month}-${day}`
 }
 
-export function getReviewDueStatus(reviewDueDate, defectStatus) {
+export function getReviewDueStatus(reviewDueDate, defectStatus, rootCauseStatus) {
   const due = formatReviewDueDate(reviewDueDate)
-  if (!due || defectStatus === 'closed') return null
+  if (!due) return null
+  if (defectStatus === 'closed') return null
+  if (['action_assigned', 'in_progress', 'pending_verification', 'ready_verification'].includes(defectStatus)) return null
+  if (defectStatus === 'under_review' && rootCauseStatus !== 'pending_investigation') return null
 
   const today = todayDateString()
   if (due < today) return 'overdue'
@@ -28,8 +31,8 @@ export function getReviewDueStatus(reviewDueDate, defectStatus) {
   return null
 }
 
-export function getReviewDueBadge(reviewDueDate, defectStatus, options = {}) {
-  const status = getReviewDueStatus(reviewDueDate, defectStatus)
+export function getReviewDueBadge(reviewDueDate, defectStatus, rootCauseStatus, options = {}) {
+  const status = getReviewDueStatus(reviewDueDate, defectStatus, rootCauseStatus)
   const workerView = Boolean(options.workerView)
   const managerReviewHint = 'Manager review due date set during defect reporting.'
 
@@ -65,7 +68,7 @@ export function isUrgentDefectPriority(defect) {
 
 export function getDefectAttentionReasons(defect, managerView) {
   const reasons = []
-  if (getReviewDueStatus(defect?.reviewDueDate, defect?.status) === 'overdue') reasons.push('Overdue')
+  if (getReviewDueStatus(defect?.reviewDueDate, defect?.status, defect?.root_cause_status) === 'overdue') reasons.push('Overdue')
   if (managerView && defect?.problemLevel === 'Food Safety Risk') reasons.push('Food Safety Risk')
   if (isUrgentDefectPriority(defect)) reasons.push('Urgent Priority')
   return { flagged: reasons.length > 0, reasons }
@@ -73,18 +76,18 @@ export function getDefectAttentionReasons(defect, managerView) {
 
 export function needsManagerReviewAttention(defect) {
   if (!isOpenDefect(defect)) return false
-  return Boolean(getReviewDueStatus(defect.reviewDueDate || defect.review_due_date, getDefectStatus(defect)))
+  return Boolean(getReviewDueStatus(defect.reviewDueDate || defect.review_due_date, getDefectStatus(defect), defect.root_cause_status))
     || isUrgentDefectPriority(defect)
 }
 
 export function matchesUrgentReviewFilter(defect) {
   if (!isOpenDefect(defect)) return false
   return isUrgentDefectPriority(defect)
-    || Boolean(getReviewDueStatus(defect.reviewDueDate || defect.review_due_date, getDefectStatus(defect)))
+    || Boolean(getReviewDueStatus(defect.reviewDueDate || defect.review_due_date, getDefectStatus(defect), defect.root_cause_status))
 }
 
 export function getDefectReviewSortRank(defect) {
-  const reviewStatus = getReviewDueStatus(defect.reviewDueDate || defect.review_due_date, getDefectStatus(defect))
+  const reviewStatus = getReviewDueStatus(defect.reviewDueDate || defect.review_due_date, getDefectStatus(defect), defect.root_cause_status)
   const priority = String(defect?.priority || '').toLowerCase()
 
   if (reviewStatus === 'overdue') return 0
@@ -110,7 +113,7 @@ export function summarizeUrgentReviewAttention(defects = []) {
 
   for (const defect of defects) {
     if (!isOpenDefect(defect)) continue
-    const reviewStatus = getReviewDueStatus(defect.reviewDueDate || defect.review_due_date, getDefectStatus(defect))
+    const reviewStatus = getReviewDueStatus(defect.reviewDueDate || defect.review_due_date, getDefectStatus(defect), defect.root_cause_status)
     if (isUrgentDefectPriority(defect)) urgent += 1
     if (reviewStatus === 'today') dueToday += 1
     if (reviewStatus === 'overdue') overdue += 1
