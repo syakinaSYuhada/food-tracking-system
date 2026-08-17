@@ -823,7 +823,7 @@ export default function CorrectiveActionDetails({ user }) {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-brand-border/70 pt-4">
-        {managerView && action.status === 'completed' && (
+        {managerView && action.status === 'completed' && !isClosedDefect && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
             Manager review: use <b>Reject</b> or <b>Verify</b> below
           </div>
