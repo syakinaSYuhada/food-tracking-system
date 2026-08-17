@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { AlertTriangle, ClipboardList, Clock, Search } from 'lucide-react'
+import { AlertTriangle, ClipboardList, Search } from 'lucide-react'
 import api from '../api/client'
 import CorrectiveActionRow, { getActionPriorityScore } from '../components/CorrectiveActionRow'
 import KPICard from '../components/KPICard'
+import TabPills from '../components/TabPills'
 import Button from '../components/Button'
 import PageHeader from '../components/PageHeader'
 import EmptyState from '../components/EmptyState'
@@ -83,15 +84,25 @@ const getCaExportColumns = (audience = 'manager') => [
   { key: 'verifiedDate', label: 'Verified Date' }
 ]
 
-const STATUS_FILTER_OPTIONS = (audience = 'manager') => [
-  { value: 'all', label: 'All Status' },
-  { value: 'overdue', label: 'Overdue' },
-  { value: 'pending_review', label: formatCaStatusLabel('completed', audience) },
-  { value: 'assigned', label: 'Assigned' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'verified', label: 'Verified' },
-  { value: 'rejected', label: 'Rejected' }
-]
+const STATUS_FILTER_OPTIONS = (audience = 'manager') => {
+  const options = [
+    { value: 'all', label: 'All Status' },
+    { value: 'overdue', label: 'Overdue' },
+    { value: 'pending_review', label: formatCaStatusLabel('completed', audience) },
+    { value: 'assigned', label: 'Assigned' },
+    { value: 'in_progress', label: 'In Progress' },
+    { value: 'verified', label: 'Verified' },
+    { value: 'rejected', label: 'Rejected' }
+  ]
+
+  // Manager view: Overdue and Awaiting Verification are now owned by the tab bar,
+  // so keeping them here too would give managers two controls for the same filter.
+  if (audience === 'manager') {
+    return options.filter((option) => option.value !== 'overdue' && option.value !== 'pending_review')
+  }
+
+  return options
+}
 
 const PRIORITY_FILTER_OPTIONS = [
   { value: 'all', label: 'All CA Priority' },
@@ -384,8 +395,17 @@ export default function CorrectiveActions({ user }) {
     }
   }, [contextActions, loading])
 
-  const overdueKpiActive = caDueFilter === 'overdue' && statusFilter === 'all'
-  const totalKpiActive = statusFilter === 'all' && caDueFilter === 'all'
+  const primaryTab = (caDueFilter === 'overdue' && statusFilter === 'all')
+    ? 'overdue'
+    : (statusFilter === 'pending_review' && caDueFilter === 'all')
+      ? 'pending_review'
+      : 'all'
+
+  function applyPrimaryTab(tabValue) {
+    if (tabValue === 'overdue') applyOverdueKpi()
+    else if (tabValue === 'pending_review') applyStatusKpi('pending_review')
+    else applyTotalKpi()
+  }
 
   const overdueCount = Number(kpis.overdue)
   const pendingReviewCount = Number(kpis.pendingReview)
@@ -418,83 +438,90 @@ export default function CorrectiveActions({ user }) {
         eyebrow={managerView ? 'Quality Control' : 'Worker Portal'}
       />
 
-      <div className={`grid gap-2 ${managerView ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2'}`}>
-        <KPICard
-          density="emphasis"
-          variant="critical"
-          title="Overdue"
-          value={kpis.overdue}
-          subtitle={kpis.overdue > 0 ? 'Requires attention' : undefined}
-          zeroHint="Everything is on track"
-          icon={<AlertTriangle size={18} />}
-          tone="red"
-          highlight={kpis.overdue > 0}
-          active={overdueKpiActive}
-          onClick={applyOverdueKpi}
-        />
-        {managerView ? (
-          <KPICard
-            density="emphasis"
-            variant="warning"
-            title={formatCaStatusLabel('completed')}
-            value={kpis.pendingReview}
-            subtitle={kpis.pendingReview > 0 ? 'Awaiting verify or reject' : undefined}
-            zeroHint="Nothing waiting for review"
-            icon={<Clock size={18} />}
-            tone="amber"
-            highlight={kpis.pendingReview > 0}
-            active={statusFilter === 'pending_review' && caDueFilter === 'all'}
-            onClick={() => applyStatusKpi('pending_review')}
+      {managerView ? (
+        <>
+          <TabPills
+            items={[
+              { value: 'overdue', label: `Overdue (${kpis.overdue})`, tone: 'red' },
+              { value: 'pending_review', label: `Awaiting Verification (${kpis.pendingReview})`, tone: 'amber' },
+              { value: 'all', label: `All Actions (${kpis.total})` }
+            ]}
+            value={primaryTab}
+            onChange={applyPrimaryTab}
           />
-        ) : (
-          <KPICard
-            variant="secondary"
-            title="In Progress"
-            value={kpis.inProgress}
-            active={statusFilter === 'in_progress' && caDueFilter === 'all'}
-            onClick={() => applyStatusKpi('in_progress')}
-          />
-        )}
-      </div>
 
-      <div className={`grid grid-cols-2 gap-2 !mt-6 ${managerView ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
-        <KPICard
-          variant="secondary"
-          title={managerView ? 'Total Actions' : 'My Work'}
-          value={kpis.total}
-          subtitle={periodLabel ? `In ${periodLabel}` : 'All records'}
-          active={totalKpiActive}
-          onClick={applyTotalKpi}
-        />
-        {managerView && (
-          <KPICard
-            variant="secondary"
-            title="Assigned"
-            value={kpis.assigned}
-            subtitle="Not yet started"
-            active={statusFilter === 'assigned' && caDueFilter === 'all'}
-            onClick={() => applyStatusKpi('assigned')}
-          />
-        )}
-        {managerView && (
-          <KPICard
-            variant="secondary"
-            title="In Progress"
-            value={kpis.inProgress}
-            subtitle="Being worked on"
-            active={statusFilter === 'in_progress' && caDueFilter === 'all'}
-            onClick={() => applyStatusKpi('in_progress')}
-          />
-        )}
-        <KPICard
-          variant="secondary"
-          title="Verified"
-          value={kpis.verified}
-          subtitle="Closed successfully"
-          active={statusFilter === 'verified' && caDueFilter === 'all'}
-          onClick={() => applyStatusKpi('verified')}
-        />
-      </div>
+          <div className="grid grid-cols-2 gap-2 !mt-6 sm:grid-cols-3">
+            <KPICard
+              variant="secondary"
+              title="Assigned"
+              value={kpis.assigned}
+              subtitle="Not yet started"
+              active={statusFilter === 'assigned' && caDueFilter === 'all'}
+              onClick={() => applyStatusKpi('assigned')}
+            />
+            <KPICard
+              variant="secondary"
+              title="In Progress"
+              value={kpis.inProgress}
+              subtitle="Being worked on"
+              active={statusFilter === 'in_progress' && caDueFilter === 'all'}
+              onClick={() => applyStatusKpi('in_progress')}
+            />
+            <KPICard
+              variant="secondary"
+              title="Verified"
+              value={kpis.verified}
+              subtitle="Closed successfully"
+              active={statusFilter === 'verified' && caDueFilter === 'all'}
+              onClick={() => applyStatusKpi('verified')}
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <KPICard
+              density="emphasis"
+              variant="critical"
+              title="Overdue"
+              value={kpis.overdue}
+              subtitle={kpis.overdue > 0 ? 'Requires attention' : undefined}
+              zeroHint="Everything is on track"
+              icon={<AlertTriangle size={18} />}
+              tone="red"
+              highlight={kpis.overdue > 0}
+              active={caDueFilter === 'overdue' && statusFilter === 'all'}
+              onClick={applyOverdueKpi}
+            />
+            <KPICard
+              variant="secondary"
+              title="In Progress"
+              value={kpis.inProgress}
+              active={statusFilter === 'in_progress' && caDueFilter === 'all'}
+              onClick={() => applyStatusKpi('in_progress')}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 !mt-6 sm:grid-cols-3">
+            <KPICard
+              variant="secondary"
+              title="My Work"
+              value={kpis.total}
+              subtitle={periodLabel ? `In ${periodLabel}` : 'All records'}
+              active={statusFilter === 'all' && caDueFilter === 'all'}
+              onClick={applyTotalKpi}
+            />
+            <KPICard
+              variant="secondary"
+              title="Verified"
+              value={kpis.verified}
+              subtitle="Closed successfully"
+              active={statusFilter === 'verified' && caDueFilter === 'all'}
+              onClick={() => applyStatusKpi('verified')}
+            />
+          </div>
+        </>
+      )}
 
       <div className="list-panel">
         {batchFilter?.id && (
@@ -556,7 +583,7 @@ export default function CorrectiveActions({ user }) {
               label="Status"
               value={statusFilter}
               options={STATUS_FILTER_OPTIONS(statusAudience)}
-              onChange={setStatusFilter}
+              onChange={applyStatusKpi}
             />
             <LabeledFilterSelect
               label="CA Priority"
