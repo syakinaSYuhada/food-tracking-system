@@ -668,8 +668,8 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
   )
 }
 
-function Info({ label, value }) {
-  return <div><p className="text-xs font-semibold uppercase text-brand-muted">{label}</p><p className="mt-1 text-sm font-semibold text-brand-ink">{value || '-'}</p></div>
+function Info({ label, value, valueClassName = '' }) {
+  return <div><p className="text-xs font-semibold uppercase text-brand-muted">{label}</p><p className={`mt-1 text-sm font-semibold text-brand-ink ${valueClassName}`}>{value || '-'}</p></div>
 }
 function Input({ label, value, onChange, type = 'text', min, required = false }) {
   return (
@@ -1163,7 +1163,7 @@ export default function Defects({ user }) {
                   >
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                       {attentionReasons.length > 0 && (
-                        <Info label="Why Flagged" value={attentionReasons.join(' · ')} />
+                        <Info label="Reason" value={attentionReasons.join(' · ')} valueClassName="!text-red-600" />
                       )}
                       <Info label="Review Due Date" value={defect.reviewDueDate} />
                       <Info label="Containment" value={defect.containmentStatus} />
