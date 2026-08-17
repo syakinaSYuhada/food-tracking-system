@@ -668,8 +668,8 @@ function AddDefectModal({ onClose, onCreated, createdBy, workerReport = false })
   )
 }
 
-function Info({ label, value, valueClassName = '' }) {
-  return <div><p className="text-xs font-semibold uppercase text-brand-muted">{label}</p><p className={`mt-1 text-sm font-semibold text-brand-ink ${valueClassName}`}>{value || '-'}</p></div>
+function Info({ label, value }) {
+  return <div><p className="text-xs font-semibold uppercase text-brand-muted">{label}</p><p className="mt-1 text-sm font-semibold text-brand-ink">{value || '-'}</p></div>
 }
 function Input({ label, value, onChange, type = 'text', min, required = false }) {
   return (
@@ -1163,7 +1163,14 @@ export default function Defects({ user }) {
                   >
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                       {attentionReasons.length > 0 && (
-                        <Info label="Reason" value={attentionReasons.join(' · ')} valueClassName="!text-red-600" />
+                        <div>
+                          {/* Invisible spacer matching Info's label row height, keeping this cell's icon+text aligned with sibling values */}
+                          <div className="h-4" aria-hidden="true" />
+                          <div className="mt-1 flex items-center gap-1">
+                            <AlertTriangle size={12} className="shrink-0 text-red-600" />
+                            <span className="text-sm font-semibold text-red-600">{attentionReasons.join(' · ')}</span>
+                          </div>
+                        </div>
                       )}
                       <Info label="Review Due Date" value={defect.reviewDueDate} />
                       <Info label="Containment" value={defect.containmentStatus} />
