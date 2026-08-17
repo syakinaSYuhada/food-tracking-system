@@ -945,19 +945,21 @@ export default function Defects({ user }) {
       )}
 
       <div className="list-kpi-grid">
-        <KpiCard
-          label={managerView ? 'Total Defects' : 'My Reports'}
-          value={kpis.total}
-          subtitle={managerView ? 'All records in the system' : 'Linked to your account'}
-          active={statusFilter === 'all' && severityFilter === 'all' && stageFilter === 'all' && urgencyFilter === 'all'}
-          onClick={() => {
-            setStatusFilter('all')
-            setSeverityFilter('all')
-            setStageFilter('all')
-            setUrgencyFilter('all')
-          }}
-          icon={<Layers size={16} />}
-        />
+        {!managerView && (
+          <KpiCard
+            label="My Reports"
+            value={kpis.total}
+            subtitle="Linked to your account"
+            active={statusFilter === 'all' && severityFilter === 'all' && stageFilter === 'all' && urgencyFilter === 'all'}
+            onClick={() => {
+              setStatusFilter('all')
+              setSeverityFilter('all')
+              setStageFilter('all')
+              setUrgencyFilter('all')
+            }}
+            icon={<Layers size={16} />}
+          />
+        )}
         {managerView ? (
           <KpiCard
             label="New Reports"
@@ -982,14 +984,16 @@ export default function Defects({ user }) {
             icon={<FileWarning size={16} />}
           />
         )}
-        <KpiCard
-          label="Open"
-          value={kpis.open}
-          subtitle="Not yet closed"
-          active={statusFilter === 'open'}
-          onClick={() => setStatusFilter('open')}
-          icon={<FolderOpen size={16} />}
-        />
+        {!managerView && (
+          <KpiCard
+            label="Open"
+            value={kpis.open}
+            subtitle="Not yet closed"
+            active={statusFilter === 'open'}
+            onClick={() => setStatusFilter('open')}
+            icon={<FolderOpen size={16} />}
+          />
+        )}
         {managerView ? (
           <KpiCard
             label="Under Review"
