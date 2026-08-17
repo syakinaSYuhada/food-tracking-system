@@ -35,7 +35,6 @@ function getAccentClass(action, managerView) {
 }
 
 function getRowTint(action, managerView) {
-  if (isActionOverdue(action.dueDate, action.status)) return 'bg-red-50/25'
   if (managerView && action.status === 'completed') return 'bg-amber-50/20'
   return ''
 }
@@ -106,7 +105,7 @@ export default function CorrectiveActionRow({
               <Badge tone="amber">Awaiting Verification</Badge>
             )}
             {highPriority && (
-              <Badge tone={priority === 'critical' ? 'red' : 'orange'}>
+              <Badge tone="orange">
                 {titleCase(action.priority)} Priority
               </Badge>
             )}
