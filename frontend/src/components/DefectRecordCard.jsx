@@ -3,19 +3,11 @@ import StatusBadge from './StatusBadge'
 import ListActionButton from './ListActionButton'
 import EntityRow from './EntityRow'
 import {
-  formatDefectPriorityLabel,
   formatReviewDueDate,
-  getReviewDueBadge,
   getReviewDueStatus,
   isUrgentDefectPriority
 } from '../utils/defectReviewDue'
 import { defectStatusBadgeTitle } from '../utils/defectStatusHint'
-
-function getCardRingClass(defect) {
-  const reviewStatus = getReviewDueStatus(defect.reviewDueDate, defect.status)
-  if (reviewStatus === 'overdue') return 'ring-1 ring-red-100/80'
-  return ''
-}
 
 export function shouldShowWorkerPriorityBadge(priority) {
   const normalized = String(priority || '').toLowerCase()
@@ -31,12 +23,12 @@ export default function DefectRecordCard({
   onView,
   children
 }) {
-  const cardRingClass = getCardRingClass(defect)
   const reviewDueStatus = getReviewDueStatus(defect.reviewDueDate, defect.status)
-  const reviewDueBadge = getReviewDueBadge(defect.reviewDueDate, defect.status, { workerView: !managerView })
   const isUrgentPriority = isUrgentDefectPriority(defect)
+  const needsAttention = reviewDueStatus === 'overdue'
+    || (managerView && defect.problemLevel === 'Food Safety Risk')
+    || isUrgentPriority
   const hasAssignedAction = managerView ? undefined : Boolean(workerAssignedDefectIds?.has(Number(defect.id)))
-  const Badge = EntityRow.Badge
 
   const reportedValue = defect.reportedByName
     ? `${defect.createdAt} · ${defect.reportedByName}`
@@ -46,40 +38,22 @@ export default function DefectRecordCard({
     <article
       className={[
         'compact-list-row group relative overflow-hidden',
-        expanded ? 'ring-1 ring-brand-200/80 shadow-card-hover' : '',
-        cardRingClass
+        expanded ? 'ring-1 ring-brand-200/80 shadow-card-hover' : ''
       ].join(' ')}
     >
       <div className="list-row-inner">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1">
             <span className="list-row-code">{defect.code}</span>
+            {needsAttention && (
+              <AlertTriangle size={12} className="shrink-0 text-red-600" title="Needs attention" />
+            )}
             <StatusBadge
               value={defect.status}
               audience={managerView ? undefined : 'worker'}
               title={managerView ? undefined : defectStatusBadgeTitle(defect.status, hasAssignedAction)}
               listView
             />
-            {managerView && defect.problemLevel === 'Food Safety Risk' && (
-              <span className="text-xs font-semibold text-red-700">Food Safety Risk</span>
-            )}
-            {isUrgentPriority && (
-              <span
-                className="text-xs font-semibold text-red-700"
-                title="Defect Priority — how quickly the manager should review this report"
-              >
-                {formatDefectPriorityLabel(defect.priority)} Priority
-              </span>
-            )}
-            {reviewDueBadge && reviewDueStatus === 'overdue' && (
-              <Badge
-                tone={reviewDueBadge.tone}
-                title={reviewDueBadge.title || 'Manager review due date — not a corrective action due date'}
-              >
-                <AlertTriangle size={10} strokeWidth={2.5} />
-                {reviewDueBadge.label}
-              </Badge>
-            )}
           </div>
 
           <h3 className="list-row-title mt-0.5">{defect.productName}</h3>
@@ -105,7 +79,7 @@ export default function DefectRecordCard({
               <>
                 <span className="text-brand-border"> · </span>
                 <span className="text-brand-muted/80">Review Due:</span>{' '}
-                <span className="font-bold text-red-700">{formatReviewDueDate(defect.reviewDueDate)}</span>
+                <span className="font-medium text-brand-700">{formatReviewDueDate(defect.reviewDueDate)}</span>
               </>
             )}
           </p>

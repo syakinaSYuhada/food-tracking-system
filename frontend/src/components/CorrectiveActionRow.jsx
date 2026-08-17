@@ -2,7 +2,7 @@ import { AlertTriangle } from 'lucide-react'
 import ListActionButton from './ListActionButton'
 import EntityRow from './EntityRow'
 import StatusBadge from './StatusBadge'
-import { getDaysLate, isActionOverdue } from '../utils/dueDate'
+import { isActionOverdue } from '../utils/dueDate'
 import { getWorkerActionProgressHint } from '../utils/workerActionProgressHint'
 import { isCriticalActionPriority } from '../utils/actionPriority'
 
@@ -11,11 +11,6 @@ function formatDisplayDate(value) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
-function titleCase(value) {
-  if (!value) return '-'
-  return String(value).replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
 function actionTypeLabel(type) {
@@ -47,7 +42,7 @@ export default function CorrectiveActionRow({
   const overdue = isActionOverdue(action.dueDate, action.status)
   const pendingReview = managerView && action.status === 'completed'
   const criticalPriority = isCriticalActionPriority(action)
-  const daysLate = getDaysLate(action.dueDate, action.status)
+  const needsAttention = overdue || criticalPriority
   const showManagerActions = managerView && action.status === 'completed'
   const verifyBlocked = managerView && action.status === 'completed'
     && action.evidenceRequired && !action.hasEvidence
@@ -84,25 +79,15 @@ export default function CorrectiveActionRow({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1">
             <span className="list-row-code">{action.code}</span>
+            {needsAttention && (
+              <AlertTriangle size={12} className="shrink-0 text-red-600" title="Needs attention" />
+            )}
             <StatusBadge kind="ca" value={action.status} audience={managerView ? undefined : 'worker'} listView />
             {pendingReview && !overdue && (
               <Badge tone="amber">Awaiting Verification</Badge>
             )}
-            {criticalPriority && (
-              <span className="text-xs font-semibold text-red-700">
-                {titleCase(action.priority)} Priority
-              </span>
-            )}
             {!managerView && action.evidenceRequired && (
               <Badge tone="amber">Evidence Required</Badge>
-            )}
-            {overdue && (
-              <Badge tone="red">
-                <AlertTriangle size={10} strokeWidth={2.5} />
-                {managerView
-                  ? `Overdue${daysLate > 0 ? ` · ${daysLate}d` : ''}`
-                  : `Action Required · Overdue by ${daysLate || 1} day${daysLate === 1 ? '' : 's'}`}
-              </Badge>
             )}
           </div>
           <p className="list-row-meta line-clamp-1 !text-brand-ink">{action.task}</p>
@@ -112,7 +97,7 @@ export default function CorrectiveActionRow({
               <span className="font-medium text-brand-700">{action.assignedToName || 'Unassigned'}</span>
               <span className="text-brand-border"> · </span>
               <span className="text-brand-muted/80">CA Due Date:</span>{' '}
-              <span className={`font-medium ${overdue ? 'text-red-700' : 'text-brand-700'}`}>
+              <span className="font-medium text-brand-700">
                 {formatDisplayDate(action.dueDate)}
               </span>
               <span className="text-brand-border"> · </span>
@@ -125,7 +110,7 @@ export default function CorrectiveActionRow({
               <span className="font-mono font-medium text-brand-700">{action.defectCode || '-'}</span>
               <span className="text-brand-border"> · </span>
               <span className="text-brand-muted/80">CA Due Date:</span>{' '}
-              <span className={`font-medium ${overdue ? 'text-red-700' : 'text-brand-700'}`}>
+              <span className="font-medium text-brand-700">
                 {formatDisplayDate(action.dueDate)}
               </span>
             </p>
