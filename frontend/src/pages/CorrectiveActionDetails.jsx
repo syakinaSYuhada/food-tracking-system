@@ -424,7 +424,7 @@ export default function CorrectiveActionDetails({ user }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-brand-muted">
+      <div className="sticky top-16 z-10 flex flex-wrap items-center justify-between gap-3 bg-softBg py-2 text-sm text-brand-muted">
         <button
           type="button"
           onClick={() => navigate('/corrective-actions')}
