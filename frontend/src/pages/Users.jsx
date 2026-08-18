@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Plus, Search, UserCircle, Users as UsersIcon, Shield, HardHat } from 'lucide-react'
+import { Plus, Search, UserCircle, Users as UsersIcon, Shield, HardHat, UserX, UserCheck } from 'lucide-react'
 import api from '../api/client'
 import PageHeader from '../components/PageHeader'
 import StatusBadge from '../components/StatusBadge'
@@ -8,6 +8,7 @@ import ListPagination from '../components/ListPagination'
 import LoadingState from '../components/LoadingState'
 import EmptyState from '../components/EmptyState'
 import Button from '../components/Button'
+import ListActionButton from '../components/ListActionButton'
 import UserFormModal from '../components/UserFormModal'
 import { paginateItems } from '../utils/pagination'
 import { isManager } from '../utils/roleAccess'
@@ -47,16 +48,16 @@ function UserRow({ user, managerView, currentUserId, onToggleStatus, togglingUse
           <StatusBadge value={user.role} />
           <StatusBadge value={user.account_status} />
           {showStatusAction && (
-            <Button
+            <ListActionButton
+              intent={isActive ? 'deactivate' : 'activate'}
+              icon={isActive ? UserX : UserCheck}
               color={isActive ? 'red' : 'green'}
               variant="subtle"
-              size="sm"
-              className="list-action-btn"
               disabled={isToggling}
               onClick={() => onToggleStatus(user)}
             >
               {isToggling ? 'Saving…' : isActive ? 'Deactivate' : 'Activate'}
-            </Button>
+            </ListActionButton>
           )}
         </div>
       </div>
