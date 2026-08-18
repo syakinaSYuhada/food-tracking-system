@@ -2,6 +2,7 @@ const pool = require('../config/db')
 const { successResponse, errorResponse } = require('../middleware/responseHandler')
 const { formatBatchDates } = require('../utils/dateFormatter')
 const correctiveActionService = require('../services/correctiveActionService')
+const { startReviewTransition } = require('../services/defectService')
 const {
   calculateEstimatedLoss,
   calculateStillSellable,
@@ -398,7 +399,7 @@ async function assignCorrectiveAction(req, res) {
       return errorResponse(res, 'Invalid action type', 400, 'INVALID_ACTION_TYPE')
     }
 
-    const defectResult = await client.query('SELECT id, defect_status FROM defects WHERE id = $1', [defectId])
+    const defectResult = await client.query('SELECT id, defect_code, defect_status FROM defects WHERE id = $1', [defectId])
     if (defectResult.rows.length === 0) {
       await client.query('ROLLBACK')
       return errorResponse(res, 'Defect not found', 404, 'DEFECT_NOT_FOUND')
@@ -407,6 +408,15 @@ async function assignCorrectiveAction(req, res) {
     if (defectResult.rows[0].defect_status === 'closed') {
       await client.query('ROLLBACK')
       return errorResponse(res, 'Cannot assign actions to a closed defect', 400, 'DEFECT_CLOSED')
+    }
+
+    if (defectResult.rows[0].defect_status === 'new') {
+      await startReviewTransition(
+        client,
+        defectId,
+        assignedBy,
+        `Review started automatically when corrective action was assigned to ${defectResult.rows[0].defect_code}.`
+      )
     }
 
     const workerResult = await client.query('SELECT id, role, full_name FROM users WHERE id = $1', [assigned_to])

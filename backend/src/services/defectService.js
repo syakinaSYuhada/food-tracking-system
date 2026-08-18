@@ -1,6 +1,38 @@
 const defectRuleService = require('./defectRuleService')
 const pool = require('../config/db')
 
+async function startReviewTransition(client, defectId, reviewerId, description) {
+  const updateResult = await client.query(
+    `
+    UPDATE defects
+    SET defect_status = 'under_review',
+        updated_by = $1,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = $2
+    RETURNING *
+    `,
+    [reviewerId, defectId]
+  )
+
+  await client.query(
+    `
+    INSERT INTO activity_logs (
+      user_id,
+      action_type,
+      entity_type,
+      entity_id,
+      description,
+      old_value,
+      new_value
+    )
+    VALUES ($1, 'START_REVIEW', 'defect', $2, $3, $4, $5)
+    `,
+    [reviewerId, defectId, description, 'Status: new', 'Status: under_review']
+  )
+
+  return updateResult.rows[0]
+}
+
 async function getDefectTypesByStage(stage) {
   const rows = await defectRuleService.getDefectTypesByCategory(stage)
   return (rows || []).map((r) => r.defect_type)
@@ -44,5 +76,6 @@ module.exports = {
   getRootCauseSources,
   getRootCauseOptions,
   getRelatedToolOptions,
-  autoSelectTool
+  autoSelectTool,
+  startReviewTransition
 }

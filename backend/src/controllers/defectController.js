@@ -2,6 +2,7 @@ const pool = require('../config/db')
 const { successResponse, errorResponse } = require('../middleware/responseHandler')
 const { formatBatchDates, localTodayDateString } = require('../utils/dateFormatter')
 const defectRuleService = require('../services/defectRuleService')
+const { startReviewTransition } = require('../services/defectService')
 const rootCauseService = require('../services/rootCauseService')
 const { determineLossStatus } = require('../services/lossService')
 const {
@@ -629,44 +630,16 @@ async function startReview(req, res) {
       return successResponse(res, defect, 'Defect is already under review or past the new-report stage')
     }
 
-    const updateResult = await client.query(
-      `
-      UPDATE defects
-      SET defect_status = 'under_review',
-          updated_by = $1,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = $2
-      RETURNING *
-      `,
-      [reviewerId, id]
-    )
-
     const reviewerName = req.user?.full_name || 'Manager'
-
-    await client.query(
-      `
-      INSERT INTO activity_logs (
-        user_id,
-        action_type,
-        entity_type,
-        entity_id,
-        description,
-        old_value,
-        new_value
-      )
-      VALUES ($1, 'START_REVIEW', 'defect', $2, $3, $4, $5)
-      `,
-      [
-        reviewerId,
-        id,
-        `Manager ${reviewerName} started review of ${defect.defect_code}.`,
-        'Status: new',
-        'Status: under_review'
-      ]
+    const updatedDefect = await startReviewTransition(
+      client,
+      id,
+      reviewerId,
+      `Manager ${reviewerName} started review of ${defect.defect_code}.`
     )
 
     await client.query('COMMIT')
-    return successResponse(res, updateResult.rows[0], 'Defect review started')
+    return successResponse(res, updatedDefect, 'Defect review started')
   } catch (error) {
     await client.query('ROLLBACK')
     return errorResponse(res, error, 500, 'START_REVIEW_ERROR')
