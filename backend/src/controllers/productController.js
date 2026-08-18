@@ -113,8 +113,7 @@ async function getProducts(req, res) {
       ORDER BY p.id ASC
     `)
 
-    const products = await attachRecentActivity(result.rows)
-    return successResponse(res, products, 'Products retrieved successfully')
+    return successResponse(res, result.rows, 'Products retrieved successfully')
   } catch (error) {
     return errorResponse(res, error, 500, 'GET_PRODUCTS_ERROR')
   }

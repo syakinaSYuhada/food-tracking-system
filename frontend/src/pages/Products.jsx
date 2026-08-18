@@ -120,7 +120,7 @@ function ProductRow({ product, onReload, managerView }) {
         expanded={expanded}
         onToggle={() => setExpanded((current) => !current)}
       >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <EntityRow.InfoCard title="Product Information">
             {[
               ['Category', product.category],
@@ -156,20 +156,6 @@ function ProductRow({ product, onReload, managerView }) {
             >
               View All Batches
             </Button>
-          </EntityRow.InfoCard>
-
-          <EntityRow.InfoCard title="Recent Activity">
-            {product.recentActivity.length === 0 ? (
-              <p className="text-sm text-brand-muted">No recent activity.</p>
-            ) : (
-              <ul className="space-y-2">
-                {product.recentActivity.slice(0, 5).map((activity, index) => (
-                  <li key={index} className="text-sm text-brand-ink">
-                    {activity}
-                  </li>
-                ))}
-              </ul>
-            )}
           </EntityRow.InfoCard>
         </div>
       </EntityRow>
