@@ -37,7 +37,12 @@ async function confirmRootCauseForDefect(client, {
   }
 
   const defectResult = await client.query(
-    'SELECT id, defect_code, defect_status FROM defects WHERE id = $1',
+    `
+    SELECT d.id, d.defect_code, d.defect_status, r.root_cause_status
+    FROM defects d
+    LEFT JOIN root_cause_investigation r ON r.defect_id = d.id
+    WHERE d.id = $1
+    `,
     [defectId]
   )
 
@@ -49,6 +54,10 @@ async function confirmRootCauseForDefect(client, {
 
   if (defect.defect_status === 'closed') {
     throw createConfirmError('Cannot confirm root cause on a closed defect', 400, 'DEFECT_CLOSED')
+  }
+
+  if (defect.root_cause_status === 'confirmed') {
+    throw createConfirmError('Root cause has already been confirmed for this defect', 409, 'ROOT_CAUSE_ALREADY_CONFIRMED')
   }
 
   const actionStats = await client.query(

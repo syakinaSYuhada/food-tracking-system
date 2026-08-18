@@ -622,8 +622,8 @@ lines.push(defects.map((defect, index) => {
 }).join('\n'))
 lines.push('')
 
-lines.push('INSERT INTO root_cause_investigation (defect_id, root_cause_status, suspected_root_cause_source, suspected_root_cause, related_tool_machine, confirmed_root_cause_source, confirmed_root_cause, confirmed_by, confirmed_date, investigation_notes) VALUES')
-lines.push(rootCauses.map((row, index) => `  (${row.defectId}, ${sqlString(row.status)}, ${sqlString(row.suspectedSource)}, ${sqlString(row.suspected)}, ${sqlString(row.tool)}, ${sqlString(row.confirmedSource)}, ${sqlString(row.confirmed)}, ${row.confirmedBy || 'NULL'}, ${sqlTs(row.confirmedDate)}, ${sqlString(row.notes)})${index === rootCauses.length - 1 ? ';' : ','}`).join('\n'))
+lines.push('INSERT INTO root_cause_investigation (defect_id, root_cause_status, related_tool_machine, confirmed_root_cause_source, confirmed_root_cause, confirmed_by, confirmed_date, investigation_notes) VALUES')
+lines.push(rootCauses.map((row, index) => `  (${row.defectId}, ${sqlString(row.status)}, ${sqlString(row.tool)}, ${sqlString(row.confirmedSource)}, ${sqlString(row.confirmed)}, ${row.confirmedBy || 'NULL'}, ${sqlTs(row.confirmedDate)}, ${sqlString(row.notes)})${index === rootCauses.length - 1 ? ';' : ','}`).join('\n'))
 lines.push('')
 
 lines.push('INSERT INTO corrective_actions (action_code, defect_id, action_type, task, assigned_to, assigned_by, due_date, priority, ca_status, started_by, started_date, completed_by, completed_date, completion_notes, qty_relabelled, qty_repacked, qty_discarded, qty_reworked, qty_released, calculated_loss, verified_by, verified_date, verification_notes, rejected_by, rejected_date, rejection_reason, created_at) VALUES')

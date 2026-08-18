@@ -220,8 +220,6 @@ async function getDefectById(req, res) {
         b.quantity_produced,
         b.batch_status,
         r.root_cause_status,
-        r.suspected_root_cause_source,
-        r.suspected_root_cause,
         r.related_tool_machine,
         r.confirmed_root_cause_source,
         r.confirmed_root_cause,

@@ -245,8 +245,6 @@ CREATE TABLE root_cause_investigation (
       )
     ),
 
-  suspected_root_cause_source VARCHAR(100),
-  suspected_root_cause VARCHAR(150),
   related_tool_machine VARCHAR(120),
 
   confirmed_root_cause_source VARCHAR(100),
@@ -305,6 +303,10 @@ CREATE TABLE corrective_actions (
   investigation_finding TEXT,
   action_taken TEXT,
   related_tool_machine_checked VARCHAR(150),
+
+  suspected_root_cause_source VARCHAR(100),
+  suspected_root_cause VARCHAR(150),
+  suspected_root_cause_notes TEXT,
 
   qty_relabelled INT NOT NULL DEFAULT 0 CHECK (qty_relabelled >= 0),
   qty_repacked INT NOT NULL DEFAULT 0 CHECK (qty_repacked >= 0),

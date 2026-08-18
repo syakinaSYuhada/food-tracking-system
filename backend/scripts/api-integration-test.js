@@ -396,8 +396,12 @@ async function main() {
 
   await check('Worker cannot overwrite confirmed root cause (defect 2)', async () => {
     const hairul = await login('hairul_nizam')
+    const actionsBody = await request('/corrective-actions?defect_id=2', { headers: manager.headers })
+    const hairulAction = (actionsBody.data || []).find((row) => Number(row.assigned_to) === Number(hairul.user.id))
+    if (!hairulAction) throw new Error('No corrective action on defect 2 assigned to hairul_nizam found')
+
     await requestStatus(
-      '/root-causes/defects/2/suspect',
+      `/root-causes/actions/${hairulAction.id}/suspect`,
       {
         method: 'PATCH',
         headers: hairul.headers,

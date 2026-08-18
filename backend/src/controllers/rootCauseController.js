@@ -1,6 +1,6 @@
 const pool = require('../config/db')
 const { successResponse, errorResponse } = require('../middleware/responseHandler')
-const { actorId, assertWorkerDefectAccess } = require('../utils/accessControl')
+const { actorId, assertWorkerDefectAccess, assertWorkerActionAccess } = require('../utils/accessControl')
 const rootCauseService = require('../services/rootCauseService')
 
 async function getRootCauseByDefect(req, res) {
@@ -49,20 +49,18 @@ async function getRootCauseByDefect(req, res) {
   }
 }
 
-async function updateSuspectedRootCause(req, res) {
+async function updateSuspectedRootCauseForAction(req, res) {
   const client = await pool.connect()
 
   try {
     await client.query('BEGIN')
 
-    const { defectId } = req.params
+    const { actionId } = req.params
 
     const {
       suspected_root_cause_source,
       suspected_root_cause,
-      related_tool_machine,
-      investigation_notes,
-      updated_by
+      suspected_root_cause_notes
     } = req.body
 
     if (!suspected_root_cause_source || !suspected_root_cause) {
@@ -75,28 +73,31 @@ async function updateSuspectedRootCause(req, res) {
       )
     }
 
-    const defectResult = await client.query(
+    const actionResult = await client.query(
       `
       SELECT
-        d.id,
+        ca.id,
+        ca.action_code,
+        ca.defect_id,
         d.defect_code,
         d.defect_status,
         r.root_cause_status
-      FROM defects d
-      LEFT JOIN root_cause_investigation r ON r.defect_id = d.id
-      WHERE d.id = $1
+      FROM corrective_actions ca
+      JOIN defects d ON d.id = ca.defect_id
+      LEFT JOIN root_cause_investigation r ON r.defect_id = ca.defect_id
+      WHERE ca.id = $1
       `,
-      [defectId]
+      [actionId]
     )
 
-    if (defectResult.rows.length === 0) {
+    if (actionResult.rows.length === 0) {
       await client.query('ROLLBACK')
-      return errorResponse(res, 'Defect not found', 404, 'DEFECT_NOT_FOUND')
+      return errorResponse(res, 'Corrective action not found', 404, 'CORRECTIVE_ACTION_NOT_FOUND')
     }
 
-    const defect = defectResult.rows[0]
+    const action = actionResult.rows[0]
 
-    if (defect.defect_status === 'closed') {
+    if (action.defect_status === 'closed') {
       await client.query('ROLLBACK')
       return errorResponse(
         res,
@@ -106,7 +107,7 @@ async function updateSuspectedRootCause(req, res) {
       )
     }
 
-    if (defect.root_cause_status === 'confirmed') {
+    if (action.root_cause_status === 'confirmed') {
       await client.query('ROLLBACK')
       return errorResponse(
         res,
@@ -116,39 +117,43 @@ async function updateSuspectedRootCause(req, res) {
       )
     }
 
-    if (!(await assertWorkerDefectAccess(req, res, defectId))) {
+    if (!(await assertWorkerActionAccess(req, res, actionId))) {
       await client.query('ROLLBACK')
       return
     }
 
     const result = await client.query(
       `
-      INSERT INTO root_cause_investigation (
-        defect_id,
-        root_cause_status,
-        suspected_root_cause_source,
-        suspected_root_cause,
-        related_tool_machine,
-        investigation_notes
-      )
-      VALUES ($1, 'suspected', $2, $3, $4, $5)
-      ON CONFLICT (defect_id)
-      DO UPDATE SET
-        root_cause_status = 'suspected',
-        suspected_root_cause_source = EXCLUDED.suspected_root_cause_source,
-        suspected_root_cause = EXCLUDED.suspected_root_cause,
-        related_tool_machine = EXCLUDED.related_tool_machine,
-        investigation_notes = EXCLUDED.investigation_notes,
+      UPDATE corrective_actions
+      SET
+        suspected_root_cause_source = $1,
+        suspected_root_cause = $2,
+        suspected_root_cause_notes = $3,
         updated_at = CURRENT_TIMESTAMP
+      WHERE id = $4
       RETURNING *
       `,
       [
-        defectId,
         suspected_root_cause_source,
         suspected_root_cause,
-        related_tool_machine || null,
-        investigation_notes || null
+        suspected_root_cause_notes || null,
+        actionId
       ]
+    )
+
+    await client.query(
+      `
+      INSERT INTO root_cause_investigation (defect_id, root_cause_status)
+      VALUES ($1, 'suspected')
+      ON CONFLICT (defect_id)
+      DO UPDATE SET
+        root_cause_status = CASE
+          WHEN root_cause_investigation.root_cause_status = 'pending_investigation' THEN 'suspected'
+          ELSE root_cause_investigation.root_cause_status
+        END,
+        updated_at = CURRENT_TIMESTAMP
+      `,
+      [action.defect_id]
     )
 
     await client.query(
@@ -162,12 +167,12 @@ async function updateSuspectedRootCause(req, res) {
         old_value,
         new_value
       )
-      VALUES ($1, 'UPDATE_SUSPECTED_ROOT_CAUSE', 'defect', $2, $3, NULL, $4)
+      VALUES ($1, 'UPDATE_SUSPECTED_ROOT_CAUSE', 'corrective_action', $2, $3, NULL, $4)
       `,
       [
-        actorId(req) || updated_by || null,
-        defectId,
-        `Suspected root cause updated for defect ${defect.defect_code}.`,
+        actorId(req),
+        actionId,
+        `Suspected root cause recorded for action ${action.action_code}.`,
         suspected_root_cause
       ]
     )
@@ -230,6 +235,6 @@ async function confirmRootCause(req, res) {
 
 module.exports = {
   getRootCauseByDefect,
-  updateSuspectedRootCause,
+  updateSuspectedRootCauseForAction,
   confirmRootCause
 }

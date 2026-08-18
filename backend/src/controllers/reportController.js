@@ -382,8 +382,7 @@ async function getRootCauseReport(req, res) {
       SELECT
         CASE
           WHEN r.root_cause_status = 'confirmed' THEN COALESCE(NULLIF(BTRIM(r.confirmed_root_cause), ''), 'Pending Investigation')
-          WHEN r.root_cause_status = 'suspected' THEN COALESCE(NULLIF(BTRIM(r.suspected_root_cause), ''), 'Pending Investigation')
-          ELSE COALESCE(NULLIF(BTRIM(r.suspected_root_cause), ''), 'Pending Investigation')
+          ELSE 'Pending Investigation'
         END AS root_cause,
         COUNT(*) FILTER (WHERE r.root_cause_status = 'confirmed')::int AS confirmed,
         COUNT(*) FILTER (WHERE r.root_cause_status = 'suspected')::int AS suspected,
@@ -680,7 +679,6 @@ async function getRootCauseByProcessAreaReport(req, res) {
       SELECT
         COALESCE(
           NULLIF(TRIM(r.confirmed_root_cause_source), ''),
-          NULLIF(TRIM(r.suspected_root_cause_source), ''),
           'Not Specified'
         ) AS root_cause_area,
         r.root_cause_status AS status,
@@ -697,7 +695,6 @@ async function getRootCauseByProcessAreaReport(req, res) {
         COUNT(*)::int AS total_investigations,
         COUNT(DISTINCT COALESCE(
           NULLIF(TRIM(r.confirmed_root_cause_source), ''),
-          NULLIF(TRIM(r.suspected_root_cause_source), ''),
           'Not Specified'
         ))::int AS process_areas
       FROM root_cause_investigation r
