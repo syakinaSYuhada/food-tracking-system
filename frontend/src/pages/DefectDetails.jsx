@@ -67,6 +67,53 @@ function TextArea({ label, value, onChange, rows = 3, required = false }) {
   )
 }
 
+function SuspectedCauseForm({ action, defectType, rootCauseOptions, onSaved }) {
+  const toast = useToast()
+  const hasExisting = Boolean(action.suspected_root_cause)
+  const existingIsListed = hasExisting && rootCauseOptions.includes(action.suspected_root_cause)
+  const [cause, setCause] = useState(existingIsListed ? action.suspected_root_cause : (hasExisting ? 'Other' : ''))
+  const [otherCause, setOtherCause] = useState(hasExisting && !existingIsListed ? action.suspected_root_cause : '')
+  const [notes, setNotes] = useState(action.suspected_root_cause_notes || '')
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    const finalCause = cause === 'Other' ? otherCause.trim() : cause
+    if (!finalCause) return toast.warning('Please choose or type a suspected root cause.')
+
+    setSaving(true)
+    try {
+      await api.patch(`/root-causes/actions/${action.id}/suspect`, {
+        suspected_root_cause_source: defectType,
+        suspected_root_cause: finalCause,
+        suspected_root_cause_notes: notes || null
+      })
+      await onSaved()
+      toast.success('Suspected root cause saved. Manager will review and confirm.')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Could not save suspected root cause.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm">
+      <h3 className="font-bold text-brand-ink">Record Suspected Root Cause — {action.code} · {titleCase(action.type)}</h3>
+      <p className="mt-2 text-sm text-brand-muted">Based on your investigation, record what you think caused this defect. The manager will review and confirm.</p>
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Select label="Suspected Root Cause" value={cause} onChange={setCause} options={rootCauseOptions} required />
+        {cause === 'Other' && (
+          <Input label="Please specify suspected root cause" value={otherCause} onChange={setOtherCause} required />
+        )}
+      </div>
+      <TextArea label="Notes" value={notes} onChange={setNotes} rows={3} />
+      <Button color="amber" onClick={save} disabled={saving} className="mt-4">
+        {saving ? 'Saving...' : hasExisting ? 'Update Suspected Root Cause' : 'Save Suspected Root Cause'}
+      </Button>
+    </div>
+  )
+}
+
 function normalizeAction(action) {
   return {
     ...action,
@@ -1006,10 +1053,6 @@ export default function DefectDetails({ user }) {
   const [rejectActionId, setRejectActionId] = useState(null)
   const [rootCause, setRootCause] = useState('')
   const [otherRootCause, setOtherRootCause] = useState('')
-  const [suspectedCause, setSuspectedCause] = useState('')
-  const [otherSuspectedCause, setOtherSuspectedCause] = useState('')
-  const [investigationNotes, setInvestigationNotes] = useState('')
-  const [savingSuspected, setSavingSuspected] = useState(false)
   const [printingSummary, setPrintingSummary] = useState(false)
   const [showEditDetails, setShowEditDetails] = useState(false)
   const [reviewedAt, setReviewedAt] = useState(null)
@@ -1065,13 +1108,6 @@ export default function DefectDetails({ user }) {
       setRule(loadedRule)
 
       const options = loadedRule?.root_cause_options || []
-      setInvestigationNotes(data.investigation_notes || '')
-      if (data.suspected_root_cause) {
-        applyRootCauseSelection(data.suspected_root_cause, options, setSuspectedCause, setOtherSuspectedCause)
-        if (!data.confirmed_root_cause) {
-          applyRootCauseSelection(data.suspected_root_cause, options, setRootCause, setOtherRootCause)
-        }
-      }
       if (data.confirmed_root_cause) {
         applyRootCauseSelection(data.confirmed_root_cause, options, setRootCause, setOtherRootCause)
       }
@@ -1234,28 +1270,6 @@ export default function DefectDetails({ user }) {
     }
   }
 
-  async function saveSuspectedRootCause() {
-    const finalCause = suspectedCause === 'Other' ? otherSuspectedCause.trim() : suspectedCause
-    if (!finalCause) return toast.warning('Please choose or type a suspected root cause.')
-
-    setSavingSuspected(true)
-    try {
-      await api.patch(`/root-causes/defects/${id}/suspect`, {
-        suspected_root_cause_source: defect.defect_type,
-        suspected_root_cause: finalCause,
-        related_tool_machine: defect.related_tool_machine || null,
-        investigation_notes: investigationNotes || null,
-        updated_by: currentUser?.id || null
-      })
-      await load()
-      toast.success('Suspected root cause saved. Manager will review and confirm.')
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Could not save suspected root cause.')
-    } finally {
-      setSavingSuspected(false)
-    }
-  }
-
   async function confirmRootCause() {
     const finalCause = rootCause === 'Other' ? otherRootCause : rootCause
     if (!finalCause) return toast.warning('Please choose or type confirmed root cause.')
@@ -1380,9 +1394,9 @@ export default function DefectDetails({ user }) {
           </div>
         </div>
         <p className="mt-3 text-sm text-brand-muted">{defect.description || 'No description provided.'}</p>
-        {defect.root_cause_status === 'suspected' && defect.suspected_root_cause && (
+        {defect.root_cause_status === 'suspected' && investigationActions.some((a) => a.suspected_root_cause) && (
           <p className="mt-3 text-sm text-brand-muted">
-            <span className="font-semibold text-brand-ink">Suspected root cause:</span> {defect.suspected_root_cause}
+            <span className="font-semibold text-brand-ink">Suspected root cause(s) recorded</span> on one or more corrective actions.
           </p>
         )}
         <div className="mt-6 border-b border-brand-border/70 pb-4">
@@ -1615,8 +1629,15 @@ export default function DefectDetails({ user }) {
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
                 <h3 className="font-bold text-emerald-800">Root cause confirmed by manager</h3>
                 <p className="mt-3 text-sm text-emerald-700"><b>Confirmed Root Cause:</b> {defect.confirmed_root_cause}</p>
-                {defect.suspected_root_cause && (
-                  <p className="text-sm text-emerald-700"><b>Worker Suspected:</b> {defect.suspected_root_cause}</p>
+                {investigationActions.some((a) => a.suspected_root_cause) && (
+                  <div className="text-sm text-emerald-700">
+                    <b>Suspected by workers:</b>
+                    <ul className="mt-1 list-disc pl-5">
+                      {investigationActions.filter((a) => a.suspected_root_cause).map((a) => (
+                        <li key={a.id}>{a.code}: {a.suspected_root_cause}</li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
                 <p className="text-sm text-emerald-700"><b>Confirmed by:</b> {defect.confirmed_by_name || '-'}</p>
                 <p className="text-sm text-emerald-700"><b>Confirmed at:</b> {formatDate(defect.confirmed_date)}</p>
@@ -1644,35 +1665,34 @@ export default function DefectDetails({ user }) {
               </div>
             ) : (
               <>
-                {!managerView && workerHasAssignedAction && (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm">
-                    <h3 className="font-bold text-brand-ink">Record Suspected Root Cause</h3>
-                    <p className="mt-2 text-sm text-brand-muted">Based on your investigation, record what you think caused this defect. The manager will review and confirm.</p>
-                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <Select label="Suspected Root Cause" value={suspectedCause} onChange={setSuspectedCause} options={rootCauseOptions} required />
-                      {suspectedCause === 'Other' && (
-                        <Input label="Please specify suspected root cause" value={otherSuspectedCause} onChange={setOtherSuspectedCause} required />
-                      )}
-                    </div>
-                    <TextArea
-                      label="Investigation Notes"
-                      value={investigationNotes}
-                      onChange={setInvestigationNotes}
-                      rows={3}
-                    />
-                    <Button color="amber" onClick={saveSuspectedRootCause} disabled={savingSuspected} className="mt-4">
-                      {savingSuspected ? 'Saving...' : defect.suspected_root_cause ? 'Update Suspected Root Cause' : 'Save Suspected Root Cause'}
-                    </Button>
-                  </div>
-                )}
+                {!managerView && investigationActions.map((action) => (
+                  <SuspectedCauseForm
+                    key={action.id}
+                    action={action}
+                    defectType={defect.defect_type}
+                    rootCauseOptions={rootCauseOptions}
+                    onSaved={load}
+                  />
+                ))}
 
-                {defect.suspected_root_cause && (
+                {investigationActions.length > 0 && (
                   <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-                    <h3 className="font-bold text-amber-800">Current Suspected Root Cause</h3>
-                    <p className="mt-2 text-sm text-amber-800"><b>Cause:</b> {defect.suspected_root_cause}</p>
-                    <p className="text-sm text-amber-800"><b>Source:</b> {defect.suspected_root_cause_source || defect.defect_type}</p>
-                    {defect.investigation_notes && (
-                      <p className="mt-2 text-sm text-amber-800"><b>Notes:</b> {defect.investigation_notes}</p>
+                    <h3 className="font-bold text-amber-800">Current Suspected Root Cause{investigationActions.filter((a) => a.suspected_root_cause).length > 1 ? 's' : ''}</h3>
+                    {investigationActions.filter((a) => a.suspected_root_cause).length === 0 ? (
+                      <p className="mt-2 text-sm text-amber-800">No suspected root cause recorded yet.</p>
+                    ) : (
+                      <div className="mt-3 space-y-3">
+                        {investigationActions.filter((a) => a.suspected_root_cause).map((action) => (
+                          <div key={action.id} className="rounded-xl bg-white/60 p-3">
+                            <p className="font-semibold text-amber-900">{action.code} — {titleCase(action.type)}</p>
+                            <p className="mt-1 text-sm text-amber-800"><b>Cause:</b> {action.suspected_root_cause}</p>
+                            <p className="text-sm text-amber-800"><b>Source:</b> {action.suspected_root_cause_source || defect.defect_type}</p>
+                            {action.suspected_root_cause_notes && (
+                              <p className="mt-1 text-sm text-amber-800"><b>Notes:</b> {action.suspected_root_cause_notes}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 )}
@@ -1681,8 +1701,8 @@ export default function DefectDetails({ user }) {
                   <div className="surface-card p-5">
                     <h3 className="font-bold text-brand-ink">Manager — Confirm Root Cause</h3>
                     <p className="mt-2 text-sm text-brand-muted">
-                      {defect.suspected_root_cause
-                        ? 'Review the worker\'s suspected cause below, then confirm or change it.'
+                      {investigationActions.some((a) => a.suspected_root_cause)
+                        ? 'Review each action\'s suspected cause above, then confirm or change it.'
                         : 'No suspected root cause recorded yet. You can still confirm based on investigation findings.'}
                     </p>
                     <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -1710,9 +1730,6 @@ export default function DefectDetails({ user }) {
                 ) : workerReportedDefect ? (
                   <div className="surface-card bg-brand-50/40 p-5 text-sm text-brand-muted">
                     Root cause will be confirmed by your manager after corrective actions are completed.
-                    {defect.suspected_root_cause && (
-                      <p className="mt-2"><b>Current suspected cause:</b> {defect.suspected_root_cause}</p>
-                    )}
                   </div>
                 ) : (
                   <div className="surface-card bg-brand-50/40 p-5 text-sm text-brand-muted">
