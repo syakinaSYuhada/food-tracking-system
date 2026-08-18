@@ -421,10 +421,9 @@ export default function CorrectiveActionDetails({ user }) {
     : { valid: true, totalHandled: 0 }
   const accounted = quantityValidation.totalHandled ?? 0
   const isClosedDefect = action.defectStatus === 'closed'
-  const isActionResolved = ['completed', 'verified', 'rejected'].includes(action.status)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       <div className="sticky top-16 z-10 flex flex-wrap items-center justify-between gap-3 bg-softBg py-2 text-sm text-brand-muted">
         <button
           type="button"
@@ -811,7 +810,7 @@ export default function CorrectiveActionDetails({ user }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-brand-border/70 pt-4">
+      <div className="fixed bottom-0 left-[var(--sidebar-width,0px)] right-0 z-10 flex flex-wrap items-center justify-between gap-3 border-t border-brand-border/70 bg-white px-4 py-4 shadow-[0_-4px_16px_rgba(15,23,42,0.08)] transition-all duration-300 ease-smooth md:px-6">
         {managerView && action.status === 'completed' && !isClosedDefect && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
             Manager review: use <b>Reject</b> or <b>Verify</b> below
@@ -819,17 +818,11 @@ export default function CorrectiveActionDetails({ user }) {
         )}
 
         <div className="ml-auto flex flex-wrap items-center gap-3">
-          <Button
-            color={isActionResolved ? 'brand' : 'slate'}
-            variant="subtle"
-            size="sm"
-            onClick={() => navigate(
-              isActionResolved
-                ? `/defects/${action.defectId}?tab=root-cause`
-                : `/defects/${action.defectId}`
-            )}
-          >
-            <Eye size={14} /> {isActionResolved ? 'Go to Investigation' : 'View Defect'}
+          <Button color="slate" variant="subtle" size="sm" onClick={() => navigate(`/defects/${action.defectId}`)}>
+            <Eye size={14} /> View Defect
+          </Button>
+          <Button color="brand" variant="subtle" size="sm" onClick={() => navigate(`/defects/${action.defectId}?tab=root-cause`)}>
+            <Eye size={14} /> Go to Investigation
           </Button>
           {!managerView && isAssignee && !isClosedDefect && (action.status === 'assigned' || action.status === 'rejected') && (
             <Button onClick={startAction}>

@@ -223,7 +223,7 @@ function AppShell({ children, user, onLogout }) {
         </div>
       </aside>
 
-      <div className="min-h-screen transition-all duration-300 ease-smooth" style={{ marginLeft: contentMargin }}>
+      <div className="min-h-screen transition-all duration-300 ease-smooth" style={{ marginLeft: contentMargin, '--sidebar-width': `${contentMargin}px` }}>
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-brand-border/80 bg-white/80 px-4 shadow-xs backdrop-blur-xl md:px-6">
           <div className="flex items-center gap-3">
             {isMobile && (
