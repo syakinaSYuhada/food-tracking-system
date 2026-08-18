@@ -1169,40 +1169,43 @@ export default function Defects({ user }) {
                     onView={() => navigate(`/defects/${defect.id}`)}
                   >
                     <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-brand-muted">Reviewed</p>
-                          {isReviewed ? (
-                            <p className="mt-0.5 text-sm font-semibold text-emerald-600">Yes</p>
-                          ) : (
-                            <>
-                              <p className="mt-0.5 text-sm font-semibold text-brand-ink">No</p>
-                              {defect.reviewDueDate && (
-                                reviewDueStatus === 'overdue' ? (
-                                  <p className="mt-0.5 text-xs font-semibold text-red-600">Overdue — {defect.reviewDueDate}</p>
-                                ) : (
-                                  <p className="mt-0.5 text-xs text-brand-muted">Due before {defect.reviewDueDate}</p>
-                                )
-                              )}
-                            </>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-brand-muted">Assigned</p>
-                          <p className={`mt-0.5 text-sm font-semibold ${isAssigned ? 'text-emerald-600' : 'text-brand-ink'}`}>{isAssigned ? 'Yes' : 'No'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-brand-muted">Actions Verified</p>
-                          <p className={`mt-0.5 text-sm font-semibold ${allActionsVerified ? 'text-emerald-600' : 'text-brand-ink'}`}>{verifiedActions} / {totalActions}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-brand-muted">Root Cause Confirmed</p>
-                          <p className={`mt-0.5 text-sm font-semibold ${isRootCauseConfirmed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isRootCauseConfirmed ? 'Yes' : 'No'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-brand-muted">Closed</p>
-                          <p className={`mt-0.5 text-sm font-semibold ${isClosed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isClosed ? 'Yes' : 'No'}</p>
-                          <p className="mt-0.5 text-xs text-brand-muted">Requires all actions verified and root cause confirmed.</p>
+                      <div>
+                        <p className="text-xs font-semibold uppercase text-brand-muted">Status of Defect</p>
+                        <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase text-brand-muted">Reviewed</p>
+                            {isReviewed ? (
+                              <p className="mt-0.5 text-sm font-semibold text-emerald-600">Yes</p>
+                            ) : (
+                              <>
+                                <p className="mt-0.5 text-sm font-semibold text-brand-ink">No</p>
+                                {defect.reviewDueDate && (
+                                  reviewDueStatus === 'overdue' ? (
+                                    <p className="mt-0.5 text-xs font-semibold text-red-600">Overdue — {defect.reviewDueDate}</p>
+                                  ) : (
+                                    <p className="mt-0.5 text-xs text-brand-muted">Due before {defect.reviewDueDate}</p>
+                                  )
+                                )}
+                              </>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold uppercase text-brand-muted">Assigned</p>
+                            <p className={`mt-0.5 text-sm font-semibold ${isAssigned ? 'text-emerald-600' : 'text-brand-ink'}`}>{isAssigned ? 'Yes' : 'No'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold uppercase text-brand-muted">Action Verified</p>
+                            <p className={`mt-0.5 text-sm font-semibold ${allActionsVerified ? 'text-emerald-600' : 'text-brand-ink'}`}>{verifiedActions} / {totalActions}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold uppercase text-brand-muted">Root Cause Confirmed</p>
+                            <p className={`mt-0.5 text-sm font-semibold ${isRootCauseConfirmed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isRootCauseConfirmed ? 'Yes' : 'No'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold uppercase text-brand-muted">Closed</p>
+                            <p className={`mt-0.5 text-sm font-semibold ${isClosed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isClosed ? 'Yes' : 'No'}</p>
+                            <p className="mt-0.5 text-xs text-brand-muted">Requires all actions verified and root cause confirmed.</p>
+                          </div>
                         </div>
                       </div>
 
