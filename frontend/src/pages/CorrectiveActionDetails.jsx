@@ -421,6 +421,7 @@ export default function CorrectiveActionDetails({ user }) {
     : { valid: true, totalHandled: 0 }
   const accounted = quantityValidation.totalHandled ?? 0
   const isClosedDefect = action.defectStatus === 'closed'
+  const isActionResolved = ['completed', 'verified', 'rejected'].includes(action.status)
 
   return (
     <div className="space-y-6">
@@ -458,18 +459,6 @@ export default function CorrectiveActionDetails({ user }) {
                 title={managerView ? getCaStatusExplanation(action.status) : undefined}
               />
             )}
-            <Button
-              color="slate"
-              variant="subtle"
-              size="sm"
-              onClick={() => navigate(
-                ['completed', 'verified', 'rejected'].includes(action.status)
-                  ? `/defects/${action.defectId}?tab=root-cause`
-                  : `/defects/${action.defectId}`
-              )}
-            >
-              <Eye size={14} /> View Defect
-            </Button>
           </div>
         </div>
 
@@ -830,6 +819,18 @@ export default function CorrectiveActionDetails({ user }) {
         )}
 
         <div className="ml-auto flex flex-wrap items-center gap-3">
+          <Button
+            color={isActionResolved ? 'brand' : 'slate'}
+            variant="subtle"
+            size="sm"
+            onClick={() => navigate(
+              isActionResolved
+                ? `/defects/${action.defectId}?tab=root-cause`
+                : `/defects/${action.defectId}`
+            )}
+          >
+            <Eye size={14} /> {isActionResolved ? 'Go to Investigation' : 'View Defect'}
+          </Button>
           {!managerView && isAssignee && !isClosedDefect && (action.status === 'assigned' || action.status === 'rejected') && (
             <Button onClick={startAction}>
               {action.status === 'rejected' ? 'Restart Action' : 'Start Action'}
