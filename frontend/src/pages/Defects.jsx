@@ -1170,7 +1170,7 @@ export default function Defects({ user }) {
                   >
                     <div className="space-y-2">
                       <div>
-                        <p className="text-xs font-semibold uppercase text-brand-muted">Status of Defect</p>
+                        <p className="list-row-title">Status of Defect</p>
                         <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-3">
                           <div>
                             <p className="text-xs font-semibold uppercase text-brand-muted">Reviewed</p>
