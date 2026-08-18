@@ -447,6 +447,9 @@ export default function CorrectiveActionDetails({ user }) {
             <h1 className="mt-1 text-2xl font-bold text-brand-ink">{action.code}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Button color="slate" variant="subtle" size="sm" onClick={() => navigate(`/defects/${action.defectId}`)}>
+              <Eye size={14} /> View Defect
+            </Button>
             <Button color="slate" variant="subtle" size="sm" onClick={() => printCorrectiveActionSummary(action, managerView ? 'manager' : 'worker')}>
               <Printer size={14} /> Print Summary
             </Button>
@@ -806,6 +809,12 @@ export default function CorrectiveActionDetails({ user }) {
                   </div>
                 </div>
               )}
+
+              <div className="mt-4 flex justify-end">
+                <Button color="brand" variant="subtle" size="sm" onClick={() => navigate(`/defects/${action.defectId}?tab=root-cause`)}>
+                  <Eye size={14} /> Go to Investigation
+                </Button>
+              </div>
           </SectionCard>
         </div>
       </div>
@@ -818,12 +827,6 @@ export default function CorrectiveActionDetails({ user }) {
         )}
 
         <div className="ml-auto flex flex-wrap items-center gap-3">
-          <Button color="slate" variant="subtle" size="sm" onClick={() => navigate(`/defects/${action.defectId}`)}>
-            <Eye size={14} /> View Defect
-          </Button>
-          <Button color="brand" variant="subtle" size="sm" onClick={() => navigate(`/defects/${action.defectId}?tab=root-cause`)}>
-            <Eye size={14} /> Go to Investigation
-          </Button>
           {!managerView && isAssignee && !isClosedDefect && (action.status === 'assigned' || action.status === 'rejected') && (
             <Button onClick={startAction}>
               {action.status === 'rejected' ? 'Restart Action' : 'Start Action'}
