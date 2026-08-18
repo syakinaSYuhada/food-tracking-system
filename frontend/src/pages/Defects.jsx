@@ -1169,6 +1169,30 @@ export default function Defects({ user }) {
                     onView={() => navigate(`/defects/${defect.id}`)}
                   >
                     <div className="space-y-2">
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-brand-muted">Description</p>
+                          <p className="mt-0.5 text-sm font-semibold text-brand-ink">{defect.description || '-'}</p>
+                        </div>
+                        {!isClosed && (
+                          <div>
+                            <p className="text-xs font-semibold uppercase text-brand-muted">Priority</p>
+                            <p className="mt-0.5 text-sm font-semibold text-brand-ink">{formatDefectPriorityLabel(defect.priority)}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-brand-muted">Containment</p>
+                          <p className="mt-0.5 text-sm font-semibold text-brand-ink">{defect.containmentStatus || '-'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-brand-muted">Problem Level</p>
+                          <p className="mt-0.5 text-sm font-semibold text-brand-ink">{defect.problemLevel || '-'}</p>
+                        </div>
+                      </div>
+
                       <div>
                         <div className="flex items-center gap-2">
                           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100">
@@ -1226,30 +1250,6 @@ export default function Defects({ user }) {
                             <p className="mt-1.5 text-xs font-semibold uppercase text-brand-muted">Closed</p>
                             <p className={`mt-0.5 text-sm font-semibold ${isClosed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isClosed ? 'Yes' : 'No'}</p>
                           </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-x-3">
-                        {!isClosed && (
-                          <div>
-                            <p className="text-xs font-semibold uppercase text-brand-muted">Priority</p>
-                            <p className="mt-0.5 text-sm font-semibold text-brand-ink">{formatDefectPriorityLabel(defect.priority)}</p>
-                          </div>
-                        )}
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-brand-muted">Problem Level</p>
-                          <p className="mt-0.5 text-sm font-semibold text-brand-ink">{defect.problemLevel || '-'}</p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-brand-muted">Containment</p>
-                          <p className="mt-0.5 text-sm font-semibold text-brand-ink">{defect.containmentStatus || '-'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-brand-muted">Description</p>
-                          <p className="mt-0.5 text-sm font-semibold text-brand-ink">{defect.description || '-'}</p>
                         </div>
                       </div>
                     </div>
