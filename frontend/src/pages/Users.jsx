@@ -51,8 +51,9 @@ function UserRow({ user, managerView, currentUserId, onToggleStatus, togglingUse
             <ListActionButton
               intent={isActive ? 'deactivate' : 'activate'}
               icon={isActive ? UserX : UserCheck}
-              color={isActive ? 'red' : 'green'}
+              color="slate"
               variant="subtle"
+              className={`list-action-btn hover:!bg-white ${isActive ? 'hover:!border-red-300 hover:!text-red-600' : 'hover:!border-emerald-300 hover:!text-emerald-600'}`}
               disabled={isToggling}
               onClick={() => onToggleStatus(user)}
             >
