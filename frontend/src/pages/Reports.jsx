@@ -40,6 +40,39 @@ function formatDate(value) {
 function getData(res) {
   return res?.data?.data ?? res?.data ?? {}
 }
+const FINANCIAL_SORT_CHIPS = [
+  { value: 'impact', label: 'Highest financial impact' },
+  { value: 'discarded', label: 'Most units discarded' },
+  { value: 'pending', label: 'Still pending' },
+  { value: 'confirmed', label: 'Confirmed losses' }
+]
+function financialImpactValue(row, view) {
+  return view === 'Discarded Only'
+    ? Number(row.estimated_loss || 0)
+    : Number(row.loss_at_risk || 0) + Number(row.pending_loss || 0) + Number(row.confirmed_loss || 0)
+}
+function applyFinancialChip(rows, chip, view) {
+  const impactSorted = () => [...rows].sort((a, b) => financialImpactValue(b, view) - financialImpactValue(a, view))
+  switch (chip) {
+    case 'discarded':
+      return [...rows].sort((a, b) => Number(b.qty_discarded || 0) - Number(a.qty_discarded || 0))
+    case 'pending':
+      return rows
+        .filter((row) => (row.loss_status || row.status) === 'pending_review')
+        .sort((a, b) => financialImpactValue(b, view) - financialImpactValue(a, view))
+    case 'confirmed':
+      return rows
+        .filter((row) => (row.loss_status || row.status) === 'loss_confirmed')
+        .sort((a, b) => {
+          const bVal = view === 'Discarded Only' ? Number(b.estimated_loss || 0) : Number(b.confirmed_loss || 0)
+          const aVal = view === 'Discarded Only' ? Number(a.estimated_loss || 0) : Number(a.confirmed_loss || 0)
+          return bVal - aVal
+        })
+    case 'impact':
+    default:
+      return impactSorted()
+  }
+}
 function ReportTabHint({ children }) {
   return (
     <p className="mb-2 text-[0.6875rem] leading-4 text-brand-muted">{children}</p>
@@ -127,6 +160,7 @@ export default function Reports() {
   const [reports, setReports] = useState({})
   const [sortBy, setSortBy] = useState('total')
   const [sortOrder, setSortOrder] = useState('desc')
+  const [financialChip, setFinancialChip] = useState('impact')
   const activeView = activeTab === TAB_ROOT_CAUSE
     ? rootCauseView
     : activeTab === TAB_FINANCIAL
@@ -223,8 +257,8 @@ export default function Reports() {
   const byBatchRows = reports.byBatch?.rows || (Array.isArray(reports.byBatch) ? reports.byBatch : [])
   const periodLabel = reports.loss?.period_label
   const sortedLossRows = useMemo(
-    () => sortReportRows(lossRows, sortBy, sortOrder, 'By Defect'),
-    [lossRows, sortBy, sortOrder]
+    () => applyFinancialChip(lossRows, financialChip, financialView),
+    [lossRows, financialChip, financialView]
   )
   const sortedRootRows = useMemo(
     () => sortReportRows(rootRows, sortBy, sortOrder, 'By Root Cause'),
@@ -258,8 +292,8 @@ export default function Reports() {
     [batchExpiryAuditRows, sortBy, sortOrder]
   )
   const sortedDiscardedRows = useMemo(
-    () => sortReportRows(discardedRows, sortBy, sortOrder, 'Discarded Only'),
-    [discardedRows, sortBy, sortOrder]
+    () => applyFinancialChip(discardedRows, financialChip, financialView),
+    [discardedRows, financialChip, financialView]
   )
   const sortedByProductRows = useMemo(
     () => sortReportRows(byProductRows, sortBy, sortOrder, 'By Product'),
@@ -292,19 +326,55 @@ export default function Reports() {
     { key: 'defect_code', label: 'Defect Code', className: 'min-w-[7rem] w-28' },
     { key: 'product_name', label: 'Product', className: 'w-full md:w-40' },
     { key: 'batch_number', label: 'Batch', className: 'w-28' },
-    { key: 'qty_on_hold', label: 'Qty On Hold', className: 'w-24' },
-    { key: 'qty_discarded', label: 'Qty Discarded', className: 'w-24' },
     { key: 'loss_at_risk', label: 'Loss at Risk', className: 'w-28', render: (row) => money(row.loss_at_risk), exportValue: (row) => money(row.loss_at_risk) },
-    { key: 'pending_loss', label: 'Pending Loss', className: 'w-28', render: (row) => money(row.pending_loss), exportValue: (row) => money(row.pending_loss) },
-    { key: 'confirmed_loss', label: 'Confirmed Loss', className: 'w-28', render: (row) => money(row.confirmed_loss), exportValue: (row) => money(row.confirmed_loss) },
+    {
+      key: 'pending_loss',
+      label: 'Pending Loss',
+      className: 'w-28',
+      render: (row) => (
+        <div>
+          <div>{money(row.pending_loss)}</div>
+          {Number(row.qty_discarded) > 0 && Number(row.pending_loss) > 0 && (
+            <div className="text-xs text-brand-muted">{row.qty_discarded} units discarded</div>
+          )}
+        </div>
+      ),
+      exportValue: (row) => money(row.pending_loss)
+    },
+    {
+      key: 'confirmed_loss',
+      label: 'Confirmed Loss',
+      className: 'w-28',
+      render: (row) => (
+        <div>
+          <div>{money(row.confirmed_loss)}</div>
+          {Number(row.qty_discarded) > 0 && Number(row.confirmed_loss) > 0 && (
+            <div className="text-xs text-brand-muted">{row.qty_discarded} units discarded</div>
+          )}
+        </div>
+      ),
+      exportValue: (row) => money(row.confirmed_loss)
+    },
     { key: 'loss_status', label: 'Loss Status', className: 'w-32', render: (row) => <StatusBadge value={row.loss_status || row.status} />, exportValue: (row) => row.loss_status || row.status }
   ]
   const discardedColumns = [
     { key: 'defect_code', label: 'Defect Code', className: 'w-28' },
     { key: 'product_name', label: 'Product', className: 'w-full md:w-48' },
     { key: 'batch_number', label: 'Batch', className: 'w-28' },
-    { key: 'qty_discarded', label: 'Qty Discarded', className: 'w-28' },
-    { key: 'estimated_loss', label: 'Estimated Loss', className: 'w-32', render: (r) => money(r.estimated_loss), exportValue: (r) => money(r.estimated_loss) },
+    {
+      key: 'estimated_loss',
+      label: 'Estimated Loss',
+      className: 'w-32',
+      render: (r) => (
+        <div>
+          <div>{money(r.estimated_loss)}</div>
+          {Number(r.qty_discarded) > 0 && (
+            <div className="text-xs text-brand-muted">{r.qty_discarded} units discarded</div>
+          )}
+        </div>
+      ),
+      exportValue: (r) => money(r.estimated_loss)
+    },
     { key: 'loss_status', label: 'Loss Status', className: 'w-36', render: (r) => <StatusBadge value={r.loss_status || r.status} />, exportValue: (r) => r.loss_status || r.status }
   ]
   const expiryDefectColumns = [
@@ -385,7 +455,13 @@ export default function Reports() {
           options={VIEW_OPTIONS_BY_TAB[activeTab]}
           onChange={handleViewChange}
         />
-        {activeSortConfig && (
+        {activeTab === TAB_FINANCIAL ? (
+          <TabPills
+            items={FINANCIAL_SORT_CHIPS}
+            value={financialChip}
+            onChange={setFinancialChip}
+          />
+        ) : activeSortConfig && (
           <>
             <label className="flex items-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">
               Sort By
@@ -524,6 +600,7 @@ export default function Reports() {
                 title="Loss at Risk"
                 value={money(lossKpis.loss_at_risk ?? 0)}
                 subtitle="Open defects · held inventory"
+                hoverTitle="Potential loss if the units still on hold for open defects end up discarded."
                 icon={<AlertTriangle size={16} />}
                 tone="amber"
                 highlight={Number(lossKpis.loss_at_risk) > 0}
@@ -533,6 +610,7 @@ export default function Reports() {
                 title="Pending Loss"
                 value={money(lossKpis.pending_loss ?? 0)}
                 subtitle="Discarded · case still open"
+                hoverTitle="Loss from units already discarded, on defects that haven't been closed yet."
                 icon={<TrendingDown size={16} />}
                 tone="purple"
                 highlight={Number(lossKpis.pending_loss) > 0}
@@ -542,6 +620,7 @@ export default function Reports() {
                 title="Confirmed Loss"
                 value={money(lossKpis.confirmed_loss ?? 0)}
                 subtitle="Finalized on close"
+                hoverTitle="Loss finalized — the corrective action was verified or the defect was closed."
                 icon={<TrendingDown size={16} />}
                 tone="red"
               />
