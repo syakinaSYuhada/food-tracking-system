@@ -26,7 +26,6 @@ import {
   formatDefectPriorityLabel,
   formatReviewDueDate,
   formatUrgentReviewCountSummary,
-  getDefectAttentionReasons,
   getReviewDueStatus,
   hasUrgentReviewAttention,
   mapRecommendedPriority,
@@ -1149,8 +1148,6 @@ export default function Defects({ user }) {
                   )
                 }
 
-                const attentionReasons = getDefectAttentionReasons(defect, managerView).reasons
-
                 const isReviewed = defect.status !== 'new'
                 const totalActions = defect.total_actions || 0
                 const verifiedActions = defect.verified_actions || 0
@@ -1171,62 +1168,66 @@ export default function Defects({ user }) {
                     onToggle={() => setExpanded(expanded === defect.id ? null : defect.id)}
                     onView={() => navigate(`/defects/${defect.id}`)}
                   >
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                         <div>
                           <p className="text-xs font-semibold uppercase text-brand-muted">Reviewed</p>
-                          <p className={`mt-1 text-sm font-semibold ${isReviewed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isReviewed ? 'Yes' : 'No'}</p>
+                          {isReviewed ? (
+                            <p className="mt-0.5 text-sm font-semibold text-emerald-600">Yes</p>
+                          ) : (
+                            <>
+                              <p className="mt-0.5 text-sm font-semibold text-brand-ink">No</p>
+                              {defect.reviewDueDate && (
+                                reviewDueStatus === 'overdue' ? (
+                                  <p className="mt-0.5 text-xs font-semibold text-red-600">Overdue — {defect.reviewDueDate}</p>
+                                ) : (
+                                  <p className="mt-0.5 text-xs text-brand-muted">Due before {defect.reviewDueDate}</p>
+                                )
+                              )}
+                            </>
+                          )}
                         </div>
                         <div>
                           <p className="text-xs font-semibold uppercase text-brand-muted">Assigned</p>
-                          <p className={`mt-1 text-sm font-semibold ${isAssigned ? 'text-emerald-600' : 'text-brand-ink'}`}>{isAssigned ? 'Yes' : 'No'}</p>
+                          <p className={`mt-0.5 text-sm font-semibold ${isAssigned ? 'text-emerald-600' : 'text-brand-ink'}`}>{isAssigned ? 'Yes' : 'No'}</p>
                         </div>
                         <div>
                           <p className="text-xs font-semibold uppercase text-brand-muted">Actions Verified</p>
-                          <p className={`mt-1 text-sm font-semibold ${allActionsVerified ? 'text-emerald-600' : 'text-brand-ink'}`}>{verifiedActions} / {totalActions}</p>
+                          <p className={`mt-0.5 text-sm font-semibold ${allActionsVerified ? 'text-emerald-600' : 'text-brand-ink'}`}>{verifiedActions} / {totalActions}</p>
                         </div>
                         <div>
                           <p className="text-xs font-semibold uppercase text-brand-muted">Root Cause Confirmed</p>
-                          <p className={`mt-1 text-sm font-semibold ${isRootCauseConfirmed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isRootCauseConfirmed ? 'Yes' : 'No'}</p>
+                          <p className={`mt-0.5 text-sm font-semibold ${isRootCauseConfirmed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isRootCauseConfirmed ? 'Yes' : 'No'}</p>
                         </div>
                         <div>
                           <p className="text-xs font-semibold uppercase text-brand-muted">Closed</p>
-                          <p className={`mt-1 text-sm font-semibold ${isClosed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isClosed ? 'Yes' : 'No'}</p>
+                          <p className={`mt-0.5 text-sm font-semibold ${isClosed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isClosed ? 'Yes' : 'No'}</p>
                           <p className="mt-0.5 text-xs text-brand-muted">Requires all actions verified and root cause confirmed.</p>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        {attentionReasons.length > 0 && (
+                      <div className="grid grid-cols-2 gap-x-3">
+                        {!isClosed && (
                           <div>
-                            {/* Invisible spacer matching Info's label row height, keeping this cell's icon+text aligned with sibling values */}
-                            <div className="h-4" aria-hidden="true" />
-                            <div className="mt-1 flex items-center gap-1">
-                              <AlertTriangle size={12} className="shrink-0 text-red-600" />
-                              <span className="text-sm font-semibold text-red-600">{attentionReasons.join(' · ')}</span>
-                            </div>
+                            <p className="text-xs font-semibold uppercase text-brand-muted">Priority</p>
+                            <p className="mt-0.5 text-sm font-semibold text-brand-ink">{formatDefectPriorityLabel(defect.priority)}</p>
                           </div>
                         )}
-                        {!isReviewed && (
-                          reviewDueStatus === 'overdue' ? (
-                            <div>
-                              <p className="text-xs font-semibold uppercase text-brand-muted">Review Due Date</p>
-                              <p className="mt-1 text-sm font-semibold text-red-600">Overdue</p>
-                              <p className="mt-0.5 text-xs text-brand-muted">Past due {defect.reviewDueDate}</p>
-                            </div>
-                          ) : (
-                            <Info label="Review Due Date" value={defect.reviewDueDate} />
-                          )
-                        )}
-                        <Info label="Containment" value={defect.containmentStatus} />
-                        <Info label="Description" value={defect.description} />
                         <div>
                           <p className="text-xs font-semibold uppercase text-brand-muted">Problem Level</p>
-                          <p className="mt-1 text-sm font-semibold text-brand-ink">{defect.problemLevel || '-'}</p>
+                          <p className="mt-0.5 text-sm font-semibold text-brand-ink">{defect.problemLevel || '-'}</p>
                         </div>
-                        {!isClosed && (
-                          <Info label="Priority" value={formatDefectPriorityLabel(defect.priority)} />
-                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-brand-muted">Containment</p>
+                          <p className="mt-0.5 text-sm font-semibold text-brand-ink">{defect.containmentStatus || '-'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-brand-muted">Description</p>
+                          <p className="mt-0.5 text-sm font-semibold text-brand-ink">{defect.description || '-'}</p>
+                        </div>
                       </div>
                     </div>
                   </DefectRecordCard>
