@@ -853,10 +853,6 @@ function ManagerOverview({
           <Info label="Containment" value={defect.containment_status} />
         </div>
 
-        <div className="mt-3 border-t border-brand-border/60 pt-3">
-          <Info label="Description" value={defect.description || 'No description provided.'} />
-        </div>
-
         {suggestedHandlingItems.length > 0 && (
           <div className="mt-3 border-t border-brand-border/60 pt-3">
             <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-muted">Suggested Handling</p>
@@ -1383,6 +1379,7 @@ export default function DefectDetails({ user }) {
             />
           </div>
         </div>
+        <p className="mt-3 text-sm text-brand-muted">{defect.description || 'No description provided.'}</p>
         {defect.root_cause_status === 'suspected' && defect.suspected_root_cause && (
           <p className="mt-3 text-sm text-brand-muted">
             <span className="font-semibold text-brand-ink">Suspected root cause:</span> {defect.suspected_root_cause}
@@ -1396,7 +1393,7 @@ export default function DefectDetails({ user }) {
           />
         </div>
 
-        {!(managerView && tab === 'overview') && tab !== 'root' && (
+        {!(managerView && tab === 'overview') && tab !== 'root' && tab !== 'actions' && (
           <NextStepBanner workflow={workflow} activeTab={tab} managerView={managerView} />
         )}
 
@@ -1484,11 +1481,6 @@ export default function DefectDetails({ user }) {
 
         {tab === 'actions' && (
           <div className="mt-6 space-y-5">
-            <div className="surface-card p-4">
-              <h3 className="text-sm font-bold text-brand-ink">Why This Action Exists</h3>
-              <p className="mt-3 text-sm text-brand-muted">{defect.description || 'No description provided.'}</p>
-            </div>
-
             <div className="flex flex-wrap items-center gap-3">
               {managerView && canAssign && (
                 <>
