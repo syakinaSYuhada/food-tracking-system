@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { AlertTriangle, FileWarning, FolderOpen, Layers, Plus, Search } from 'lucide-react'
+import { Activity, AlertTriangle, FileCheck, FileWarning, FolderOpen, Layers, Lock, Plus, Search, ShieldCheck, Target, User } from 'lucide-react'
 import api from '../api/client'
 import DefectRecordCard from '../components/DefectRecordCard'
 import AnalyticRow from '../components/AnalyticRow'
@@ -1170,10 +1170,19 @@ export default function Defects({ user }) {
                   >
                     <div className="space-y-2">
                       <div>
-                        <p className="list-row-title">Status of Defect</p>
-                        <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-3">
-                          <div>
-                            <p className="text-xs font-semibold uppercase text-brand-muted">Reviewed</p>
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100">
+                            <Activity size={14} className="text-slate-600" />
+                          </div>
+                          <p className="list-row-title">Status Overview</p>
+                        </div>
+                        <p className="mt-1 text-sm text-brand-muted">Where this defect stands right now</p>
+                        <div className="mt-2 grid grid-cols-5 divide-x divide-brand-border/70">
+                          <div className="px-2 text-center">
+                            <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
+                              <FileCheck size={16} className="text-purple-600" />
+                            </div>
+                            <p className="mt-1.5 text-xs font-semibold uppercase text-brand-muted">Reviewed</p>
                             {isReviewed ? (
                               <p className="mt-0.5 text-sm font-semibold text-emerald-600">Yes</p>
                             ) : (
@@ -1189,22 +1198,33 @@ export default function Defects({ user }) {
                               </>
                             )}
                           </div>
-                          <div>
-                            <p className="text-xs font-semibold uppercase text-brand-muted">Assigned</p>
+                          <div className="px-2 text-center">
+                            <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
+                              <User size={16} className="text-emerald-600" />
+                            </div>
+                            <p className="mt-1.5 text-xs font-semibold uppercase text-brand-muted">Assigned</p>
                             <p className={`mt-0.5 text-sm font-semibold ${isAssigned ? 'text-emerald-600' : 'text-brand-ink'}`}>{isAssigned ? 'Yes' : 'No'}</p>
                           </div>
-                          <div>
-                            <p className="text-xs font-semibold uppercase text-brand-muted">Action Verified</p>
+                          <div className="px-2 text-center">
+                            <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                              <ShieldCheck size={16} className="text-blue-600" />
+                            </div>
+                            <p className="mt-1.5 text-xs font-semibold uppercase text-brand-muted">Action Verified</p>
                             <p className={`mt-0.5 text-sm font-semibold ${allActionsVerified ? 'text-emerald-600' : 'text-brand-ink'}`}>{verifiedActions} / {totalActions}</p>
                           </div>
-                          <div>
-                            <p className="text-xs font-semibold uppercase text-brand-muted">Root Cause Confirmed</p>
+                          <div className="px-2 text-center">
+                            <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+                              <Target size={16} className="text-orange-600" />
+                            </div>
+                            <p className="mt-1.5 text-xs font-semibold uppercase text-brand-muted">Root Cause Confirmed</p>
                             <p className={`mt-0.5 text-sm font-semibold ${isRootCauseConfirmed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isRootCauseConfirmed ? 'Yes' : 'No'}</p>
                           </div>
-                          <div>
-                            <p className="text-xs font-semibold uppercase text-brand-muted">Closed</p>
+                          <div className="cursor-help px-2 text-center" title="Requires all actions verified and root cause confirmed.">
+                            <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+                              <Lock size={16} className="text-slate-600" />
+                            </div>
+                            <p className="mt-1.5 text-xs font-semibold uppercase text-brand-muted">Closed</p>
                             <p className={`mt-0.5 text-sm font-semibold ${isClosed ? 'text-emerald-600' : 'text-brand-ink'}`}>{isClosed ? 'Yes' : 'No'}</p>
-                            <p className="mt-0.5 text-xs text-brand-muted">Requires all actions verified and root cause confirmed.</p>
                           </div>
                         </div>
                       </div>
