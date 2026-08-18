@@ -1105,7 +1105,7 @@ export default function DefectDetails({ user }) {
   const visibleActions = managerView
     ? actions
     : actions.filter((action) => isAssignedToUser(action, currentUser?.id))
-  const completedFindings = visibleActions.filter((a) => a.status === 'completed' || a.status === 'verified').filter((a) => a.investigation_finding)
+  const investigationActions = visibleActions.filter((a) => a.status !== 'cancelled')
   const rootCauseOptions = rule?.root_cause_options || []
   const workflow = getDefectWorkflow(defect, actions, managerView)
   const { stats, canClose: canCloseDefect, canConfirmRootCause, canAssign, confirmBlockers, blockers: closeBlockers } = workflow
@@ -1396,7 +1396,7 @@ export default function DefectDetails({ user }) {
           />
         </div>
 
-        {!(managerView && tab === 'overview') && (
+        {!(managerView && tab === 'overview') && tab !== 'root' && (
           <NextStepBanner workflow={workflow} activeTab={tab} managerView={managerView} />
         )}
 
@@ -1598,15 +1598,21 @@ export default function DefectDetails({ user }) {
           <div className="mt-6 space-y-5">
             <div className="surface-card p-5">
               <h3 className="font-bold text-brand-ink">Investigation Findings</h3>
-              {completedFindings.length === 0 ? (
+              {visibleActions.length === 0 ? (
                 <p className="mt-2 text-sm text-brand-muted">None of this defect's {visibleActions.length} corrective action(s) have recorded investigation findings yet.</p>
               ) : (
                 <div className="mt-3 space-y-3">
-                  {completedFindings.map((action) => (
+                  {investigationActions.map((action) => (
                     <div key={action.id} className="rounded-xl bg-brand-50/70 p-3">
-                      <p className="font-semibold text-brand-ink">{action.task}</p>
-                      <p className="text-sm text-brand-muted">Finding: {action.investigation_finding}</p>
-                      <p className="text-sm text-brand-muted">Action Taken: {action.action_taken || '-'}</p>
+                      <p className="font-semibold text-brand-ink">{action.code} — {titleCase(action.type)}</p>
+                      {action.investigation_finding ? (
+                        <>
+                          <p className="mt-1 text-sm text-brand-muted">Finding: {action.investigation_finding}</p>
+                          <p className="text-sm text-brand-muted">Action Taken: {action.action_taken || '-'}</p>
+                        </>
+                      ) : (
+                        <p className="mt-1 text-sm text-brand-muted">No findings recorded for this action yet.</p>
+                      )}
                     </div>
                   ))}
                 </div>
